@@ -66,7 +66,7 @@ for c in $compilers ; do
 		echo "Compiling for $c $v"
 		
 		########## Release versions
-	    # we get a serious of useful variables
+	    # we get a series of useful variables
 		cd $BUNDLE_YARP_DIR
 		# # brings in variables to locate all packages e.g. YARP_DIR, GSL_DIR, ACE_DIR, gtkmm
 		source yarp_${c}_${v}_Release.sh
@@ -89,7 +89,7 @@ for c in $compilers ; do
 		source ipopt_${c}_${v}_any.sh
 		source qt3_${c}_${v}_any.sh
 		
-		#cd $BUILD_DIR
+		cd $BUILD_DIR
 		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh Release
 		
 		########## Debug versions
@@ -100,11 +100,11 @@ for c in $compilers ; do
 		source ace_${c}_${v}_Debug.sh
 		source gtkmm_${c}_${v}_Debug.sh
 
-		#cd $BUILD_DIR
+		cd $BUILD_DIR
 		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh Debug
-		#source opencv_${c}_${v}_Debug.sh
+		source opencv_${c}_${v}_Debug.sh
 		
-		#cd $BUILD_DIR
+		cd $BUILD_DIR
 		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh Debug
 		
 		cd $BUILD_DIR

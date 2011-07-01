@@ -7,7 +7,7 @@
 !include MultiUser.nsh
 
 Name "iCub ${ICUB_VERSION}"
-OutFile "${NSIS_OUTPUT_PATH}\iCub_${ICUB_VERSION}_${BUILD_VERSION}.exe"
+OutFile "${NSIS_OUTPUT_PATH}\iCub_${ICUB_VERSION}-${ICUB_TWEAK}_${BUILD_VERSION}.exe"
 InstallDir "$PROGRAMFILES\${VENDOR}"
 InstallDirRegKey HKCU "Software\iCub\Common" "LastInstallLocation"
 RequestExecutionLevel admin
@@ -216,6 +216,10 @@ Section "-first"
   !insertmacro RegisterPackage iCub ${INST2}
   !insertmacro RegisterPackage ipopt ${IPOPT_SUB}
   !insertmacro RegisterPackage OpenCV ${OPENCV_SUB}
+  !insertmacro RegisterPackage sdl ${SDL_SUB}
+  !insertmacro RegisterPackage ode ${ODE_SUB}
+  !insertmacro RegisterPackage glut ${GLUT_SUB}
+  !insertmacro RegisterPackage qt3 ${QT3_SUB}
   
   WriteUninstaller "$INSTDIR\Uninstall_iCub.exe"
   SectionIn RO
@@ -233,23 +237,6 @@ Section "-first"
 
   ${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
   !insertmacro FixCMakeForPackage __NSIS_OPENCV_INSTALLED_LOCATION__ $\"$0$\"
-  
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-config.cmake" "__NSIS_ICUB_INSTALLED_LOCATION__" $\"$0$\"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-includes.cmake" "__NSIS_ICUB_INSTALLED_LOCATION__" $\"$0$\"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-includes.cmake" "__NSIS_ICUB_INSTALLED_LOCATION__" $\"$0$\"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-release.cmake" "__NSIS_ICUB_INSTALLED_LOCATION__" $\"$0$\"
-  
-#  ${StrRepLocal} $0 "$GSL_PATH" "\" "/"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-config.cmake" "__NSIS_GSL_INSTALLED_LOCATION__" $\"$0$\"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-includes.cmake" "__NSIS_GSL_INSTALLED_LOCATION__" $\"$0$\"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-includes.cmake" "__NSIS_GSL_INSTALLED_LOCATION__" $\"$0$\"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-release.cmake" "__NSIS_GSL_INSTALLED_LOCATION__" $\"$0$\"
-  
-#  ${StrRepLocal} $0 "$INSTDIR\${IPOPT_SUB}" "\" "/"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-config.cmake" "__NSIS_IPOPT_INSTALLED_LOCATION__" $\"$0$\"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-includes.cmake" "__NSIS_IPOPT_INSTALLED_LOCATION__" $\"$0$\"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-includes.cmake" "__NSIS_IPOPT_INSTALLED_LOCATION__" $\"$0$\"
-#  !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-release.cmake" "__NSIS_IPOPT_INSTALLED_LOCATION__" $\"$0$\"
   
 SectionEnd
 
@@ -275,6 +262,9 @@ SectionGroup "Development" SecDevelopment
     !include ${NSIS_OUTPUT_PATH}\icub_headers_add.nsi
   SectionEnd
 
+SectionGroupEnd
+
+SectionGroup "Dependencies" SecDependencies
   Section "Ipopt files" SecIpopt
     SetOutPath "$INSTDIR"
     !include ${NSIS_OUTPUT_PATH}\icub_ipopt_add.nsi
@@ -283,9 +273,31 @@ SectionGroup "Development" SecDevelopment
   Section "OpenCV files" SecOpenCV
     SetOutPath "$INSTDIR"
     !include ${NSIS_OUTPUT_PATH}\icub_opencv_add.nsi
-    !include ${NSIS_OUTPUT_PATH}\icub_opencv_dlls_add.nsi
+	!include ${NSIS_OUTPUT_PATH}\icub_opencv_bin_add.nsi
   SectionEnd
-  
+
+  Section "ODE files" SecODE
+    SetOutPath "$INSTDIR"
+    !include ${NSIS_OUTPUT_PATH}\icub_ode_add.nsi
+  SectionEnd
+
+  Section "SDL files" SecSDL
+    SetOutPath "$INSTDIR"
+    !include ${NSIS_OUTPUT_PATH}\icub_sdl_add.nsi
+	!include ${NSIS_OUTPUT_PATH}\icub_sdl_bin_add.nsi
+  SectionEnd
+
+  Section "QT3 files" SecQt3
+    SetOutPath "$INSTDIR"
+    !include ${NSIS_OUTPUT_PATH}\icub_qt3_add.nsi
+	!include ${NSIS_OUTPUT_PATH}\icub_qt3_bin_add.nsi
+  SectionEnd
+
+  Section "GLUT files" SecGLUT
+    SetOutPath "$INSTDIR"
+    !include ${NSIS_OUTPUT_PATH}\icub_glut_add.nsi
+	!include ${NSIS_OUTPUT_PATH}\icub_glut_bin_add.nsi
+  SectionEnd
 SectionGroupEnd
 
 SectionGroup "Runtime" SecRuntime
@@ -294,22 +306,7 @@ SectionGroup "Runtime" SecRuntime
     SetOutPath "$INSTDIR"
     !include ${NSIS_OUTPUT_PATH}\icub_vc_dlls_add.nsi
   SectionEnd
-
-  Section "SDL DLL" SecSDLDlls
-    SetOutPath "$INSTDIR"
-    !include ${NSIS_OUTPUT_PATH}\icub_sdl_dlls_add.nsi
-  SectionEnd
   
-  Section "GLUT DLL" SecGLUTDlls
-    SetOutPath "$INSTDIR"
-    !include ${NSIS_OUTPUT_PATH}\icub_glut_dlls_add.nsi
-  SectionEnd
-
-   Section "QT3 DLL" SecQT3Dlls
-    SetOutPath "$INSTDIR"
-    !include ${NSIS_OUTPUT_PATH}\icub_qt3_dlls_add.nsi
-   SectionEnd
-   
 SectionGroupEnd
 
 
@@ -325,10 +322,14 @@ SectionGroupEnd
 !endif
 
 Section "Environment variables" SecPath
-  ${EnvVarUpdate} $0 "PATH" "A" "${WriteEnvStr_Base}" "$INSTDIR\${INST2}\bin"
+  ${EnvVarUpdate} $0 "PATH" "A" "${WriteEnvStr_Base}" "$INSTDIR\${RUNTIMES_DIR}"
+  ${EnvVarUpdate} $0 "PATH" "A" "${WriteEnvStr_Base}" "$INSTDIR\${INST2}"
   ${EnvVarUpdate} $0 "LIB" "A" "${WriteEnvStr_Base}" "$INSTDIR\${INST2}\lib"
   ${EnvVarUpdate} $0 "INCLUDE" "A" "${WriteEnvStr_Base}" "$INSTDIR\${INST2}\include"
-  WriteRegExpandStr ${WriteEnvStr_RegKey} ICUB_DIR "$INSTDIR\${INST2}"
+  
+  ${EnvVarUpdate} $0 "CMAKE_PREFIX_PATH" "A" "${WriteEnvStr_Base}" "$INSTDIR"
+  
+  #WriteRegExpandStr ${WriteEnvStr_RegKey} ICUB_DIR "$INSTDIR\${INST2}"
   WriteRegExpandStr ${WriteEnvStr_RegKey} ICUB_ROOT "$INSTDIR\${INST2}"
   
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
@@ -349,11 +350,10 @@ LangString DESC_SecLibraries ${LANG_ENGLISH} "C++ libraries."
 LangString DESC_SecHeaders ${LANG_ENGLISH} "Header files."
 LangString DESC_SecIpopt ${LANG_ENGLISH} "Ipopt files."
 LangString DESC_SecOpenCV ${LANG_ENGLISH} "OpenCV files."
-LangString DESC_SecRuntime ${LANG_ENGLISH} "Files needed for running modules."
 LangString DESC_SecVcDlls ${LANG_ENGLISH} "Visual Studio runtime redistributable files.  Not free software. If you already have Visual Studio installed, you may want to skip this."
-LangString DESC_SecSDLDlls ${LANG_ENGLISH} "Simple Direct Layer (SDL) DLL."
-LangString DESC_SecGLUTDlls ${LANG_ENGLISH} "GLUT DLL."
-LangString DESC_SecQT3Dlls ${LANG_ENGLISH} "QT3 DLLs."
+LangString DESC_SecSDL ${LANG_ENGLISH} "Simple Direct Layer (SDL)."
+LangString DESC_SecGLUT ${LANG_ENGLISH} "GLUT."
+LangString DESC_SecQT3 ${LANG_ENGLISH} "QT3."
 LangString DESC_SecPath ${LANG_ENGLISH} "Add iCub software to PATH, LIB, and INCLUDE variables, and set ICUB_DIR and ICUB_ROOT variable."
 
 ;Assign language strings to sections
@@ -366,11 +366,7 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Add iCub software to PATH, LIB, and INC
   !insertmacro MUI_DESCRIPTION_TEXT ${SecIpopt} $(DESC_SecIpopt)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecOpenCV} $(DESC_SecOpenCV)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecHeaders} $(DESC_SecHeaders)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecRuntime} $(DESC_SecRuntime)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecVcDlls} $(DESC_SecVcDlls)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecGLUTDlls} $(DESC_SecGLUTDlls)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecSDLDlls} $(DESC_SecSDLDlls)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecQT3Dlls} $(DESC_SecQT3Dlls)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecPath} $(DESC_SecPath)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
@@ -378,17 +374,17 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Add iCub software to PATH, LIB, and INC
 ;Uninstaller Section
 
 Section "Uninstall"
-  ${un.EnvVarUpdate} $0 "PATH" "R" "${WriteEnvStr_Base}" "$INSTDIR\bin"
-  ${un.EnvVarUpdate} $0 "LIB" "R" "${WriteEnvStr_Base}" "$INSTDIR\lib"
-  ${un.EnvVarUpdate} $0 "INCLUDE" "R" "${WriteEnvStr_Base}" "$INSTDIR\include"
-
+  ${un.EnvVarUpdate} $0 "PATH" "R" "${WriteEnvStr_Base}" "$INSTDIR\${RUNTIMES_DIR}"
+  ${un.EnvVarUpdate} $0 "PATH" "R" "${WriteEnvStr_Base}" "$INSTDIR\${INST2}\bin"
+  ${un.EnvVarUpdate} $0 "LIB" "R" "${WriteEnvStr_Base}" "$INSTDIR\${INST2}\lib"
+  ${un.EnvVarUpdate} $0 "INCLUDE" "R" "${WriteEnvStr_Base}" "$INSTDIR\${INST2}\include"
   #Push "$INSTDIR\bin"
   #Call un.RemoveFromPath
   #Push "LIB"
   #Push "$INSTDIR\lib"
   #Call un.RemoveFromEnvVar
-  DeleteRegValue ${WriteEnvStr_RegKey} ICUB_DIR
-  SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
+ # DeleteRegValue ${WriteEnvStr_RegKey} ICUB_DIR
+ # SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
 
   DeleteRegValue ${WriteEnvStr_RegKey} ICUB_ROOT
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
@@ -397,12 +393,16 @@ Section "Uninstall"
   !include ${NSIS_OUTPUT_PATH}\icub_libraries_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_ipopt_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_opencv_remove.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_opencv_dlls_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_opencv_bin_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_headers_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_vc_dlls_remove.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_sdl_dlls_remove.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_glut_dlls_remove.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_qt3_dlls_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_sdl_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_sdl_bin_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_glut_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_glut_bin_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_ode_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_qt3_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_qt3_bin_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_modules_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_applications_remove.nsi
     
@@ -415,10 +415,19 @@ Section "Uninstall"
   
   RMDir /r "$INSTDIR\${IPOPT_SUB}"
   RMDir /r "$INSTDIR\${OPENCV_SUB}"
+  RMDir /r "$INSTDIR\${SDL_SUB}"
+  RMDir /r "$INSTDIR\${GLUT_SUB}"
+  RMDir /r "$INSTDIR\${ODE_SUB}"
+  RMDir /r "$INSTDIR\${QT3_SUB}"
 
   !insertmacro UnregisterPackage iCub ${INST2}
   !insertmacro UnregisterPackage ipopt ${IPOPT_SUB}
   !insertmacro UnregisterPackage OpenCV ${OPENCV_SUB}
+  
+  !insertmacro UnregisterPackage sdl ${SDL_SUB}
+  !insertmacro UnregisterPackage glut ${GLUT_SUB}
+  !insertmacro UnregisterPackage qt3 ${QT3_SUB}
+  !insertmacro UnregisterPackage ode ${ODE_SUB}
   
 SectionEnd
 
