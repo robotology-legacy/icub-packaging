@@ -1,6 +1,6 @@
 BUILD_DIR=$PWD
 
-source_dir=sdl-$c-$v
+source_dir=glut-$c-$v
 
 cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release

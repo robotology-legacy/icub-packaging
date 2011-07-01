@@ -260,10 +260,11 @@ ICUB_LOGO=`cygpath --windows "$ICUB_ROOT/conf/package/robotcublogo.bmp"`
 
 ## Now cmake files
 cd $ICUB_DIR_UNIX/lib/ICUB || exit 1
-nsis_add icub_base icub-config-fp.cmake $ICUB_SUB/lib/ICUB/icub-config.cmake
+nsis_add icub_base icub-config-fp.cmake $ICUB_SUB/cmake/icub-config.cmake
 nsis_add icub_base icub-export-install.cmake $ICUB_SUB/lib/ICUB/icub-export-install.cmake
 nsis_add icub_base icub-export-install-includes-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-includes.cmake
 nsis_add icub_base icub-export-install-release-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-release.cmake
+nsis_add icub_base icub-export-install-debug-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-debug.cmake
 
 cd $ICUB_DIR_UNIX
 nsis_add_recurse icub_base share $ICUB_SUB/share

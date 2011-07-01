@@ -75,12 +75,12 @@ for c in $compilers ; do
 		source gtkmm_${c}_${v}_Release.sh
 		
 		cd $BUILD_DIR
-		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_sdl.sh
-		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_glut.sh
-		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_ode.sh
-		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh Release
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_sdl.sh
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_glut.sh
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ode.sh
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh Release
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ipopt.sh
-		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_qt3.sh
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_qt3.sh
 		
 		source sdl_${c}_${v}_any.sh
 		source glut_${c}_${v}_any.sh
@@ -90,7 +90,7 @@ for c in $compilers ; do
 		source qt3_${c}_${v}_any.sh
 		
 		cd $BUILD_DIR
-		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh Release
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh Release
 		
 		########## Debug versions
 		cd $BUNDLE_YARP_DIR
@@ -101,11 +101,11 @@ for c in $compilers ; do
 		source gtkmm_${c}_${v}_Debug.sh
 
 		cd $BUILD_DIR
-		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh Debug
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh Debug
 		source opencv_${c}_${v}_Debug.sh
 		
 		cd $BUILD_DIR
-		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh Debug
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh Debug
 		
 		cd $BUILD_DIR
 		source icub_${c}_${v}_Debug.sh
