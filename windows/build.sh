@@ -79,7 +79,7 @@ for c in $compilers ; do
 		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_glut.sh
 		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_ode.sh
 		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh Release
-		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_ipopt.sh
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ipopt.sh
 		#source $ICUB_PACKAGE_SOURCE_DIR/src/build_qt3.sh
 		
 		source sdl_${c}_${v}_any.sh

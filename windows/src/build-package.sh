@@ -377,8 +377,8 @@ fi
 # Add ipopt
 cd $IPOPT_DIR
 nsis_add_recurse icub_ipopt include $IPOPT_SUB/include
-echo "Warning skipping debug version of Ipopt to speed up testing"
-nsis_add_recurse icub_ipopt lib/libipopt.lib $IPOPT_SUB/lib/libipopt.lib 
+nsis_add icub_ipopt lib/libipopt.lib $IPOPT_SUB/lib/libipopt.lib 
+nsis_add icub_ipopt lib/libipoptD.lib $IPOPT_SUB/lib/libipoptD.lib 
 nsis_add_recurse icub_ipopt share $IPOPT_SUB/share
 
 ##### Add OpenCV
