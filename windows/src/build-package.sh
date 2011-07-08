@@ -2,7 +2,7 @@
 
 ##############################################################################
 #
-# Copyright: (C) 2011 RobotCub Consortium
+# Copyright: (C) 2011 Department of Robotics Brain and Cognitive Sciences, Istituto Italiano di Tecnologia
 # Authors: Lorenzo Natale
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 #
@@ -50,8 +50,6 @@ function insert_top {
 
 BUILD_DIR=$PWD
 VENDOR=robotology
-
-RUNTIMES_DIR=bin-${BUNDLE_ICUB_VERSION}
 
 cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
@@ -309,7 +307,7 @@ if [ -e "$SDLDIR" ] ; then
 		nsis_add icub_sdl $f $SDL_SUB/lib/$f
 	done
 	
-	nsis_add icub_sdl_bin SDL.dll $RUNTIMES_DIR/SDL.dll
+	nsis_add icub_sdl_bin SDL.dll $SDL_SUB/lib/SDL.dll
 fi
 
 ## add GLUT 
@@ -323,7 +321,7 @@ if [ -e "$GLUT_DIR" ] ; then
 	
 	nsis_add_recurse icub_glut GL $GLUT_SUB/GL
 	
-	nsis_add icub_glut_bin glut32.dll $RUNTIMES_DIR/glut32.dll
+	nsis_add icub_glut_bin glut32.dll $GLUT_SUB/glut32.dll
 fi
 
 
@@ -342,7 +340,7 @@ if [ -e "$QTDIR" ]; then
 	
 	cd "$QTDIR/bin"
 	for f in `find ./ -maxdepth 1 -type f`; do
-		nsis_add icub_qt3_bin $f $RUNTIMES_DIR/$f
+		nsis_add icub_qt3_bin $f $QT3_SUB/bin/$f
 	done
 fi
 
@@ -396,11 +394,11 @@ echo echo "OpenCV Release: $OPENCV_DIR_UNIX"
 if [ -e "$OPENCV_DIR_UNIX" ]; then
    cd "$OPENCV_DIR_UNIX/bin" || exit 1
    for f in `ls *.dll`; do
-        nsis_add icub_opencv_bin $f $RUNTIMES_DIR/$f
+        nsis_add icub_opencv_bin $f $OPENCV_SUB/bin/$f
    done
    
    for f in `ls *.exe`; do
-        nsis_add icub_opencv_bin $f $RUNTIMES_DIR/$f
+        nsis_add icub_opencv_bin $f $OPENCV_SUB/bin/$f
    done
    
 fi
@@ -415,7 +413,7 @@ if [ -e "$OPENCV_DIR_DBG_UNIX" ] ; then
 	
 	cd "$OPENCV_DIR_DBG_UNIX/bin"
 	for f in `ls *.dll`; do
-		nsis_add icub_opencv_bin $f $RUNTIMES_DIR/$f
+		nsis_add icub_opencv_bin $f $OPENCV_SUB/bin/$f
 	done
 fi
 
@@ -424,5 +422,5 @@ cd $OUT_DIR
 echo $OUT_DIR
 echo $ICUB_PACKAGE_SOURCE_DIR
 cp $ICUB_PACKAGE_SOURCE_DIR/nsis/*.nsh .
-$NSIS_BIN -DRUNTIMES_DIR=$RUNTIMES_DIR -DQT3_SUB=$QT3_SUB -DODE_SUB=$ODE_SUB -DGLUT_SUB=$GLUT_SUB -DSDL_SUB=$SDL_SUB -DOPENCV_SUB=$OPENCV_SUB -DIPOPT_SUB=$IPOPT_SUB -DYARP_VERSION=$BUNDLE_YARP_VERSION -DINST2=$ICUB_SUB -DGSL_VERSION=$BUNDLE_GSL_VERSION -DICUB_VERSION=$BUNDLE_ICUB_VERSION -DICUB_TWEAK=$BUNDLE_ICUB_TWEAK -DBUILD_VERSION=${OPT_COMPILER}_${OPT_VARIANT} -DVENDOR=$VENDOR -DICUB_LOGO=$ICUB_LOGO -DICUB_LICENSE=$ICUB_LICENSE -DICUB_ORG_DIR=$ICUB_DIR -DGSL_ORG_DIR=$GSL_DIR -DNSIS_OUTPUT_PATH=`cygpath -w $PWD` `cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi` || exit 1
+$NSIS_BIN -DQT3_SUB=$QT3_SUB -DODE_SUB=$ODE_SUB -DGLUT_SUB=$GLUT_SUB -DSDL_SUB=$SDL_SUB -DOPENCV_SUB=$OPENCV_SUB -DIPOPT_SUB=$IPOPT_SUB -DYARP_VERSION=$BUNDLE_YARP_VERSION -DINST2=$ICUB_SUB -DGSL_VERSION=$BUNDLE_GSL_VERSION -DICUB_VERSION=$BUNDLE_ICUB_VERSION -DICUB_TWEAK=$BUNDLE_ICUB_TWEAK -DBUILD_VERSION=${OPT_COMPILER}_${OPT_VARIANT} -DVENDOR=$VENDOR -DICUB_LOGO=$ICUB_LOGO -DICUB_LICENSE=$ICUB_LICENSE -DICUB_ORG_DIR=$ICUB_DIR -DGSL_ORG_DIR=$GSL_DIR -DNSIS_OUTPUT_PATH=`cygpath -w $PWD` `cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi` || exit 1
 
