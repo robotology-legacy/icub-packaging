@@ -384,10 +384,18 @@ nsis_add_recurse icub_ipopt share $IPOPT_SUB/share
 # Add release stuff
 echo $OpenCV_DIR
 cd $OpenCV_DIR
+
+cp OpenCVConfig.cmake OpenCVConfig-fp.cmake
+
+file=OpenCVConfig-fp.cmake
+replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
+insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+
 nsis_add_recurse icub_opencv 3rdparty $OPENCV_SUB/3rdparty
 nsis_add_recurse icub_opencv doc $OPENCV_SUB/doc
 nsis_add_recurse icub_opencv include $OPENCV_SUB/include
 nsis_add_recurse icub_opencv lib $OPENCV_SUB/lib
+nsis_add icub_opencv $file $OPENCV_SUB/OpenCVConfig.cmake
 
 echo echo "OpenCV Release: $OPENCV_DIR_UNIX"
 ## add runtime for OpenCV

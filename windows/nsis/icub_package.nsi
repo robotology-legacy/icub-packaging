@@ -19,6 +19,67 @@ RequestExecutionLevel admin
 
 !define MUI_ABORTWARNING
 
+################# the following piece could be used also as a header e.g. myheader.nsh
+##          HEADER PART BEGINS HERE
+!define SF_USELECTED  0
+###############################
+ 
+!macro SecSelect SecId
+  Push $0
+  IntOp $0 ${SF_SELECTED} | ${SF_RO}
+  SectionSetFlags ${SecId} $0
+  SectionSetInstTypes ${SecId} 1
+  Pop $0
+!macroend
+ 
+!define SelectSection '!insertmacro SecSelect'
+#################################
+ 
+!macro SecUnSelect SecId
+  Push $0
+  IntOp $0 ${SF_USELECTED} | ${SF_RO}
+  SectionSetFlags ${SecId} $0
+  SectionSetText  ${SecId} ""
+  Pop $0
+!macroend
+ 
+!define UnSelectSection '!insertmacro SecUnSelect'
+###################################
+ 
+!macro SecExtract SecId
+  Push $0
+  IntOp $0 ${SF_USELECTED} | ${SF_RO}
+  SectionSetFlags ${SecId} $0
+  SectionSetInstTypes ${SecId} 2
+  Pop $0
+!macroend
+ 
+!define SetSectionExtract '!insertmacro SecExtract'
+###################################
+ 
+!macro Groups GroupId
+  Push $0
+  SectionGetFlags ${GroupId} $0
+  IntOp $0 $0 | ${SF_RO}
+  IntOp $0 $0 ^ ${SF_BOLD}
+  IntOp $0 $0 ^ ${SF_EXPAND}
+  SectionSetFlags ${GroupId} $0
+  Pop $0
+!macroend
+ 
+!define SetSectionGroup "!insertmacro Groups"
+####################################
+ 
+!macro GroupRO GroupId
+  Push $0
+  IntOp $0 ${SF_SECGRP} | ${SF_RO}
+  SectionSetFlags ${GroupId} $0
+  Pop $0
+!macroend
+ 
+!define MakeGroupReadOnly '!insertmacro GroupRO' 
+##        HEADER PART for selections ENDS HERE
+
 ;--------------------------------
 ;Utilities
 
@@ -213,17 +274,10 @@ FunctionEnd
 ;Installer Sections
 
 Section "-first"
-  Var /GLOBAL  GSL_PATH
-  Var /GLOBAL  YARP_PATH
-  
-  Call CheckYARPVersion
-  StrCpy $YARP_PATH $0
-  
-  Call CheckGSLVersion
-  StrCpy $GSL_PATH $0
-  
-  DetailPrint "YARP found at $YARP_PATH"
-  DetailPrint "GSL found at $GSL_PATH"
+  Var /GLOBAL GSL_PATH
+  Var /GLOBAL YARP_PATH
+  Var /GLOBAL YARP_FOUND
+  Var /GLOBAL GSL_FOUND
   
   SectionIn RO
   !include ${NSIS_OUTPUT_PATH}\icub_base_add.nsi
@@ -241,14 +295,17 @@ Section "-first"
   ${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
   !insertmacro FixCMakeForPackage __NSIS_OPENCV_INSTALLED_LOCATION__ $\"$0$\"
   
+  DetailPrint "Fixing: $INSTDIR\${OPENCV_SUB}\OpenCVConfig.cmake"
+  ${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
+  !insertmacro ReplaceInFile "$INSTDIR\${OPENCV_SUB}\OpenCVConfig.cmake" __NSIS_OPENCV_INSTALLED_LOCATION__ $\"$0$\"
+  
   SetOutPath "$INSTDIR"
   !insertmacro RegisterPackage ipopt ${IPOPT_SUB}
   !insertmacro RegisterPackage OpenCV ${OPENCV_SUB}
   !insertmacro RegisterPackage sdl ${SDL_SUB}
   !insertmacro RegisterPackage ode ${ODE_SUB}
   !insertmacro RegisterPackage glut ${GLUT_SUB}
-  !insertmacro RegisterPackage qt3 ${QT3_SUB}
-  
+  !insertmacro RegisterPackage qt3 ${QT3_SUB}  
 SectionEnd
 
 SectionGroup "iCub" SeciCub
@@ -326,38 +383,65 @@ SectionEnd
 !endif
 
 Section "Environment variables" SecPath
-  Var /GLOBAL ICUB_ENVIRONMENT
-  
+ 
    !insertmacro SectionFlagIsSet ${SeciCub} ${SF_PSELECTED} isSel chkAll
    chkAll:
      !insertmacro SectionFlagIsSet ${SeciCub} ${SF_SELECTED} isSel notSel
    notSel:
       DetailPrint "Skipping iCub environment variables and PATH"
-	  StrCpy $ICUB_ENVIRONMENT "0"
 	  Goto endif 
    isSel:
       DetailPrint "Adding iCub environment variables and PATH"
-      StrCpy $ICUB_ENVIRONMENT "1"
       WriteRegExpandStr ${WriteEnvStr_RegKey} ICUB_DIR "$INSTDIR\${INST2}"
 	  WriteRegExpandStr ${WriteEnvStr_RegKey} ICUB_ROOT "$INSTDIR\${INST2}"
       !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${INST2}\bin"
    endif:
+
+   !insertmacro SectionFlagIsSet ${SecIpopt} ${SF_SELECTED} isIpoptSel notIpoptSel
+   notIpoptSel:
+	  Goto ipoptEndIf 
+   isIpoptSel:
+      WriteRegExpandStr ${WriteEnvStr_RegKey} IPOPT_DIR "$INSTDIR\${IPOPT_SUB}"
+   ipoptEndIf:
    
-  DetailPrint "ICUB_ENVIRONMENT WAS SET: $ICUB_ENVIRONMENT"
-  WriteRegExpandStr ${WriteEnvStr_RegKey} IPOPT_DIR "$INSTDIR\${IPOPT_SUB}"
+   !insertmacro SectionFlagIsSet ${SecODE} ${SF_SELECTED} isODESel notODESel
+   notODESel:
+	  Goto odeEndif 
+   isODESel:
+       WriteRegExpandStr ${WriteEnvStr_RegKey} ODE_DIR "$INSTDIR\${ODE_SUB}"
+   odeEndif:
   
-  WriteRegExpandStr ${WriteEnvStr_RegKey} ODE_DIR "$INSTDIR\${ODE_SUB}"
-  WriteRegExpandStr ${WriteEnvStr_RegKey} OPENCV_DIR "$INSTDIR\${OPENCV_SUB}"
-  WriteRegExpandStr ${WriteEnvStr_RegKey} QTDIR "$INSTDIR\${QT3_SUB}"
-  WriteRegExpandStr ${WriteEnvStr_RegKey} SDLDIR "$INSTDIR\${SDL_SUB}"
-  WriteRegExpandStr ${WriteEnvStr_RegKey} GLUT_DIR "$INSTDIR\${GLUT_SUB}"
-  
-  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${SDL_SUB}\lib"
-  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${GLUT_SUB}"
-  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${QT3_SUB}\bin"
-  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\bin"
-  
-  #${EnvVarUpdate} $0 "CMAKE_PREFIX_PATH" "A" "${WriteEnvStr_Base}" "$INSTDIR"
+   !insertmacro SectionFlagIsSet ${SecOpenCV} ${SF_SELECTED} isOpenCVSel notOpenCVSel
+   notOpenCVSel:
+	  Goto endOpenCVIf 
+   isOpenCVSel:
+      WriteRegExpandStr ${WriteEnvStr_RegKey} OPENCV_DIR "$INSTDIR\${OPENCV_SUB}"
+	  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\bin"
+   endOpenCVIf:
+   
+   !insertmacro SectionFlagIsSet ${SecQT3} ${SF_SELECTED} isQT3Sel notQt3Sel
+   notQt3Sel:
+	  Goto qt3Endif 
+   isQT3Sel:
+      WriteRegExpandStr ${WriteEnvStr_RegKey} QTDIR "$INSTDIR\${QT3_SUB}"
+	  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${QT3_SUB}\bin"
+   qt3Endif:
+
+   !insertmacro SectionFlagIsSet ${SecSDL} ${SF_SELECTED} isSelSDL notSDLSel
+   notSDLSel:
+	  Goto sdlEndif 
+   isSelSDL:
+        WriteRegExpandStr ${WriteEnvStr_RegKey} SDLDIR "$INSTDIR\${SDL_SUB}"
+		!insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${SDL_SUB}\lib"
+   sdlEndif:
+   
+   !insertmacro SectionFlagIsSet ${SecGLUT} ${SF_SELECTED} isGLUTSel notGLUTSel
+   notGLUTSel:
+	  Goto endifGLUT 
+   isGLUTSel:
+         WriteRegExpandStr ${WriteEnvStr_RegKey} GLUT_DIR "$INSTDIR\${GLUT_SUB}"
+		!insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${GLUT_SUB}"
+   endifGLUT:
   
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
 SectionEnd
@@ -380,19 +464,20 @@ SectionEnd
 ;Descriptions
   
 ;Language strings
-LangString DESC_SeciCub ${LANG_ENGLISH} "iCub software. You can uncheck this item if you want to compile the software yourself."
+LangString DESC_SeciCub ${LANG_ENGLISH} "iCub software. You need first to install YARP binaries or you can uncheck this item if you want to compile the iCub software from svn."
 LangString DESC_SecModules ${LANG_ENGLISH} "Modules."
 LangString DESC_SecApplications ${LANG_ENGLISH} "Applications."
 LangString DESC_SecDevelopment ${LANG_ENGLISH} "Files for developers."
 LangString DESC_SecLibraries ${LANG_ENGLISH} "C++ libraries."
 LangString DESC_SecHeaders ${LANG_ENGLISH} "Header files."
-LangString DESC_SecIpopt ${LANG_ENGLISH} "Ipopt files."
-LangString DESC_SecOpenCV ${LANG_ENGLISH} "OpenCV files."
+LangString DESC_SecIpopt ${LANG_ENGLISH} "Interior Point OPTimizer (Ipopt), used for solving inverse problems."
+LangString DESC_SecOpenCV ${LANG_ENGLISH} "Open Source Computer Vision library (OpenCV)."
 LangString DESC_SecVcDlls ${LANG_ENGLISH} "Visual Studio runtime redistributable files.  Not free software. If you already have Visual Studio installed, you may want to skip this."
-LangString DESC_SecSDL ${LANG_ENGLISH} "Simple Direct Layer (SDL)."
-LangString DESC_SecGLUT ${LANG_ENGLISH} "GLUT."
-LangString DESC_SecQT3 ${LANG_ENGLISH} "QT3."
-LangString DESC_SecPath ${LANG_ENGLISH} "Add iCub software to PATH, LIB, and INCLUDE variables, and set ICUB_DIR and ICUB_ROOT variable."
+LangString DESC_SecSDL ${LANG_ENGLISH} "Simple Direct Layer (SDL). Used by the simulator."
+LangString DESC_SecGLUT ${LANG_ENGLISH} "The OpenGL Utility Toolkit (GLUT). Used by the iCub visualization gui."
+LangString DESC_SecQT3 ${LANG_ENGLISH} "Qt3 Cross-platformm application and UI framework."
+LangString DESC_SecODE ${LANG_ENGLISH} "Open Dynamics Engine (ODE). Used by the simulator"
+LangString DESC_SecPath ${LANG_ENGLISH} "Modify user environment. Add executables and DLLs to the PATH, set variables used by CMake (e.g. ICUB_DIR, IPOPT_DIR, etc.)"
 
 ;Assign language strings to sections
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
@@ -406,6 +491,10 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Add iCub software to PATH, LIB, and INC
   !insertmacro MUI_DESCRIPTION_TEXT ${SecHeaders} $(DESC_SecHeaders)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecVcDlls} $(DESC_SecVcDlls)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecPath} $(DESC_SecPath)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecGLUT} $(DESC_SecGLUT)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecQT3} $(DESC_SecQT3)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecSDL} $(DESC_SecSDL)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecODE} $(DESC_SecODE)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ;--------------------------------
@@ -552,6 +641,33 @@ Section "Uninstall"
 SectionEnd
 
 Function .onInit
+  Call CheckYARPVersion
+  Call CheckGSLVersion
+
+  StrCmp $YARP_FOUND "1" yarp notyarp
+  yarp:
+	DetailPrint "YARP found at $YARP_PATH"
+	Goto yarpdone
+  notyarp:
+	DetailPrint "YARP was not found at $YARP_PATH"
+	${UnSelectSection} ${SecModules}
+    ${UnSelectSection} ${SecApplications}
+    ${UnSelectSection} ${SecLibraries}
+    ${UnSelectSection} ${SecHeaders}
+	${UnSelectSection} ${SecHeaders}
+	${UnSelectSection} ${SecVcDlls}
+ 	${MakeGroupReadOnly} ${SeciCub}
+    ${SetSectionGroup} ${SeciCub}
+  yarpdone:
+  
+  StrCmp $GSL_FOUND "1" gsl notgsl
+  gsl:
+	DetailPrint "GSL found at $GSL_PATH"
+	Goto gsldone
+  notgsl:
+	DetailPrint "GSL was not found at $GSL_PATH"
+  gsldone:
+   
  !insertmacro MULTIUSER_INIT
 FunctionEnd
 
@@ -565,16 +681,15 @@ Function CheckYARPVersion
 	ReadRegStr $0 HKCU "Software\${VENDOR}\YARP\yarp-${YARP_VERSION}" ""
 	DetailPrint "Got registry key $0"
  
-	IfErrors 0 NoAbort
-	Abort "Setup could not find YARP; this is required for installation. Please install YARP."
- 
-    IfFileExists $0\cmake\YARPConfig.cmake NoAbort
-	Abort "YARP was found in the registry but no YARPConfig.cmake was located in $0. Please re-install YARP."
+ 	StrCpy $YARP_FOUND "0"
 	
+	IfErrors ExitFunction NoAbort
+ 	
 	NoAbort:
 		DetailPrint "YARP was found in the system"
+		StrCpy $YARP_PATH $0
+		StrCpy $YARP_FOUND "1"
 		Goto ExitFunction
- 
 
 	ExitFunction:
  
@@ -586,11 +701,13 @@ Function CheckGSLVersion
 	ReadRegStr $0 HKCU "Software\${VENDOR}\GSL\gsl-${GSL_VERSION}" ""
 	DetailPrint "Got registry key $0"
  
-	IfErrors 0 NoAbort
-	Abort "Setup could not find GSL; this is required for installation. Please install GSL."
+	StrCpy $GSL_FOUND "0"
+	IfErrors ExitFunction NoAbort
  
 	NoAbort:
 		DetailPrint "GSL was found in the system"
+		StrCpy $GSL_PATH $0
+		StrCpy $GSL_FOUND "1"
 		Goto ExitFunction
  	ExitFunction:
  
