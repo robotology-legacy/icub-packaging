@@ -7,11 +7,23 @@ source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
 if [ "k$c" = "kv10" ]; then
-	packetname="Ipopt-3.7.0-msvc10"
+	packetname="Ipopt-3.7.0-win32-msvc10"
 	archivename="$packetname.zip"
 	if [ ! -e $archivename ]; then
        wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc10/$archivename
 	fi
+elif [ "k$c" = "kv8" ]; then
+	packetname="Ipopt-3.7.0-win32-msvc8"
+	archivename="$packetname.zip"
+	if [ ! -e $archivename ]; then
+       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc8/$archivename
+	fi
+elif [ "k$c" = "kv9" ]; then
+	packetname="Ipopt-3.7.0-win32-msvc9"
+	archivename="$packetname.zip"
+	if [ ! -e $archivename ]; then
+       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc9/$archivename
+	fi	
 else
 	echo "Compiler version not yet supported"
 	exit -1
@@ -20,7 +32,7 @@ fi
 mkdir $source_dir
 unzip -o $archivename -d ./$source_dir
 rm ./$source_dir/Ipopt-3.7.0 -rf
-mv ./$source_dir/Ipopt-3.7.0-msvc10 ./$source_dir/Ipopt-3.7.0
+mv ./$source_dir/${packetname} ./$source_dir/Ipopt-3.7.0
 
 # Cache icub paths and variables, for dependent packages to read
 IPOPT_DIR=`cygpath --mixed "$BUILD_DIR/$source_dir/Ipopt-3.7.0"`

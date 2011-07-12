@@ -11,6 +11,16 @@ if [ "k$c" = "kv10" ]; then
 	if [ ! -e $archivename ]; then
        wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc10/$archivename
 	fi
+elif [ "k$c" = "kv8" ]; then
+	archivename="ode-0.11.1-bin-msvc8.zip"
+	if [ ! -e $archivename ]; then
+       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc8/$archivename
+	fi
+elif [ "k$c" = "kv9" ]; then
+	archivename="ode-0.11.1-bin-msvc9.zip"
+	if [ ! -e $archivename ]; then
+       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc9/$archivename
+	fi	
 else
 	echo "Compiler version not yet supported"
 	exit -1
