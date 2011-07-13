@@ -12,7 +12,7 @@
 !include MultiUser.nsh
 
 Name "iCub ${ICUB_VERSION}"
-OutFile "${NSIS_OUTPUT_PATH}\iCub_${ICUB_VERSION}-${ICUB_TWEAK}_${BUILD_VERSION}.exe"
+OutFile "${NSIS_OUTPUT_PATH}\iCub_${ICUB_VERSION}_${BUILD_VERSION}_${ICUB_TWEAK}.exe"
 InstallDir "$PROGRAMFILES\${VENDOR}"
 InstallDirRegKey HKCU "Software\iCub\Common" "LastInstallLocation"
 RequestExecutionLevel admin

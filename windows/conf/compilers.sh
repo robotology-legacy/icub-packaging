@@ -1,4 +1,4 @@
-compilers="v8 v9 v10"
+compilers="v9"
 # v9 v8 mingw" # list of compilers
 compiler_v10_family="msvc"
 compiler_v10_loader="F:/VS10/VC/vcvarsall.bat"
