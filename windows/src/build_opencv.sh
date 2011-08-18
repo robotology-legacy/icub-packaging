@@ -25,11 +25,14 @@ mkdir $build_dir
 cd $build_dir
 rm CMakeCache.txt
 "$CMAKE_BIN" -DCMAKE_INSTALL_PREFIX=$OpenCV_DIR -G "$OPT_GENERATOR" ../$source_dir || exit 1
-## first call msbuild for taarget 
+## first call msbuild for target 
 # build
 $OPT_BUILDER OpenCV.sln /t:Build $OPT_CONFIGURATION_COMMAND $OPT_PLATFORM_COMMAND
 # the following install code
 "$CMAKE_BIN" --build . --target install --config ${OPT_BUILD} || exit 1
+
+# cleanup obj file to save space
+find ./ -type f -name *.obj -exec rm -rf {} \;
 
 # Cache icub paths and variables, for dependent packages to read
 OpenCV_DIR=`cygpath --mixed "$build_dir/install"`

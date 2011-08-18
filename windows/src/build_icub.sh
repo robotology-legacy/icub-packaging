@@ -40,6 +40,9 @@ $OPT_BUILDER iCub.sln /t:Build $OPT_CONFIGURATION_COMMAND $OPT_PLATFORM_COMMAND
 # the following install code
 "$CMAKE_BIN" --build . --target install --config ${OPT_BUILD} || exit 1
 
+# cleanup obj files to save space
+find ./ -type f -name *.obj -exec rm -rf {} \;
+
 # Cache icub paths and variables, for dependent packages to read
 ICUB_ROOT=`cygpath --mixed "$BUILD_DIR/$source_dir"`
 (
