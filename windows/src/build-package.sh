@@ -253,7 +253,7 @@ ODE_SUB="ode-$BUNDLE_ODE_VERSION"
 
 ## First license
 cd $ICUB_DIR_UNIX || exit 1
-ICUB_LICENSE=`cygpath --windows "$ICUB_ROOT/conf/package/copyright.txt"`
+ICUB_LICENSE=`cygpath --windows "$ICUB_ROOT/conf/package/license.txt"`
 ICUB_LOGO=`cygpath --windows "$ICUB_ROOT/conf/package/robotcublogo.bmp"`
 
 ## Now cmake files
