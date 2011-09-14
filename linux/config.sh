@@ -1,4 +1,4 @@
-ICUB_VERSION='1.1.6'
+ICUB_VERSION='1.1.7'
 DEBIAN_REVISION_NUMBER=1
 
 APT_OPTIONS="-q --no-install-recommends -y --force-yes"

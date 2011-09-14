@@ -9,6 +9,7 @@
 # Creare pacchetto .deb
 # Verifica tramite installazione pacchetto e lancio iCub_SIM
 
+# Se i path sono scorretti, controllare (o rimuovere) /etc/dchroot.conf
 
 #-------------------------------------------------------------------------------------#
 # Helper for running a command within the build chroot
@@ -148,20 +149,24 @@ ICUB_REQYARP_VERSION_MINOR=$(echo $TMP | awk '{ split($0, array, "\"" ); print a
 TMP=$(echo $STRING | awk '{ split($0, array, "PATCH" ); print array[2] }')
 ICUB_REQYARP_VERSION_PATCH=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
 
-echo "major= $ICUB_REQYARP_VERSION_MAJOR"
-echo "minor= $ICUB_REQYARP_VERSION_MINOR"
-echo "patch= $ICUB_REQYARP_VERSION_PATCH"
+echo "ICUB_REQYARP_VERSION_MAJOR= $ICUB_REQYARP_VERSION_MAJOR"
+echo "ICUB_REQYARP_VERSION_MINOR= $ICUB_REQYARP_VERSION_MINOR"
+echo "ICUB_REQYARP_VERSION_MINOR= $ICUB_REQYARP_VERSION_PATCH"
 
 ICUB_REQYARP_VERSION=$ICUB_REQYARP_VERSION_MAJOR.$ICUB_REQYARP_VERSION_MINOR.$ICUB_REQYARP_VERSION_PATCH
 echo "ICUB_REQYARP_VERSION=$ICUB_REQYARP_VERSION"
 echo "Found Yarp version = $YARP_VERSION"
 
-echo "$ICUB_REQYARP_VERSION $YARP_VERSION" | awk '{ if($2 >= $1) exit 11 }'
+YARP_VERSION_MAJOR=$(echo $YARP_VERSION | awk '{ split($0, array, "." ); print array[1] }')
+YARP_VERSION_MINOR=$(echo $YARP_VERSION | awk '{ split($0, array, "." ); print array[2] }')
+YARP_VERSION_PATCH=$(echo $YARP_VERSION | awk '{ split($0, array, "." ); print array[3] }')
 
-if [ $? = 11 ]; then
-	echo "compatible YARP_VERSION version found."
-else
-	echo "YARP_VERSION version too old, update it please!! exiting"
+echo "YARP_VERSION_MAJOR= $YARP_VERSION_MAJOR"
+echo "YARP_VERSION_MINOR= $YARP_VERSION_MINOR"
+echo "YARP_VERSION_PATCH= $YARP_VERSION_PATCH"
+
+if [ $YARP_VERSION_MAJOR -lt $ICUB_REQYARP_VERSION_MAJOR ] || [ $YARP_VERSION_MINOR -lt $ICUB_REQYARP_VERSION_MINOR ] || [ $YARP_VERSION_PATCH -lt $ICUB_REQYARP_VERSION_PATCH ]; then
+	echo "Your yarp version is too old!! iCub version $ICUB_VERSION requires yarp version $ICUB_REQYARP_VERSION, please update it before proceeding"
 	do_exit "3"
 fi
 
@@ -231,6 +236,9 @@ run_in_chroot "rm $D_ICUB_INSTALL_DIR/usr/share/iCub/ICUB_ROOT.ini"
 sudo mkdir -p $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/
 sudo cp $ICUB_SCRIPT_DIR/ICUB_ROOT.ini $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/
 
+# Fix path inside cmake files
+sudo /$ICUB_SCRIPT_DIR/fix_cmake_path.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR  $ICUB_VERSION_NAME
+
 # Generate 'conffiles' file
 sudo touch $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/conffiles
 echo "/etc/ICUB_ROOT.ini" | sudo tee $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/conffiles
@@ -261,75 +269,77 @@ DEPENDS_ON="libc6, python (<= 3), libncurses5-dev,  libglademm-2.4-dev, libqt3-m
 if [ $PLATFORM_KEY = "lenny" ] || [ $PLATFORM_KEY = "lucid" ]; then
 	# nothing, ode can't be listed
 	echo "working on $PLATFORM_KEY, so won't add libode to the dependencies"
+	ICUB_COMMON_VERSION=$ICUB_VERSION-$DEBIAN_REVISION_NUMBER~lucid+lenny
 else
 	DEPENDS_ON="$DEPENDS_ON, libode1 (>= 0.11.1)"
+	ICUB_COMMON_VERSION=$ICUB_VERSION-$DEBIAN_REVISION_NUMBER~all
 fi
 
 
 # Create dependencies package
-mkdir -p $ICUB_BUILD_CHROOT/tmp/install_dir/icub-common${ICUB_VERSION}
-echo "Generating package"
+run_in_chroot " mkdir -p /tmp/install_dir/iCub-common${ICUB_COMMON_VERSION}/DEBIAN; touch /tmp/install_dir/iCub-common${ICUB_COMMON_VERSION}/DEBIAN/control"
+echo "Generating icub-common package"
 echo "Package: icub-common
-Version: $ICUB_VERSION-$DEBIAN_REVISION
+Version: $ICUB_COMMON_VERSION
 Section: contrib/science
 Priority: optional
-Architecture: $PLATFORM_HARDWARE
+Architecture: all
 Depends: $DEPENDS_ON
-Installed-Size:  $SIZE
+Installed-Size:  0
 Homepage: http://www.robotcub.org
 Maintainer: Alberto Cardellino <alberto.cardellino@iit.it>
 Description: List of dependencies for iCub software
  This package lists all the dependencies needed to install the icub 
  platform software or to download the source code and compile it directly
- onto your machine." | sudo tee $ICUB_BUILD_CHROOT/tmp/install_dir/icub-common${ICUB_VERSION}/DEBIAN/control
+ onto your machine." | sudo tee $ICUB_BUILD_CHROOT/tmp/install_dir/iCub-common${ICUB_COMMON_VERSION}/DEBIAN/control
  
-run_in_chroot "cd tmp/install_dir; dpkg -b icub-common${ICUB_VERSION} icub-common${ICUB_VERSION}.deb"
+run_in_chroot "cd /tmp/install_dir; dpkg -b iCub-common${ICUB_COMMON_VERSION} iCub-common${ICUB_COMMON_VERSION}.deb"
+run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/usr/share/doc/icub"
+run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/COPYING $D_ICUB_INSTALL_DIR/usr/share/doc/icub/copyright"
+run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/AUTHORS $D_ICUB_INSTALL_DIR/usr/share/doc/icub/AUTHORS"
  
-run_in_chroot "cp /tpm/$ICUB_VERSION_NAME/main/COPYING $D_ICUB_INSTALL_DIR/usr/share/doc/icub/copyright"
-run_in_chroot "cp /tpm/$ICUB_VERSION_NAME/main/AUTHORS $D_ICUB_INSTALL_DIR/usr/share/doc/icub/AUTHORS"
- 
-echo "Generating package"
+echo "Generating icub package"
 echo "Package: icub
 Version: $ICUB_VERSION-$DEBIAN_REVISION
 Section: contrib/science
 Priority: optional
 Architecture: $PLATFORM_HARDWARE
-Depends: icub-common ( = $ICUB_VERSION)
+Depends: icub-common ( =$ICUB_COMMON_VERSION)
 Installed-Size:  $SIZE
 Homepage: http://www.robotcub.org
 Maintainer: Alberto Cardellino <alberto.cardellino@iit.it>
 Description: Software platform for iCub humanoid robot with simulator.
- The iCub is the humanoid robot developed as part of the EU project RobotCub and 
- subsequently adopted by more than 20 laboratories worldwide. It has 53 motors 
- that move the head, arms & hands, waist, and legs. It can see and hear, it has 
- the sense of proprioception and movement.
+ The iCub is the humanoid robot developed as part of the European project 
+ RobotCub and subsequently adopted by more than 20 laboratories worldwide. 
+ It has 53 motors that move the head, arms & hands, waist, and legs. It can 
+ see and hear, it has the sense of proprioception and movement.
  .
- This package provides the standard iCub software platform and apps to interact
- with the real iCub robot, or with the included simulator." | sudo tee $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/control
+ This package provides the standard iCub software platform and apps to 
+ interact with the real iCub robot, or with the included simulator." | sudo tee $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/control
  
 # Fix permission for scripts
 #/$ICUB_SCRIPT_DIR/fix_script_perm.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR
-
-# Fix path inside cmake files
-sudo /$ICUB_SCRIPT_DIR/fix_cmake_path.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR  $ICUB_VERSION_NAME
 
 # Build package
 run_in_chroot "cd /tmp/install_dir; dpkg -b $ICUB_VERSION_NAME $PACKAGE_NAME"	>> $LOG_FILE 2>&1
 
 # Copy .deb to somewhere easier to find
 echo -e "\n\n cp $ICUB_BUILD_CHROOT/tmp/install_dir/$PACKAGE_NAME $YARP_PACKAGE_DIR/ \n\n"
-sudo cp $ICUB_BUILD_CHROOT/tmp/install_dir/$PACKAGE_NAME $YARP_PACKAGE_DIR/  	>> $LOG_FILE 2>&1
+sudo cp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb $YARP_PACKAGE_DIR/  	>> $LOG_FILE 2>&1
 
 # Copy deb into shared folder for VM
 echo "Copying yarp and iCub debs to shared folder /data/debs/$CHROOT_NAME/ "
 mkdir -p /data/debs/$CHROOT_NAME
-cp $YARP_PACKAGE_DIR/$PACKAGE_NAME /data/debs/$CHROOT_NAME/
-cp $YARP_PACKAGE_DIR/yarp*.deb	/data/debs/$CHROOT_NAME/
+cp $YARP_PACKAGE_DIR/yarp*.deb	/data/debs/$CHROOT_NAME/					>> $LOG_FILE 2>&1
+cp $YARP_PACKAGE_DIR/iCub*.deb /data/debs/$CHROOT_NAME/						>> $LOG_FILE 2>&1
 
 # Test the package with lintian
 echo "Testing icub package with lintian "
 lintian $YARP_PACKAGE_DIR/$PACKAGE_NAME > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log
 lintian-info $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.info
+
+lintian $YARP_PACKAGE_DIR/$iCub-common${ICUB_VERSION}.deb > $ICUB_SCRIPT_DIR/log/Lintian-$iCub-common${ICUB_VERSION}.log
+lintian-info $ICUB_SCRIPT_DIR/log/Lintian-$iCub-common${ICUB_VERSION}.log > $ICUB_SCRIPT_DIR/log/Lintian-$iCub-common${ICUB_VERSION}.info
 
 echo "Installing package"
 run_in_chroot "dpkg -i /tmp/install_dir/$PACKAGE_NAME" >> $LOG_FILE 2>&1
