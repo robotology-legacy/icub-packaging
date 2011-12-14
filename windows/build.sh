@@ -58,13 +58,16 @@ source $ICUB_PACKAGE_SOURCE_DIR/conf/compilers.sh
 # read options from yarp
 source $BUNDLE_YARP_DIR/nsis_any_any_any.sh
 source $BUNDLE_YARP_DIR/cmake_any_any_any.sh
-		
+
+while [ 3 -eq 4 ]
+do
+	
 for c in $compilers ; do
 	variants=compiler_${c}_variants
     for v in ${!variants}; do
 	
 		echo "Compiling for $c $v"
-		
+
 		########## Release versions
 	    # we get a series of useful variables
 		cd $BUNDLE_YARP_DIR
@@ -85,7 +88,6 @@ for c in $compilers ; do
 		source sdl_${c}_${v}_any.sh
 		source glut_${c}_${v}_any.sh
 		source ode_${c}_${v}_any.sh
-		source opencv_${c}_${v}_Release.sh
 		source ipopt_${c}_${v}_any.sh
 		source qt3_${c}_${v}_any.sh
 		
@@ -96,7 +98,7 @@ for c in $compilers ; do
 		cd $BUNDLE_YARP_DIR
 		# # brings in variables to locate all packages e.g. YARP_DIR, GSL_DIR, ACE_DIR, gtkmm
 		source yarp_${c}_${v}_Debug.sh
-		source gsl_${c}_${v}_Debug.sh
+     	source gsl_${c}_${v}_Debug.sh
 		source ace_${c}_${v}_Debug.sh
 		source gtkmm_${c}_${v}_Debug.sh
 
@@ -114,5 +116,9 @@ for c in $compilers ; do
 		
 	done
 done
+done
+
+## prepare for sync to sourceforge 
+source $ICUB_PACKAGE_SOURCE_DIR/src/build_transfer.sh
  
 

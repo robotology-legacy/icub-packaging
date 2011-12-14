@@ -55,8 +55,6 @@ cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
-cd $BUILD_DIR
-
 ######### Load env variables for iCub
 ## load debug variables and save them
 source icub_${c}_${v}_Debug.sh
@@ -379,6 +377,7 @@ nsis_add_recurse icub_ipopt include $IPOPT_SUB/include
 nsis_add icub_ipopt lib/libipopt.lib $IPOPT_SUB/lib/libipopt.lib 
 nsis_add icub_ipopt lib/libipoptD.lib $IPOPT_SUB/lib/libipoptD.lib 
 nsis_add_recurse icub_ipopt share $IPOPT_SUB/share
+nsis_add_recurse icub_ipopt bin $IPOPT_SUB/bin
 
 ##### Add OpenCV
 # Add release stuff
@@ -432,3 +431,4 @@ echo $ICUB_PACKAGE_SOURCE_DIR
 cp $ICUB_PACKAGE_SOURCE_DIR/nsis/*.nsh .
 $NSIS_BIN -DQT3_SUB=$QT3_SUB -DODE_SUB=$ODE_SUB -DGLUT_SUB=$GLUT_SUB -DSDL_SUB=$SDL_SUB -DOPENCV_SUB=$OPENCV_SUB -DIPOPT_SUB=$IPOPT_SUB -DYARP_VERSION=$BUNDLE_YARP_VERSION -DINST2=$ICUB_SUB -DGSL_VERSION=$BUNDLE_GSL_VERSION -DICUB_VERSION=$BUNDLE_ICUB_VERSION -DICUB_TWEAK=$BUNDLE_ICUB_TWEAK -DBUILD_VERSION=${OPT_COMPILER}_${OPT_VARIANT} -DVENDOR=$VENDOR -DICUB_LOGO=$ICUB_LOGO -DICUB_LICENSE=$ICUB_LICENSE -DICUB_ORG_DIR=$ICUB_DIR -DGSL_ORG_DIR=$GSL_DIR -DNSIS_OUTPUT_PATH=`cygpath -w $PWD` `cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi` || exit 1
 
+cd $BUILD_DIR

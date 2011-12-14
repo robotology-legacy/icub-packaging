@@ -8,7 +8,7 @@ cd $BUILD_DIR
 
 fname=OpenCV-2.2.0-win.zip 
 if [ ! -e $fname ]; then
-	wget http://sourceforge.net/projects/opencvlibrary/files/opencv-win/2.2/OpenCV-2.2.0-win.zip/download || (
+	wget http://sourceforge.net/projects/opencvlibrary/files/opencv-win/2.2/$fname || (
 		echo "Cannot fetch OpenCV"
 		exit 1
 	)
@@ -40,6 +40,7 @@ OpenCV_DIR=`cygpath --mixed "$build_dir/install"`
 	echo "export OpenCV_DIR='$OpenCV_DIR'"
 ) > $BUILD_DIR/opencv_${OPT_COMPILER}_${OPT_VARIANT}_${OPT_BUILD}.sh
 
+rsynch 
 cd $BUILD_DIR
 
 
