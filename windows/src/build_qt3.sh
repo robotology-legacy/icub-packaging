@@ -1,3 +1,10 @@
+
+guard_file="build_qt3.txt"
+if [ -e $guard_file ]; then
+    echo "Skipping build_qt3"
+    return
+fi
+
 BUILD_DIR=$PWD
 
 source_dir=qt3-$c-$v
@@ -39,5 +46,7 @@ QTDIR=`cygpath --mixed "$BUILD_DIR/$source_dir/qt3"`
 ) > $BUILD_DIR/qt3_${OPT_COMPILER}_${OPT_VARIANT}_any.sh
 
 cd $BUILD_DIR
+
+touch $guar_dfile
 
 

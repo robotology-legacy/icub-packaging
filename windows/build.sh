@@ -59,8 +59,8 @@ source $ICUB_PACKAGE_SOURCE_DIR/conf/compilers.sh
 source $BUNDLE_YARP_DIR/nsis_any_any_any.sh
 source $BUNDLE_YARP_DIR/cmake_any_any_any.sh
 
-while [ 3 -eq 4 ]
-do
+#while [ 3 -eq 4 ]
+#do
 	
 for c in $compilers ; do
 	variants=compiler_${c}_variants
@@ -81,7 +81,7 @@ for c in $compilers ; do
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_sdl.sh
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_glut.sh
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ode.sh
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh Release
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Release
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ipopt.sh
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_qt3.sh
 		
@@ -91,9 +91,11 @@ for c in $compilers ; do
 		source ipopt_${c}_${v}_any.sh
 		source qt3_${c}_${v}_any.sh
 		
-		cd $BUILD_DIR
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh Release
+	    source opencv_${c}_${v}_Release.sh
 		
+		cd $BUILD_DIR
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh $c $v Release
+			
 		########## Debug versions
 		cd $BUNDLE_YARP_DIR
 		# # brings in variables to locate all packages e.g. YARP_DIR, GSL_DIR, ACE_DIR, gtkmm
@@ -103,20 +105,20 @@ for c in $compilers ; do
 		source gtkmm_${c}_${v}_Debug.sh
 
 		cd $BUILD_DIR
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh Debug
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Debug
 		source opencv_${c}_${v}_Debug.sh
 		
 		cd $BUILD_DIR
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh Debug
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh $c $v Debug
 		
 		cd $BUILD_DIR
 		source icub_${c}_${v}_Debug.sh
 		source icub_${c}_${v}_Release.sh
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build-package.sh
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build-package.sh $c $v
 		
 	done
 done
-done
+#done
 
 ## prepare for sync to sourceforge 
 source $ICUB_PACKAGE_SOURCE_DIR/src/build_transfer.sh

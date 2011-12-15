@@ -1,3 +1,10 @@
+guard_file="build_sdl.txt"
+
+if [ -e $guard_file ]; then
+    echo "Skipping build_sdl"
+    return
+fi
+
 BUILD_DIR=$PWD
 
 source_dir=sdl-$c-$v
@@ -21,5 +28,8 @@ SDLDIR=`cygpath --mixed "$BUILD_DIR/$source_dir/SDL-1.2.13"`
 ) > $BUILD_DIR/sdl_${OPT_COMPILER}_${OPT_VARIANT}_any.sh
 
 cd $BUILD_DIR
+
+touch $guard_file
+
 
 

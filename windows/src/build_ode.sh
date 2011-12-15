@@ -1,3 +1,12 @@
+
+guard_file="build_ode.txt"
+
+if [ -e $guard_file ]; then
+    echo "Skipping build_ode"
+    return
+fi
+
+
 BUILD_DIR=$PWD
 
 source_dir=ode-$c-$v
@@ -37,4 +46,4 @@ ODE_DIR=`cygpath --mixed "$BUILD_DIR/$source_dir/ode-0.11.1"`
 
 cd $BUILD_DIR
 
-
+touch $guard_file

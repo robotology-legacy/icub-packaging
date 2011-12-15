@@ -1,9 +1,19 @@
+
+guard_file="build_opencv_$1_$2_$3.txt"
+
+if [ -e $guard_file ]; then
+    echo "Skipping build_opencv_$1_$2_$3"
+    return
+fi
+
+echo "Not found $guard_file"
+
 BUILD_DIR=$PWD
 
 source_dir=OpenCV-2.2.0
 
 cd $BUNDLE_YARP_DIR
-source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v $1
+source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $1 $2 $3
 cd $BUILD_DIR
 
 fname=OpenCV-2.2.0-win.zip 
@@ -40,7 +50,7 @@ OpenCV_DIR=`cygpath --mixed "$build_dir/install"`
 	echo "export OpenCV_DIR='$OpenCV_DIR'"
 ) > $BUILD_DIR/opencv_${OPT_COMPILER}_${OPT_VARIANT}_${OPT_BUILD}.sh
 
-rsynch 
+
 cd $BUILD_DIR
 
-
+touch $guard_file

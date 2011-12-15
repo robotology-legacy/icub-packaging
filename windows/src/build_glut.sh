@@ -1,3 +1,12 @@
+
+guard_file=build_glut.txt
+
+if [ -e $guard_file ]; then
+    echo "Skipping build_glut"
+    return
+fi
+
+
 BUILD_DIR=$PWD
 
 source_dir=glut-$c-$v
@@ -22,4 +31,5 @@ GLUT_DIR=`cygpath --mixed "$BUILD_DIR/$source_dir/glut-3.7.6-bin"`
 
 cd $BUILD_DIR
 
+touch $guard_file
 

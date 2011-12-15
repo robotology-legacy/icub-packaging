@@ -48,11 +48,21 @@ function insert_top {
 	sed -i "1i $string" $file
 }
 
+guard_file="build_package_${c}_${v}.txt"
+if [ -e $guard_file ]; then
+    echo "Skipping build_package_${c}_${v}"
+    return
+fi
+
 BUILD_DIR=$PWD
 VENDOR=robotology
 
 cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
+# brings in variables to locate GSL_DIR (we need to separate debug and release)
+source gsl_${c}_${v}_Debug.sh
+GSL_DIR_DBG=$GSL_DIR
+source gsl_${c}_${v}_Release.sh
 cd $BUILD_DIR
 
 ######### Load env variables for iCub
@@ -137,7 +147,7 @@ replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
 insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
 
 file=icub-export-install-debug-fp.cmake
-replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
+replace_string "$GSL_DIR_DBG" \${GSL_INSTALLED_LOCATION} $file
 insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
 replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
 insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
@@ -432,3 +442,5 @@ cp $ICUB_PACKAGE_SOURCE_DIR/nsis/*.nsh .
 $NSIS_BIN -DQT3_SUB=$QT3_SUB -DODE_SUB=$ODE_SUB -DGLUT_SUB=$GLUT_SUB -DSDL_SUB=$SDL_SUB -DOPENCV_SUB=$OPENCV_SUB -DIPOPT_SUB=$IPOPT_SUB -DYARP_VERSION=$BUNDLE_YARP_VERSION -DINST2=$ICUB_SUB -DGSL_VERSION=$BUNDLE_GSL_VERSION -DICUB_VERSION=$BUNDLE_ICUB_VERSION -DICUB_TWEAK=$BUNDLE_ICUB_TWEAK -DBUILD_VERSION=${OPT_COMPILER}_${OPT_VARIANT} -DVENDOR=$VENDOR -DICUB_LOGO=$ICUB_LOGO -DICUB_LICENSE=$ICUB_LICENSE -DICUB_ORG_DIR=$ICUB_DIR -DGSL_ORG_DIR=$GSL_DIR -DNSIS_OUTPUT_PATH=`cygpath -w $PWD` `cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi` || exit 1
 
 cd $BUILD_DIR
+
+touch $guard_file

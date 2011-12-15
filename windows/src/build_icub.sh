@@ -1,9 +1,22 @@
+c=$1
+v=$2
+
+guard_file=build_icub_${c}_${v}_$3.txt
+
+if [ -e $guard_file ]; then
+    echo "Skipping build_icub_${c}_${v}_$3"
+    return
+fi
+
+echo "Proceeding build_icub_${c}_${v}_$3"
+    
+	
 BUILD_DIR=$PWD
 
 source_dir=iCub$BUNDLE_ICUB_VERSION
 
 cd $BUNDLE_YARP_DIR
-source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v $1
+source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v $3
 cd $BUILD_DIR
 
 if [ ! -e $source_dir ]; then
@@ -34,14 +47,15 @@ rm CMakeCache.txt
 CMAKE_PARAMETERS=$BUNDLE_CMAKE_PARAMETERS
 "$CMAKE_BIN" $CMAKE_PARAMETERS -DCMAKE_INSTALL_PREFIX=$ICUB_DIR -G "$OPT_GENERATOR" ../$source_dir || exit 1
 
-## first call msbuild for taarget 
-## aparently the following builds and calls install_applications
+## first call msbuild for target 
+## apparently the following builds and calls install_applications
 $OPT_BUILDER iCub.sln /t:Build $OPT_CONFIGURATION_COMMAND $OPT_PLATFORM_COMMAND
 # the following install code
 "$CMAKE_BIN" --build . --target install --config ${OPT_BUILD} || exit 1
 
+# don't clean obj, since some applications have files with the same extension
 # cleanup obj files to save space
-find ./ -type f -name *.obj -exec rm -rf {} \;
+# find ./ -type f -name *.obj -exec rm -rf {} \;
 
 # Cache icub paths and variables, for dependent packages to read
 ICUB_ROOT=`cygpath --mixed "$BUILD_DIR/$source_dir"`
@@ -52,4 +66,4 @@ ICUB_ROOT=`cygpath --mixed "$BUILD_DIR/$source_dir"`
 
 cd $BUILD_DIR
 
-
+touch $guard_file
