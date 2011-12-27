@@ -292,6 +292,9 @@ Section "-first"
 
   ${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
   !insertmacro FixCMakeForPackage __NSIS_OPENCV_INSTALLED_LOCATION__ $\"$0$\"
+
+  ${StrRepLocal} $0 "$INSTDIR\${ACE_SUB}" "\" "/"
+  !insertmacro FixCMakeForPackage __NSIS_ACE_INSTALLED_LOCATION__ $\"$0$\"
   
   DetailPrint "Fixing: $INSTDIR\${OPENCV_SUB}\OpenCVConfig.cmake"
   ${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
