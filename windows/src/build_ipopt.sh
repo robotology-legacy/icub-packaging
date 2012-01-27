@@ -1,5 +1,5 @@
 
-guard_file="build_ipopt.txt"
+guard_file="build_ipopt-$c-$v.txt"
 
 if [ -e $guard_file ]; then
     echo "Skipping build_ipopt"

@@ -1,5 +1,4 @@
-
-guard_file=build_glut.txt
+guard_file="build_glut-$c-$v.txt"
 
 if [ -e $guard_file ]; then
     echo "Skipping build_glut"

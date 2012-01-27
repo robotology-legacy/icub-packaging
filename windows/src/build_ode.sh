@@ -1,5 +1,5 @@
 
-guard_file="build_ode.txt"
+guard_file="build_ode-$c-$v.txt"
 
 if [ -e $guard_file ]; then
     echo "Skipping build_ode"

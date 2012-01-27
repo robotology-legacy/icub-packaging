@@ -600,6 +600,8 @@ Section "Uninstall"
 	
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   
+
+  
   !include ${NSIS_OUTPUT_PATH}\icub_base_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_libraries_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_ipopt_remove.nsi
@@ -616,12 +618,17 @@ Section "Uninstall"
   !include ${NSIS_OUTPUT_PATH}\icub_qt3_bin_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_modules_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_applications_remove.nsi
-    
+  !include ${NSIS_OUTPUT_PATH}\icub_headers_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_vc_dlls_remove.nsi
+      
   Delete "$INSTDIR\Uninstall_iCub.exe"
 
   RMDir /r "$INSTDIR\${INST2}\bin"
   RMDir /r "$INSTDIR\${INST2}\lib"
   RMDir /r "$INSTDIR\${INST2}\include"
+  RMDir /r "$INSTDIR\${INST2}\cmake"
+  RMDir /r "$INSTDIR\${INST2}\lib"
+  RMDir /r "$INSTDIR\${INST2}\share"
   RMDir /r "$INSTDIR\${INST2}"
   
   RMDir /r "$INSTDIR\${IPOPT_SUB}"

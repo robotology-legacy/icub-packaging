@@ -1,5 +1,5 @@
 
-guard_file="build_qt3.txt"
+guard_file="build_qt3-$c-$v.txt"
 if [ -e $guard_file ]; then
     echo "Skipping build_qt3"
     return

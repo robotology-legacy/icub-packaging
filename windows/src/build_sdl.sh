@@ -1,4 +1,4 @@
-guard_file="build_sdl.txt"
+guard_file="build_sdl-$c-$v.txt"
 
 if [ -e $guard_file ]; then
     echo "Skipping build_sdl"
