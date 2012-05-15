@@ -1,144 +1,173 @@
-#!/bin/bash
-# Passaggi:
-# cerca filettini .sh per le varie distro di yarp realizzate
-#        parametro $1 = cartella in cui si trovano le build di yarp
-# cerca corrispondente test_chroot se esiste
-# Scaricare dipendenze
-# Scarica icub
-# Compila e make install
-# Creare pacchetto .deb
-# Verifica tramite installazione pacchetto e lancio iCub_SIM
+# Load everything needed from external files
+cd "`dirname $0`"
+echo $PWD
+ICUB_SCRIPT_DIR=$PWD
+cd $OLDPWD
+source $ICUB_SCRIPT_DIR/prepare.sh
 
-# Se i path sono scorretti, controllare (o rimuovere) /etc/dchroot.conf
 
-#-------------------------------------------------------------------------------------#
-# Helper for running a command within the build chroot
-function run_in_chroot 
-{
-	sudo dchroot -c $CHROOT_NAME --directory=/ "$1"
-}
 
-# Helper for smooth exit (unmounting /proc)
-function do_exit 
-{
-	run_in_chroot "umount /proc"
-	exit $1
-}
-#-------------------------------------------------------------------------------------#
 
-if [ "K${1}" = "K" ]; then
-	echo "Please insert path to the yarp builds."
-	exit 1
+
+
+#----------------------------------- Debug variables------------------------------------------------#
+
+LOG_FILE=$ICUB_SCRIPT_DIR/log/$CHROOT_NAME.log
+#LOG_FILE=/dev/stdout
+
+echo -e "Printing debug information\n"					> $LOG_FILE 2>&1
+
+echo "ICUB_VERSION_NAME = $ICUB_VERSION_NAME"			>> $LOG_FILE 2>&1
+echo "ICUB_DIR = $D_ICUB_DIR"							>> $LOG_FILE 2>&1
+echo "ICUB_INSTALL_DIR = $D_ICUB_INSTALL_DIR"			>> $LOG_FILE 2>&1
+
+echo "Path to yarp is: $YARP_PACKAGE_DIR"				>> $LOG_FILE 2>&1
+
+echo "Path to the yarp scripts is $YARP_SCRIPT_DIR"		>> $LOG_FILE 2>&1
+echo "Path to the yarp builds  is $ICUB_SCRIPT_DIR"		>> $LOG_FILE 2>&1
+echo -e "$CHROOT_NAME; log file=$LOG_FILE\n"			>> $LOG_FILE 2>&1
+
+echo "Yarp version = $YARP_VERSION"						>> $LOG_FILE 2>&1	# Need yarp version to see if it matches the icub requirement
+echo "YARP_VERSION_MAJOR= $YARP_VERSION_MAJOR"			>> $LOG_FILE 2>&1
+echo "YARP_VERSION_MINOR= $YARP_VERSION_MINOR"			>> $LOG_FILE 2>&1
+echo "YARP_VERSION_PATCH= $YARP_VERSION_PATCH"			>> $LOG_FILE 2>&1
+
+echo "ICUB_SCRIPT_DIR= $ICUB_SCRIPT_DIR"
+
+if [ -e $ICUB_SCRIPT_DIR/stop ]; then
+	echo "ok" >> $ICUB_SCRIPT_DIR/stop
+	exit 0
 fi
 
-if [ "K${2}" = "K" ]; then
-	echo "Please insert chroot name."
-	exit 1
-fi
-
-# ROOT_DIR in this case is simply /exports/
-ROOT_DIR=$1
-CHROOT_NAME=$2
-YARP_SCRIPT_DIR=$ROOT_DIR/linux-yarp-packaging/			# symlink to link folder extracted from yarp svn.
-ICUB_SCRIPT_DIR=$PWD/									# folder in which this file is located.	
-
-BUILD_DIR=$ROOT_DIR/build/
-
-source $ICUB_SCRIPT_DIR/config.sh						# Load ICUB_VERSION & DEBIAN_REVISION_NUMBER variables
-ICUB_VERSION_NAME=iCub$ICUB_VERSION
-
-source $BUILD_DIR/settings.sh							# Load BUNDLE_NAME variable - written by yarp scripts
-source $YARP_SCRIPT_DIR/conf/$BUNDLE_NAME.sh			# Load YARP_VERSION variable - written by yarp scripts
-
-# 	Variables used in the script and sourced directly from yarp packaging files
-# DEBIAN_REVISION_NUMBER								-> comes from ICUB_SCRIPT_DIR/version.sh
-# YARP_PACKAGE_DIR=$BUILD_ROOT/yarp_${CHROOT_NAME}		-> comes from yarp_distro.sh file inside BUILD_DIR
-# YARP_PACKAGE=yarp-${YARP_VERSION}-${PLATFORM_KEY}-${PLATFORM_HARDWARE}.deb
-# CHROOT_NAME=$BUILD_DIR/chroot_${CHROOT_NAME}   		-> comes from chroot_distro.sh file inside BUILD_DIR
-# CHROOT_DIR=$BUILD_DIR/chroot_${CHROOT_NAME}    		-> comes from chroot_distro.sh file inside BUILD_DIR
-
-echo -e "\nPrint debug information\n"
-echo "Path to the yarp scripts is $YARP_SCRIPT_DIR"
-echo "Path to the yarp builds  is $ICUB_SCRIPT_DIR"
 
 #-------------------------------------------------------------------------------------#
-# Variable to be used INSIDE chroots
-
-CMAKE=cmake
-D_ICUB_ROOT=/tmp/$ICUB_VERSION_NAME/main
-D_ICUB_DIR=$D_ICUB_ROOT/build
-D_ICUB_INSTALL_DIR=/tmp/install_dir/$ICUB_VERSION_NAME
-echo "ICUB_VERSION_NAME = $ICUB_VERSION_NAME"
-echo "ICUB_DIR = $D_ICUB_DIR"
-echo "ICUB_INSTALL_DIR = $D_ICUB_INSTALL_DIR"
-
-#-------------------------------------------------------------------------------------#
-
-echo "Yarp version = $YARP_VERSION"					# Need yarp version to see if it matches the icub requirement
-
-#for i in "$BUILD_DIR"/chroot_*.sh
-#do
-
-source $BUILD_DIR/chroot_${CHROOT_NAME}.sh			# Load CHROOT_NAME & CHROOT_DIR for current distro+arch
-source $BUILD_DIR/yarp_${CHROOT_NAME}.sh   			# Load YARP_PACKAGE_DIR & YARP_PACKAGE_NAME for current distro+arch
-source $BUILD_DIR/config_${CHROOT_NAME}.sh			# Load PLATFORM_KEY & PLATFORM_HARDWARE
-echo "Path to yarp is: $YARP_PACKAGE_DIR"
-
-YARP_BUILD_CHROOT=$YARP_PACKAGE_DIR/build_chroot
-YARP_TEST_CHROOT=$YARP_PACKAGE_DIR/test_chroot
-ICUB_BUILD_CHROOT=$YARP_PACKAGE_DIR/test_chroot
 
 # Configure dchroot file
 ## tee command is needed because "sudo >>" doesn't work!!
+sudo touch /etc/dchroot.conf
 cat  /etc/dchroot.conf | grep -i "$CHROOT_NAME"
 if [ $? = 0 ]; then
-	echo "/etc/dchroot.conf $CHROOT_NAME entry already exists."
+	echo "/etc/dchroot.conf $CHROOT_NAME entry already exists."					>> $LOG_FILE 2>&1
 else
-	echo "$CHROOT_NAME $ICUB_BUILD_CHROOT" | sudo tee -a /etc/dchroot.conf > /dev/null
+	echo "$CHROOT_NAME $ICUB_BUILD_CHROOT" | sudo tee -a /etc/dchroot.conf 		>> $LOG_FILE 2>&1
 fi
-
-#echo "$CHROOT_NAME $ICUB_BUILD_CHROOT" >> dchroot.conf
-#sudo cp dchroot.conf /etc/
-
-LOG_FILE=$ICUB_SCRIPT_DIR/log/$CHROOT_NAME.log
-echo -e "$CHROOT_NAME; log file=$LOG_FILE\n.\n"
-DEBIAN_REVISION="${DEBIAN_REVISION_NUMBER}~${PLATFORM_KEY}+${PLATFORM_HARDWARE}"
-PACKAGE_NAME=$ICUB_VERSION_NAME-$DEBIAN_REVISION.deb
-
 
 run_in_chroot "mount -t proc proc /proc" >> $LOG_FILE 2>&1
 
-			 ###------------------- ICUB --------------------###
-echo        "###------------------- ICUB --------------------###"
-echo -e "\n\n###------------------- ICUB --------------------###\n\n" >> $LOG_FILE 2>&1
+			 ###------------------- Preparing --------------------###
+echo        "###------------------- Preparing --------------------###"
+echo -e "\n\n###------------------- Preparing --------------------###\n\n" 			>> $LOG_FILE 2>&1
 
-# Check if test_XXX make target has been made
+# Check if test_CHROOT_NAME make target has been made
 if [ ! -e $BUILD_DIR/test_${CHROOT_NAME}.txt ]; then
-	echo "yarp test_${CHROOT_NAME}.txt has not been found, skipping this one."
+	echo " | | ERROR: yarp test_${CHROOT_NAME}.txt has not been found, exiting!"
 	do_exit "1"
 else
-	echo "yarp test_${CHROOT_NAME}.txt has been found!!... OK"
+	echo "@ yarp test_${CHROOT_NAME}.txt has been found! OK"
 fi
 
 # Check if test_chroot folder actually exists
 if [ ! -d $YARP_TEST_CHROOT ]; then
-	echo "${CHROOT_NAME} test_chroot ($YARP_TEST_CHROOT) has not been found, skipping this one."
+	echo " | | ERROR: ${CHROOT_NAME} test_chroot ($YARP_TEST_CHROOT) has not been found, exiting!"
 	do_exit "2"
 else
-	echo "${CHROOT_NAME} test_chroot ($YARP_TEST_CHROOT) has been found!!... OK"
+	echo "@ ${CHROOT_NAME} test_chroot ($YARP_TEST_CHROOT) has been found! OK"
 fi
 
-# install ICUB dependencies
-run_in_chroot "apt-get install $APT_OPTIONS cmake wget subversion subversion"  >> $LOG_FILE 2>&1
+# --> Handle (install) ALL dependencies at the beginning
+echo "Installing all dependencies in the dchroot environment"					>> $LOG_FILE 2>&1
+run_in_chroot "apt-get $APT_OPTIONS install -f"									>> $LOG_FILE 2>&1
+run_in_chroot "apt-get install $APT_OPTIONS $BUILD_DEPENDENCIES"  				>> $LOG_FILE 2>&1
+run_in_chroot "apt-get $APT_OPTIONS install -f"												>> $LOG_FILE 2>&1
 
-ICUB_DEPENDENCIES="libncurses5-dev  libglademm-2.4-dev libqt3-mt-dev  libcv-dev libhighgui-dev libcvaux-dev"
-echo "Installing dependencies : $ICUB_DEPENDENCIES"
-run_in_chroot "apt-get install $APT_OPTIONS $ICUB_DEPENDENCIES" >> $LOG_FILE 2>&1
-
-echo "Fetching iCub tag $ICUB_VERSION_NAME"
-run_in_chroot "cd /tmp; echo p | svn co $SVN_OPTIONS https://robotcub.svn.sourceforge.net/svnroot/robotcub/tags/$ICUB_VERSION_NAME/ $ICUB_VERSION_NAME" >> $LOG_FILE 2>&1
+echo        "###------------------- Handle libode --------------------###"
+echo -e "\n\n###------------------- Handle libode --------------------###\n\n" 	>> $LOG_FILE 2>&1
+# --> Handle libode 
+echo "PLATFORM_KEY is $PLATFORM_KEY"											>> $LOG_FILE 2>&1
+if [ $PLATFORM_KEY = "lenny" ] || [ $PLATFORM_KEY = "lucid" ]; then
+	# We need to download and compile libode manually
+	if [ ! -e $ICUB_BUILD_CHROOT/tmp/libode.done ]; then
+		run_in_chroot "cd /tmp && wget http://sourceforge.net/projects/opende/files/ODE/0.11.1/ode-0.11.1.zip && echo A | unzip ode-0.11.1.zip >> /dev/null" >> $LOG_FILE 2>&1
+		run_in_chroot "cd /tmp/ode-0.11.1 && ./configure --prefix=/usr --enable-double-precision --enable-shared --disable-drawstuff --disable-demos && make && make install" >> $LOG_FILE 2>&1
+		sudo touch  $ICUB_BUILD_CHROOT/tmp/libode.done
+		echo "libode done"																						>> $LOG_FILE 2>&1
+	else
+		echo "libode already installed"																			>> $LOG_FILE 2>&1
+	fi
 	
-# Search which version of yarp is required
+else  # if linux version is squeeze or maverick (and newer too, hopefully), libode from synaptic is ok!
+	echo "Installing libode-dev"																				>> $LOG_FILE 2>&1
+	run_in_chroot "apt-get $APT_OPTIONS install -f"																			>> $LOG_FILE 2>&1
+	run_in_chroot "apt-get install $APT_OPTIONS libode-dev"														>> $LOG_FILE 2>&1
+	run_in_chroot "apt-get $APT_OPTIONS install -f"																			>> $LOG_FILE 2>&1
+	echo "libode done"																							>> $LOG_FILE 2>&1
+fi
+
+echo        "###------------------- Handle IpOpt --------------------###"
+echo -e "\n\n###------------------- Handle IpOpt --------------------###\n\n" 									>> $LOG_FILE 2>&1
+# --> Handle IpOpt using Mumps
+
+if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done ]; then 
+	# Compile and install (twice) the lib IpOpt - components Blas, Lapack, Mumps and Metis are already downloaded and placed inside the correct ThirdParty folder
+	DO "sudo cp -R $ICUB_SCRIPT_DIR/sources/Ipopt/$IPOPT  $ICUB_BUILD_CHROOT/tmp/"								>> $LOG_FILE 2>&1
+
+	run_in_chroot "cd /tmp/$IPOPT/; mkdir -p build; cd build; ../configure --prefix=/usr"						>> $LOG_FILE 2>&1
+	run_in_chroot "cd /tmp/$IPOPT/build; make; make test; make install"											>> $LOG_FILE 2>&1
+	sudo touch $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done															>> $LOG_FILE 2>&1
+else
+	echo "IpOpt libraries (/usr) already handled."																>> $LOG_FILE 2>&1
+fi
+
+# <-- Handle IpOpt - end
+# <-- Handle all dependencies - end
+
+
+#----------------------------------- Download iCub source to correctly resolve iCub-common's dependencies ----------------------------------------#	
+#
+echo    "Getting iCub source"
+echo -e "\nGetting iCub source\n" 																				>> $LOG_FILE 2>&1
+
+if [ $TESTING ]; then
+	echo "Fetching iCub revision $ICUB_REVISION"
+	echo "Fetching iCub revision $ICUB_REVISION"																	>> $LOG_FILE 2>&1
+	cd $ICUB_SCRIPT_DIR/sources; svn co -r $ICUB_REVISION $SVN_OPTIONS https://robotcub.svn.sourceforge.net/svnroot/robotcub/trunk/iCub/ $ICUB_VERSION_NAME 
+
+else
+	echo "Fetching iCub tag "																	
+	if [ ! -d $ICUB_SCRIPT_DIR/sources/$ICUB_VERSION_NAME ]; then
+		echo "Fetching iCub tag $ICUB_VERSION_NAME"																	>> $LOG_FILE 2>&1
+		cd $ICUB_SCRIPT_DIR/sources; svn co $SVN_OPTIONS https://robotcub.svn.sourceforge.net/svnroot/robotcub/tags/$ICUB_VERSION_NAME/ $ICUB_VERSION_NAME >> $LOG_FILE 2>&1
+	else
+		echo "iCub tag $ICUB_VERSION_NAME already downloaded..."													>> $LOG_FILE 2>&1
+	fi
+	
+fi
+
+	
+if [ ! -d $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME ]; then
+	echo "copying iCub tag $ICUB_VERSION_NAME..."																>> $LOG_FILE 2>&1
+	DO "sudo cp -uR $ICUB_SCRIPT_DIR/sources/$ICUB_VERSION_NAME $ICUB_BUILD_CHROOT/tmp/"							>> $LOG_FILE 2>&1
+else
+	echo "iCub tag $ICUB_VERSION_NAME already copied."															>> $LOG_FILE 2>&1
+fi
+
+
+
+# Fix cmakelist.txt for version 1.1.7, missing execution permissions for some script
+if [ $ICUB_VERSION = "1.1.7" ]; then
+	echo "Version 1.1.7- fixing cmakelist"																		>> $LOG_FILE 2>&1
+	sudo cp $ICUB_SCRIPT_DIR/sources/CMakeLists_1.1.7.txt $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/main/CMakeLists.txt
+else
+	# Fix cmakelist.txt for version 1.1.8, missing execution permissions for some script
+	if [ $ICUB_VERSION = "1.1.8" ]; then
+		echo "Version 1.1.8 - fixing cmakelist"																		>> $LOG_FILE 2>&1
+		sudo cp $ICUB_SCRIPT_DIR/sources/CMakeLists_1.1.8.txt $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/main/CMakeLists.txt
+	else
+		echo "Version higer than 1.1.9, cmakelist ok"																>> $LOG_FILE 2>&1
+	fi
+fi
+
+# Find which version of yarp is required
 STRING=$(cat "$ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/main/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)
 TMP=$(echo $STRING | awk '{ split($0, array, "MAJOR" ); print array[2] }')
 ICUB_REQYARP_VERSION_MAJOR=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
@@ -149,162 +178,147 @@ ICUB_REQYARP_VERSION_MINOR=$(echo $TMP | awk '{ split($0, array, "\"" ); print a
 TMP=$(echo $STRING | awk '{ split($0, array, "PATCH" ); print array[2] }')
 ICUB_REQYARP_VERSION_PATCH=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
 
-echo "ICUB_REQYARP_VERSION_MAJOR= $ICUB_REQYARP_VERSION_MAJOR"
-echo "ICUB_REQYARP_VERSION_MINOR= $ICUB_REQYARP_VERSION_MINOR"
-echo "ICUB_REQYARP_VERSION_MINOR= $ICUB_REQYARP_VERSION_PATCH"
+echo "ICUB_REQYARP_VERSION_MAJOR= $ICUB_REQYARP_VERSION_MAJOR"														
+echo "ICUB_REQYARP_VERSION_MINOR= $ICUB_REQYARP_VERSION_MINOR"														
+echo "ICUB_REQYARP_VERSION_MINOR= $ICUB_REQYARP_VERSION_PATCH"														
 
 ICUB_REQYARP_VERSION=$ICUB_REQYARP_VERSION_MAJOR.$ICUB_REQYARP_VERSION_MINOR.$ICUB_REQYARP_VERSION_PATCH
-echo "ICUB_REQYARP_VERSION=$ICUB_REQYARP_VERSION"
-echo "Found Yarp version = $YARP_VERSION"
-
-YARP_VERSION_MAJOR=$(echo $YARP_VERSION | awk '{ split($0, array, "." ); print array[1] }')
-YARP_VERSION_MINOR=$(echo $YARP_VERSION | awk '{ split($0, array, "." ); print array[2] }')
-YARP_VERSION_PATCH=$(echo $YARP_VERSION | awk '{ split($0, array, "." ); print array[3] }')
-
-echo "YARP_VERSION_MAJOR= $YARP_VERSION_MAJOR"
-echo "YARP_VERSION_MINOR= $YARP_VERSION_MINOR"
-echo "YARP_VERSION_PATCH= $YARP_VERSION_PATCH"
+echo "ICUB_REQYARP_VERSION=$ICUB_REQYARP_VERSION"																	>> $LOG_FILE 2>&1
+echo "Found Yarp version = $YARP_VERSION"																			>> $LOG_FILE 2>&1
 
 if [ $YARP_VERSION_MAJOR -lt $ICUB_REQYARP_VERSION_MAJOR ] || [ $YARP_VERSION_MINOR -lt $ICUB_REQYARP_VERSION_MINOR ] || [ $YARP_VERSION_PATCH -lt $ICUB_REQYARP_VERSION_PATCH ]; then
-	echo "Your yarp version is too old!! iCub version $ICUB_VERSION requires yarp version $ICUB_REQYARP_VERSION, please update it before proceeding"
+	echo "Your yarp version is too old!! iCub version $ICUB_VERSION requires yarp version $ICUB_REQYARP_VERSION, please update it before proceeding" >> $LOG_FILE 2>&1
 	do_exit "3"
 fi
 
-# Go ahead and configure
-echo "Configuring iCub"
-run_in_chroot "mkdir -p $D_ICUB_DIR; cd $D_ICUB_DIR; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ $D_ICUB_ROOT" >> $LOG_FILE 2>&1
+echo 	"++ OK -> Found compatible Yarp version!!"																	>> $LOG_FILE 2>&1
+		#----------------------------------- iCub-common ----------------------------------------#				
+echo   "#----------------------------------- iCub-common ----------------------------------------#"
+echo   "#----------------------------------- iCub-common ----------------------------------------#"					>> $LOG_FILE 2>&1
 
+run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/usr"													>> $LOG_FILE 2>&1
+run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN"													>> $LOG_FILE 2>&1
 
-# Go ahead and make
-echo "Compiling iCub"
-run_in_chroot "cd $D_ICUB_DIR; make" >> $LOG_FILE 2>&1
-
-# make install
-echo "make install"
-run_in_chroot "cd $D_ICUB_DIR; make install" >> $LOG_FILE 2>&1
-	
-# make install_applications
-echo "make install_applications"
-run_in_chroot "cd $D_ICUB_DIR; make install_applications" >> $LOG_FILE 2>&1
-
-# install ICUB simulator dependencies
-echo "PLATFORM_KEY is $PLATFORM_KEY"
 if [ $PLATFORM_KEY = "lenny" ] || [ $PLATFORM_KEY = "lucid" ]; then
-	# we need to download and compile libode manually
-	SIM_DEPENDENCIES="libglut3-dev libsdl1.2-dev unzip "
-	echo "Installing dependencies : $SIM_DEPENDENCIES"
-	run_in_chroot "apt-get install $APT_OPTIONS $SIM_DEPENDENCIES" >> $LOG_FILE 2>&1
-	
-	# Get ODE library and compile it
-	if [ ! -d $ICUB_BUILD_CHROOT/tmp/ode-0.11.1 ]; then
-		run_in_chroot "cd /tmp && wget http://sourceforge.net/projects/opende/files/ODE/0.11.1/ode-0.11.1.zip && unzip ode-0.11.1.zip >> /dev/null" >> $LOG_FILE 2>&1
-		run_in_chroot "cd /tmp/ode-0.11.1 && ./configure --prefix=/usr --enable-double-precision --enable-shared --disable-drawstuff --disable-demos && make && make install" >> $LOG_FILE 2>&1
+	# We need to download and compile libode manually and include it
+	echo "working on $PLATFORM_KEY, so won't add libode to the dependencies, instead we need to download and compile libode manually and include it"										>> $LOG_FILE 2>&1
+		run_in_chroot "cd /tmp && wget http://sourceforge.net/projects/opende/files/ODE/0.11.1/ode-0.11.1.zip && echo A | unzip ode-0.11.1.zip >> /dev/null" >> $LOG_FILE 2>&1
+		run_in_chroot "cd /tmp/ode-0.11.1 && ./configure --prefix=/tmp/install_dir/$ICUB_COMMON_NAME/usr --enable-double-precision --enable-shared --disable-drawstuff --disable-demos && make && make install" >> $LOG_FILE 2>&1
 
-	else
-		echo "libode already installed"
-	fi
-	
-else  # if linux version is squeeze or maverick (and newer I hope), libode from synaptic is ok!
-	SIM_DEPENDENCIES="libglut3-dev libsdl1.2-dev libode-dev"
-	echo "Installing dependencies : $SIM_DEPENDENCIES"
-	run_in_chroot "apt-get install $APT_OPTIONS $SIM_DEPENDENCIES" >> $LOG_FILE 2>&1
+else  # if linux version is squeeze or maverick (and newer too, hopefully), libode from synaptic is ok!
+	echo "Installing libode-dev"																					>> $LOG_FILE 2>&1
+	run_in_chroot "apt-get install $APT_OPTIONS libode-dev"															>> $LOG_FILE 2>&1
+	run_in_chroot "apt-get $APT_OPTIONS install -f"																				>> $LOG_FILE 2>&1
+	ICUB_DEPENDENCIES="$ICUB_DEPENDENCIES, libode1 (>= 0.11.1), libode-dev"
 fi
 
+echo "Building IpOpt libraries for iCub package..."
+echo "Building IpOpt libraries for iCub package..."																	>> $LOG_FILE 2>&1
+if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done ]; then 
+	run_in_chroot "cd /tmp/$IPOPT/build; ../configure --prefix=/tmp/install_dir/$ICUB_COMMON_NAME/usr; make install"	>> $LOG_FILE 2>&1
+	sudo touch $ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done																>> $LOG_FILE 2>&1
+else
+	echo "IpOpt libraries (/icub) already handled."																	>> $LOG_FILE 2>&1
+fi
+
+SIZE=$(du -s $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/)
+SIZE=$(echo $SIZE | awk '{ split($0, array, "/" ); print array[1] }')
+echo "Size: $SIZE"																									>> $LOG_FILE 2>&1
+
+run_in_chroot "touch /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums"												>> $LOG_FILE 2>&1
+cd $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/
+FILES=$(find -path ./DEBIAN -prune -o -print)
+for FILE in $FILES
+do
+	if [ ! -d $FILE ]; then
+		md5sum $FILE | sudo tee -a $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums  >> /dev/null
+	fi
+done
+
+
+# --> Create icub-common package
+run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN; touch /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/control"	>> $LOG_FILE 2>&1
+
+echo "Generating icub-common package"																				>> $LOG_FILE 2>&1
+echo "Package: icub-common
+Version: $ICUB_VERSION-$DEBIAN_REVISION_NUMBER
+Section: contrib/science
+Priority: optional
+Architecture: $PLATFORM_HARDWARE
+Depends: $ICUB_DEPENDENCIES
+Conflicts: coinor-libipopt0, coinor-libipopt-dev
+Installed-Size:  $SIZE
+Homepage: http://www.robotcub.org, https://projects.coin-or.org/Ipopt
+Maintainer: Alberto Cardellino <alberto.cardellino@iit.it>
+Description: List of dependencies for iCub software
+ This package lists all the dependencies needed to install the icub 
+ platform software or to download the source code and compile it directly
+ onto your machine. It contains also a compiled version of IpOpt library $EXTENDED_COMMENT" | sudo tee $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/control >> $LOG_FILE 2>&1
+ 
+run_in_chroot "cd /tmp/install_dir; dpkg -b $ICUB_COMMON_NAME $ICUB_COMMON_PKG_NAME.deb"							>> $LOG_FILE 2>&1
+
+# <-- Create icub-common package -end
+
+		#----------------------------------- iCub ----------------------------------------#
+echo   "#----------------------------------- iCub ----------------------------------------#"
+echo   "#----------------------------------- iCub ----------------------------------------#"						>> $LOG_FILE 2>&1
+
 # Go ahead and configure
-run_in_chroot "mkdir -p $D_ICUB_DIR; cd $D_ICUB_DIR; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub $D_ICUB_ROOT" >> $LOG_FILE 2>&1
+run_in_chroot "mkdir -p $D_ICUB_DIR; cd $D_ICUB_DIR; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub $D_ICUB_ROOT" 													>> $LOG_FILE 2>&1
 
-# Go ahead and make
-run_in_chroot "cd $D_ICUB_DIR; make" >> $LOG_FILE 2>&1
-
-# make install
-run_in_chroot "cd $D_ICUB_DIR; make install" >> $LOG_FILE 2>&1
-
-# make install applications
-run_in_chroot "cd $D_ICUB_DIR; make install_applications" >> $LOG_FILE 2>&1
+# Go ahead and make, install and install_applications
+run_in_chroot "cd $D_ICUB_DIR; make; make install; make install_applications" 										>> $LOG_FILE 2>&1
 
 SIZE=$(du -s $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/)
 SIZE=$(echo $SIZE | awk '{ split($0, array, "/" ); print array[1] }')
 echo "Size: $SIZE"
 
 # Generate dpkg DEBIAN folder
-run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/DEBIAN"
+run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/DEBIAN"																	>> $LOG_FILE 2>&1
 
 # Remove standard ICUB_ROOT.ini file and substitute it with the ad-hoc one.
-run_in_chroot "rm $D_ICUB_INSTALL_DIR/usr/share/iCub/ICUB_ROOT.ini"
+run_in_chroot "rm $D_ICUB_INSTALL_DIR/usr/share/iCub/ICUB_ROOT.ini"													>> $LOG_FILE 2>&1
 
 #echo "mkdir -p $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/; cp $ICUB_SCRIPT_DIR/ICUB_ROOT.ini $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/"
 sudo mkdir -p $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/
-sudo cp $ICUB_SCRIPT_DIR/ICUB_ROOT.ini $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/
+sudo cp $ICUB_SCRIPT_DIR/sources/ICUB_ROOT.ini $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/
 
 # Fix path inside cmake files
-sudo /$ICUB_SCRIPT_DIR/fix_cmake_path.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR  $ICUB_VERSION_NAME
+sudo /$ICUB_SCRIPT_DIR/fix_cmake_path.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR  $ICUB_VERSION_NAME					>> $LOG_FILE 2>&1
 
 # Generate 'conffiles' file
 sudo touch $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/conffiles
-echo "/etc/ICUB_ROOT.ini" | sudo tee $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/conffiles
+echo "/etc/ICUB_ROOT.ini" | sudo tee $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/conffiles						>> $LOG_FILE 2>&1
 
 # Generate DEBIAN/md5sums file
 if [ -f $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums ]; then
-	echo "Removing old md5sums file in $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/"
-	sudo rm $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums
+	echo "Removing old md5sums file in $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/"								>> $LOG_FILE 2>&1
+	sudo rm $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums													>> $LOG_FILE 2>&1
 fi
-sudo touch $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums
+# Generate dpkg DEBIAN/control file 
+run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/DEBIAN; touch $D_ICUB_INSTALL_DIR/DEBIAN/control" 						>> $LOG_FILE 2>&1
+run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/usr/share/doc/icub"
+run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/COPYING $D_ICUB_INSTALL_DIR/usr/share/doc/icub/copyright"
+run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/AUTHORS $D_ICUB_INSTALL_DIR/usr/share/doc/icub/AUTHORS"
+
+sudo touch $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums													>> $LOG_FILE 2>&1
 
 cd $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR
 FILES=$(find -path ./DEBIAN -prune -o -print)
 for FILE in $FILES
 do
-	#echo $FILE >> /data/list.txt
 	if [ ! -d $FILE ]; then
 		md5sum $FILE | sudo tee -a $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums  >> /dev/null
 	fi
 done
-
-# Generate dpkg DEBIAN/control file 
-run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/DEBIAN; touch $D_ICUB_INSTALL_DIR/DEBIAN/control" >> $LOG_FILE 2>&1
-
-# if ode is not got from repository don't list it in the dependencies
-DEPENDS_ON="libc6, python (<= 3), libncurses5-dev,  libglademm-2.4-dev, libqt3-mt-dev,  libcv-dev, libhighgui-dev, libcvaux-dev, yarp ( >= $ICUB_REQYARP_VERSION)"
-
-if [ $PLATFORM_KEY = "lenny" ] || [ $PLATFORM_KEY = "lucid" ]; then
-	# nothing, ode can't be listed
-	echo "working on $PLATFORM_KEY, so won't add libode to the dependencies"
-	ICUB_COMMON_VERSION=$ICUB_VERSION-$DEBIAN_REVISION_NUMBER~lucid+lenny
-else
-	DEPENDS_ON="$DEPENDS_ON, libode1 (>= 0.11.1)"
-	ICUB_COMMON_VERSION=$ICUB_VERSION-$DEBIAN_REVISION_NUMBER~all
-fi
-
-
-# Create dependencies package
-run_in_chroot " mkdir -p /tmp/install_dir/iCub-common${ICUB_COMMON_VERSION}/DEBIAN; touch /tmp/install_dir/iCub-common${ICUB_COMMON_VERSION}/DEBIAN/control"
-echo "Generating icub-common package"
-echo "Package: icub-common
-Version: $ICUB_COMMON_VERSION
-Section: contrib/science
-Priority: optional
-Architecture: all
-Depends: $DEPENDS_ON
-Installed-Size:  0
-Homepage: http://www.robotcub.org
-Maintainer: Alberto Cardellino <alberto.cardellino@iit.it>
-Description: List of dependencies for iCub software
- This package lists all the dependencies needed to install the icub 
- platform software or to download the source code and compile it directly
- onto your machine." | sudo tee $ICUB_BUILD_CHROOT/tmp/install_dir/iCub-common${ICUB_COMMON_VERSION}/DEBIAN/control
- 
-run_in_chroot "cd /tmp/install_dir; dpkg -b iCub-common${ICUB_COMMON_VERSION} iCub-common${ICUB_COMMON_VERSION}.deb"
-run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/usr/share/doc/icub"
-run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/COPYING $D_ICUB_INSTALL_DIR/usr/share/doc/icub/copyright"
-run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/AUTHORS $D_ICUB_INSTALL_DIR/usr/share/doc/icub/AUTHORS"
  
 echo "Generating icub package"
 echo "Package: icub
-Version: $ICUB_VERSION-$DEBIAN_REVISION
+Version: $ICUB_VERSION-$DEBIAN_REVISION_NUMBER
 Section: contrib/science
 Priority: optional
 Architecture: $PLATFORM_HARDWARE
-Depends: icub-common ( =$ICUB_COMMON_VERSION)
+Depends: icub-common ( =$ICUB_COMMON_VERSION), yarp ( >= $ICUB_REQYARP_VERSION)
 Installed-Size:  $SIZE
 Homepage: http://www.robotcub.org
 Maintainer: Alberto Cardellino <alberto.cardellino@iit.it>
@@ -317,31 +331,15 @@ Description: Software platform for iCub humanoid robot with simulator.
  This package provides the standard iCub software platform and apps to 
  interact with the real iCub robot, or with the included simulator." | sudo tee $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/control
  
-# Fix permission for scripts
-#/$ICUB_SCRIPT_DIR/fix_script_perm.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR
+# Fix permission for $D_ICUB_INSTALL_DIR/usr/share/iCub folder
+run_in_chroot "chown -R 1000:1000 $D_ICUB_INSTALL_DIR/usr/share/iCub"
+run_in_chroot "chmod -R g+w $D_ICUB_INSTALL_DIR/usr/share/iCub"
 
 # Build package
-run_in_chroot "cd /tmp/install_dir; dpkg -b $ICUB_VERSION_NAME $PACKAGE_NAME"	>> $LOG_FILE 2>&1
-
-# Copy .deb to somewhere easier to find
-echo -e "\n\n cp $ICUB_BUILD_CHROOT/tmp/install_dir/$PACKAGE_NAME $YARP_PACKAGE_DIR/ \n\n"
-sudo cp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb $YARP_PACKAGE_DIR/  	>> $LOG_FILE 2>&1
-
-# Copy deb into shared folder for VM
-echo "Copying yarp and iCub debs to shared folder /data/debs/$CHROOT_NAME/ "
-mkdir -p /data/debs/$CHROOT_NAME
-cp $YARP_PACKAGE_DIR/yarp*.deb	/data/debs/$CHROOT_NAME/					>> $LOG_FILE 2>&1
-cp $YARP_PACKAGE_DIR/iCub*.deb /data/debs/$CHROOT_NAME/						>> $LOG_FILE 2>&1
-
-# Test the package with lintian
-echo "Testing icub package with lintian "
-lintian $YARP_PACKAGE_DIR/$PACKAGE_NAME > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log
-lintian-info $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.info
-
-lintian $YARP_PACKAGE_DIR/$iCub-common${ICUB_VERSION}.deb > $ICUB_SCRIPT_DIR/log/Lintian-$iCub-common${ICUB_VERSION}.log
-lintian-info $ICUB_SCRIPT_DIR/log/Lintian-$iCub-common${ICUB_VERSION}.log > $ICUB_SCRIPT_DIR/log/Lintian-$iCub-common${ICUB_VERSION}.info
+run_in_chroot "cd /tmp/install_dir; dpkg -b $ICUB_VERSION_NAME $PACKAGE_NAME"												>> $LOG_FILE 2>&1
 
 echo "Installing package"
+run_in_chroot "dpkg -i /tmp/install_dir/$ICUB_COMMON_PKG_NAME.deb" >> $LOG_FILE 2>&1
 run_in_chroot "dpkg -i /tmp/install_dir/$PACKAGE_NAME" >> $LOG_FILE 2>&1
 
 # very simple test
@@ -358,4 +356,23 @@ echo "kill all" >> $LOG_FILE 2>&1
 sudo killall iCub_SIM
 sudo killall yarpserver3
 
-run_in_chroot "umount /proc" 			>> $LOG_FILE 2>&1
+#run_in_chroot "cd /tmp/iCub1.1.7/main/src/libraries/iKin/tutorials/; mkdir -p build; cd build; cmake ..; make; "
+run_in_chroot "umount /proc" 			>> $LOG_FILE 2>&1	
+
+
+## -------------------------  Copying debs elsewhere LOCALLY ---------------------------------- ##
+
+# Copy .debs to somewhere easier to find - shared folder for VM
+echo "Copying yarp and iCub debs to shared folder /data/debs/$CHROOT_NAME/ "
+mkdir -p /data/debs/$CHROOT_NAME
+sudo cp $YARP_PACKAGE_DIR/yarp*.deb /data/debs/$CHROOT_NAME/
+sudo cp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb /data/debs/$CHROOT_NAME/  	
+sudo cp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb /data/debs/$CHROOT_NAME/
+
+## ---------------------------- Test the package with lintian ------------------------------------##
+echo -e "\nTesting icub package with lintian."																				>> $LOG_FILE 2>&1
+lintian /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log					
+lintian-info $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_NAME.log > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_NAME.info		 
+
+lintian /data/debs/$CHROOT_NAME/$PACKAGE_NAME > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log							 
+lintian-info $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.info

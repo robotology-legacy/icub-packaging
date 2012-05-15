@@ -27,7 +27,7 @@ if [ "K${2}" = "KALL" ]; then
 
 	for i in "${ROOT_DIR}/build"/chroot_*.sh
 	do
-		source $i															# Load CHROOT_NAME & CHROOT_DIR for current distro+arch
+		source $i																# Load CHROOT_NAME & CHROOT_DIR for current distro+arch
 		list="$list $CHROOT_NAME"
 	done
 else
@@ -41,15 +41,36 @@ for i in $list
 do
 	echo "Cleaning $i..."
 	DO "source $ROOT_DIR/build/yarp_${i}.sh"									# Load YARP_PACKAGE_DIR & YARP_PACKAGE_NAME for current distro+arch
-	DO "sudo chroot $YARP_PACKAGE_DIR/test_chroot/ dpkg -r icub"
-	DO "rm ./$i.log"
+	DO "source ${ROOT_DIR}/build/config_${i}.sh"								# Load PLATFORM_KEY & PLATFORM_HARDWARE
+	DO "sudo chroot $YARP_PACKAGE_DIR/test_chroot/ dpkg --purge icub"
+	DO "sudo chroot $YARP_PACKAGE_DIR/test_chroot/ umount /proc"
 	DO "source $PWD/config.sh"													# Load ICUB_VERSION & DEBIAN_REVISION_NUMBER variables
 
-	DO "sudo rm   	$YARP_PACKAGE_DIR/iCub*.deb"
+
+	if [ "K$PLATFORM_IS_DEBIAN" = "Ktrue" ]; then
+		DISTRO=debian
+	elif [ "K$PLATFORM_IS_UBUNTU" = "Ktrue" ]; then
+		DISTRO=ubuntu
+	else
+		echo " | | ERROR!! Not PLATFORM_IS_DEBIAN nor PLATFORM_IS_UBUNTU defined -> Unknown platform"
+		exit 1
+	fi
+
+	#DO "sudo rm   	$YARP_PACKAGE_DIR/iCub*.deb" 
+	DO "cd 	$YARP_PACKAGE_DIR/test_chroot/tmp/$IPOPT; sudo make distclean"
+	DO "sudo rm -r	$YARP_PACKAGE_DIR/test_chroot/tmp/$IPOPT*"
+	DO "sudo rm -r	$YARP_PACKAGE_DIR/test_chroot/tmp/*.done"
 	DO "sudo rm -r	$YARP_PACKAGE_DIR/test_chroot/tmp/iCub${ICUB_VERSION}/main/build"
 	DO "sudo rm -r  $YARP_PACKAGE_DIR/test_chroot/tmp/install_dir"
-	DO "sudo rm 	$ROOT_DIR/linux-icub-packaging/log/Lint*$CHROOT_NAME*"
-	DO "sudo rm 	$ROOT_DIR/linux-icub-packaging/log/$CHROOT_NAME.log"
+	DO "sudo rm 	$ROOT_DIR/linux-icub-packaging/log/$i.log"
+	DO "sudo rm 	$ROOT_DIR/linux-icub-packaging/log/Lintian*${PLATFORM_KEY}+${PLATFORM_HARDWARE}*.log"
+	DO "sudo rm 	$ROOT_DIR/linux-icub-packaging/log/Lintian*${PLATFORM_KEY}+${PLATFORM_HARDWARE}*.info"
+#	DO "sudo rm 	$ROOT_DIR/linux-icub-packaging/log/Lintian-iCub-common*${PLATFORM_KEY}+${PLATFORM_HARDWARE}*.log"
+#	DO "sudo rm 	$ROOT_DIR/linux-icub-packaging/log/Lintian-iCub-common*${PLATFORM_KEY}+${PLATFORM_HARDWARE}*.info"
+	DO "sudo rm 	$ROOT_DIR/debs/$i/iCub*"
+	
+#	ssh cardellino@geo "rm  ~/repository/$DISTRO/pool/${PLATFORM_KEY}/contrib/science/${PLATFORM_HARDWARE}/yarp*"
+#	ssh cardellino@geo "rm  ~/repository/$DISTRO/pool/${PLATFORM_KEY}/contrib/science/${PLATFORM_HARDWARE}/iCub*"
 	echo -e "done\n"
 done
 
