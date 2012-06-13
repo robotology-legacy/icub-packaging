@@ -19,12 +19,12 @@ if [ "k$c" = "kv10" ]; then
        wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc10/$archivename
 	fi
 elif [ "k$c" = "kv8" ]; then
-	archivename="qt3-bin-msvc8.zip"
+	archivename="qt3-bin-0.1-msvc8.zip"
 	if [ ! -e $archivename ]; then
        wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc8/$archivename
 	fi
 elif [ "k$c" = "kv9" ]; then
-	archivename="qt3-bin-msvc9.zip"
+	archivename="qt3-bin-0.1-msvc9.zip"
 	if [ ! -e $archivename ]; then
        wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc9/$archivename
 	fi
