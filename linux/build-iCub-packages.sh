@@ -7,9 +7,6 @@ source $ICUB_SCRIPT_DIR/prepare.sh
 
 
 
-
-
-
 #----------------------------------- Debug variables------------------------------------------------#
 
 LOG_FILE=$ICUB_SCRIPT_DIR/log/$CHROOT_NAME.log
@@ -202,7 +199,9 @@ run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN"													
 if [ $PLATFORM_KEY = "lenny" ] || [ $PLATFORM_KEY = "lucid" ]; then
 	# We need to download and compile libode manually and include it
 	echo "working on $PLATFORM_KEY, so won't add libode to the dependencies, instead we need to download and compile libode manually and include it"										>> $LOG_FILE 2>&1
-		run_in_chroot "cd /tmp && wget http://sourceforge.net/projects/opende/files/ODE/0.11.1/ode-0.11.1.zip && echo A | unzip ode-0.11.1.zip >> /dev/null" >> $LOG_FILE 2>&1
+# if I'm here the library has already been downloaded
+#		run_in_chroot "cd /tmp && wget http://sourceforge.net/projects/opende/files/ODE/0.11.1/ode-0.11.1.zip && echo A | unzip ode-0.11.1.zip >> /dev/null" >> $LOG_FILE 2>&1
+# we need to do the configure angain because the path changes
 		run_in_chroot "cd /tmp/ode-0.11.1 && ./configure --prefix=/tmp/install_dir/$ICUB_COMMON_NAME/usr --enable-double-precision --enable-shared --disable-drawstuff --disable-demos && make && make install" >> $LOG_FILE 2>&1
 
 else  # if linux version is squeeze or maverick (and newer too, hopefully), libode from synaptic is ok!
@@ -213,27 +212,27 @@ else  # if linux version is squeeze or maverick (and newer too, hopefully), libo
 fi
 
 echo "Building IpOpt libraries for iCub package..."
-echo "Building IpOpt libraries for iCub package..."																	>> $LOG_FILE 2>&1
+echo "Building IpOpt libraries for iCub package..."														>> $LOG_FILE 2>&1
 if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done ]; then 
 	run_in_chroot "cd /tmp/$IPOPT/build; ../configure --prefix=/tmp/install_dir/$ICUB_COMMON_NAME/usr; make install"	>> $LOG_FILE 2>&1
-	sudo touch $ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done																>> $LOG_FILE 2>&1
+	sudo touch $ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done														>> $LOG_FILE 2>&1
 else
-	echo "IpOpt libraries (/icub) already handled."																	>> $LOG_FILE 2>&1
+	echo "IpOpt libraries (/icub) already handled."									>> $LOG_FILE 2>&1
 fi
 
 SIZE=$(du -s $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/)
 SIZE=$(echo $SIZE | awk '{ split($0, array, "/" ); print array[1] }')
 echo "Size: $SIZE"																									>> $LOG_FILE 2>&1
 
-run_in_chroot "touch /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums"												>> $LOG_FILE 2>&1
+run_in_chroot "touch /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums"								>> $LOG_FILE 2>&1
 cd $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/
 FILES=$(find -path ./DEBIAN -prune -o -print)
-for FILE in $FILES
-do
-	if [ ! -d $FILE ]; then
-		md5sum $FILE | sudo tee -a $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums  >> /dev/null
-	fi
-done
+#for FILE in $FILES
+#do
+#	if [ ! -d $FILE ]; then
+#		md5sum $FILE | sudo tee -a $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums  >> /dev/null
+#	fi
+#done
 
 
 # --> Create icub-common package
@@ -264,7 +263,7 @@ echo   "#----------------------------------- iCub ------------------------------
 echo   "#----------------------------------- iCub ----------------------------------------#"						>> $LOG_FILE 2>&1
 
 # Go ahead and configure
-run_in_chroot "mkdir -p $D_ICUB_DIR; cd $D_ICUB_DIR; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub $D_ICUB_ROOT" 													>> $LOG_FILE 2>&1
+run_in_chroot "mkdir -p $D_ICUB_DIR; cd $D_ICUB_DIR; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub -DENABLE_icubmod_DFKI_hand_calibrator=ON -DENABLE_icubmod_canmotioncontrol=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_debugInterfaceClient=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_gazecontrollerclient=ON -DENABLE_icubmod_icubarmcalibrator=ON -DENABLE_icubmod_icubarmcalibratorj4=ON -DENABLE_icubmod_icubarmcalibratorj8=ON -DENABLE_icubmod_icubhandcalibrator=ON -DENABLE_icubmod_icubheadcalibrator=ON -DENABLE_icubmod_icubheadcalibratorV2=ON -DENABLE_icubmod_icublegscalibrator=ON -DENABLE_icubmod_icubtorsoonlycalibrator=ON -DENABLE_icubmod_logpolarclient=ON -DENABLE_icubmod_logpolargrabber=ON -DENABLE_icubmod_skinprototype=ON -DENABLE_icubmod_socketcan=ON -D ENABLE_icubmod_static_grabber=ON -D ENABLE_icubmod_xsensmtx=ON  $D_ICUB_ROOT" 													>> $LOG_FILE 2>&1
 
 # Go ahead and make, install and install_applications
 run_in_chroot "cd $D_ICUB_DIR; make; make install; make install_applications" 										>> $LOG_FILE 2>&1
@@ -292,8 +291,8 @@ echo "/etc/ICUB_ROOT.ini" | sudo tee $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBI
 
 # Generate DEBIAN/md5sums file
 if [ -f $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums ]; then
-	echo "Removing old md5sums file in $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/"								>> $LOG_FILE 2>&1
-	sudo rm $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums													>> $LOG_FILE 2>&1
+	echo "Removing old md5sums file in $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/"			>> $LOG_FILE 2>&1
+	sudo rm $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums							>> $LOG_FILE 2>&1
 fi
 # Generate dpkg DEBIAN/control file 
 run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/DEBIAN; touch $D_ICUB_INSTALL_DIR/DEBIAN/control" 						>> $LOG_FILE 2>&1
@@ -301,16 +300,16 @@ run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/usr/share/doc/icub"
 run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/COPYING $D_ICUB_INSTALL_DIR/usr/share/doc/icub/copyright"
 run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/AUTHORS $D_ICUB_INSTALL_DIR/usr/share/doc/icub/AUTHORS"
 
-sudo touch $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums													>> $LOG_FILE 2>&1
+sudo touch $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums								>> $LOG_FILE 2>&1
 
-cd $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR
-FILES=$(find -path ./DEBIAN -prune -o -print)
-for FILE in $FILES
-do
-	if [ ! -d $FILE ]; then
-		md5sum $FILE | sudo tee -a $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums  >> /dev/null
-	fi
-done
+#cd $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR
+#FILES=$(find -path ./DEBIAN -prune -o -print)
+#for FILE in $FILES
+#do
+#	if [ ! -d $FILE ]; then
+#		md5sum $FILE | sudo tee -a $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums  >> /dev/null
+#	fi
+#done
  
 echo "Generating icub package"
 echo "Package: icub
@@ -372,7 +371,7 @@ sudo cp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb /data/debs/$CHROOT_NAME/
 ## ---------------------------- Test the package with lintian ------------------------------------##
 echo -e "\nTesting icub package with lintian."																				>> $LOG_FILE 2>&1
 lintian /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log					
-lintian-info $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_NAME.log > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_NAME.info		 
+lintian-info $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_NAME.info		 
 
 lintian /data/debs/$CHROOT_NAME/$PACKAGE_NAME > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log							 
 lintian-info $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.info
