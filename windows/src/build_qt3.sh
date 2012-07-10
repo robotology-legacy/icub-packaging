@@ -19,7 +19,7 @@ if [ "k$c" = "kv10" ]; then
        wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc10/$archivename
 	fi
 elif [ "k$c" = "kv8" ]; then
-	archivename="qt3-bin-0.1-msvc8.zip"
+	archivename="qt3-bin-0.1a-msvc8.zip"
 	if [ ! -e $archivename ]; then
        wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc8/$archivename
 	fi
@@ -47,6 +47,6 @@ QTDIR=`cygpath --mixed "$BUILD_DIR/$source_dir/qt3"`
 
 cd $BUILD_DIR
 
-touch $guar_dfile
+touch $guard_file
 
 
