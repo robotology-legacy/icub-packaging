@@ -406,7 +406,10 @@ file=OpenCVConfig-fp.cmake
 replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
 insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
 
-nsis_add_recurse icub_opencv 3rdparty $OPENCV_SUB/3rdparty
+if [ -e 3rdParty ]; then
+	nsis_add_recurse icub_opencv 3rdparty $OPENCV_SUB/3rdparty
+fi
+	
 nsis_add_recurse icub_opencv doc $OPENCV_SUB/doc
 nsis_add_recurse icub_opencv include $OPENCV_SUB/include
 nsis_add_recurse icub_opencv lib $OPENCV_SUB/lib

@@ -15,7 +15,12 @@ cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
-if [ "k$c" = "kv10" ]; then
+if [ "k$c" = "kv11" ]; then
+	archivename="ode-0.11.1-bin-msvc11.zip"
+	if [ ! -e $archivename ]; then
+       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc11/$archivename
+	fi
+elif [ "k$c" = "kv10" ]; then
 	archivename="ode-0.11.1-bin-msvc10.zip"
 	if [ ! -e $archivename ]; then
        wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc10/$archivename

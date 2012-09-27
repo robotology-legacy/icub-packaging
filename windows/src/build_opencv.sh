@@ -10,15 +10,17 @@ echo "Not found $guard_file"
 
 BUILD_DIR=$PWD
 
-source_dir=OpenCV-2.2.0
-
 cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $1 $2 $3
 cd $BUILD_DIR
 
-fname=OpenCV-2.2.0-win.zip 
+#source_dir=OpenCV-2.2.0
+#fname=OpenCV-2.4.2-win.zip 
+source_dir=opencv
+fname=opencv-snapshot-26-09-12.zip 
 if [ ! -e $fname ]; then
-	wget http://sourceforge.net/projects/opencvlibrary/files/opencv-win/2.2/$fname || (
+	#wget http://sourceforge.net/projects/opencvlibrary/files/opencv-win/2.4.2/$fname || (
+	wget http://eris.liralab.it/iCub/downloads/packages/windows/common/$fname || (
 		echo "Cannot fetch OpenCV"
 		exit 1
 	)
