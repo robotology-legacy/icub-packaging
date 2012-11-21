@@ -20,7 +20,7 @@ source_dir=opencv
 fname=opencv-snapshot-26-09-12.zip 
 if [ ! -e $fname ]; then
 	#wget http://sourceforge.net/projects/opencvlibrary/files/opencv-win/2.4.2/$fname || (
-	wget http://eris.liralab.it/iCub/downloads/packages/windows/common/$fname || (
+	wget http://wiki.icub.org/iCub/downloads/packages/windows/common/$fname || (
 		echo "Cannot fetch OpenCV"
 		exit 1
 	)

@@ -19,25 +19,25 @@ if [ "k$c" = "kv11" ]; then
 	packetname="Ipopt-3.10.1-win32-msvc10_mumps+metis+clapack"
 	archivename="$packetname.zip"
 	if [ ! -e $archivename ]; then
-       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc10/$archivename
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc10/$archivename
 	fi
 elif [ "k$c" = "kv10" ]; then
 	packetname="Ipopt-3.10.1-win32-msvc10_mumps+metis+clapack"
 	archivename="$packetname.zip"
 	if [ ! -e $archivename ]; then
-       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc10/$archivename
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc10/$archivename
 	fi
 elif [ "k$c" = "kv8" ]; then
 	packetname="Ipopt-3.10.1-win32-msvc8_mumps+metis+clapack"
 	archivename="$packetname.zip"
 	if [ ! -e $archivename ]; then
-       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc8/$archivename
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc8/$archivename
 	fi
 elif [ "k$c" = "kv9" ]; then
 	packetname="Ipopt-3.10.1-win32-msvc9_mumps+metis+clapack"
 	archivename="$packetname.zip"
 	if [ ! -e $archivename ]; then
-       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc9/$archivename
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc9/$archivename
 	fi	
 else
 	echo "Compiler version not yet supported"

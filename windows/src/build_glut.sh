@@ -16,7 +16,7 @@ cd $BUILD_DIR
 
 archivename="glut-3.7.6.icub-bin.zip"
 if [ ! -e $archivename ]; then
-	wget http://eris.liralab.it/iCub/downloads/packages/windows/common/$archivename
+	wget http://wiki.icub.org/iCub/downloads/packages/windows/common/$archivename
 fi
 
 mkdir $source_dir

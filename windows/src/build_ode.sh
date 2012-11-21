@@ -18,22 +18,22 @@ cd $BUILD_DIR
 if [ "k$c" = "kv11" ]; then
 	archivename="ode-0.11.1-bin-msvc11.zip"
 	if [ ! -e $archivename ]; then
-       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc11/$archivename
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc11/$archivename
 	fi
 elif [ "k$c" = "kv10" ]; then
 	archivename="ode-0.11.1-bin-msvc10.zip"
 	if [ ! -e $archivename ]; then
-       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc10/$archivename
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc10/$archivename
 	fi
 elif [ "k$c" = "kv8" ]; then
 	archivename="ode-0.11.1-bin-msvc8.zip"
 	if [ ! -e $archivename ]; then
-       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc8/$archivename
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc8/$archivename
 	fi
 elif [ "k$c" = "kv9" ]; then
 	archivename="ode-0.11.1-bin-msvc9.zip"
 	if [ ! -e $archivename ]; then
-       wget http://eris.liralab.it/iCub/downloads/packages/windows/msvc9/$archivename
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc9/$archivename
 	fi	
 else
 	echo "Compiler version not yet supported"

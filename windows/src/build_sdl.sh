@@ -15,7 +15,7 @@ cd $BUILD_DIR
 
 archivename="SDL-1.2.13-bin.zip"
 if [ ! -e $archivename ]; then
-	wget http://eris.liralab.it/iCub/downloads/packages/windows/common/$archivename
+	wget http://wiki.icub.org/iCub/downloads/packages/windows/common/$archivename
 fi
 
 mkdir $source_dir
