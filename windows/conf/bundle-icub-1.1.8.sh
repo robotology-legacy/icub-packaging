@@ -10,6 +10,6 @@ export BUNDLE_ODE_QT3=""
 
 _BUNDLE_YARP_DIR="F:\cygwin\home\icub\yarp2\packaging\windows\build-2-3-15"
 export BUNDLE_YARP_DIR=`cygpath $_BUNDLE_YARP_DIR`
-export BUNDLE_CMAKE_PARAMETERS="-DENABLE_icubmod_cartesiancontrollerclient:BOOL=TRUE -DENABLE_icubmod_cartesiancontrollerserver:BOOL=TRUE -DENABLE_icubmod_gazecontrollerclient:BOOL=TRUE -DENABLE_icubmod_logpolarclient:BOOL=TRUE -DENABLE_icubmod_logpolarserver:BOOL=TRUE"
+export BUNDLE_CMAKE_PARAMETERS="-DENABLE_icubmod_cartesiancontrollerclient:BOOL=TRUE -DENABLE_icubmod_cartesiancontrollerserver:BOOL=TRUE -DENABLE_icubmod_gazecontrollerclient:BOOL=TRUE -DENABLE_icubmod_logpolarclient:BOOL=TRUE -DENABLE_icubmod_logpolarserver:BOOL=TRUE -DENABLE_icubmod_debugInterfaceClient:BOOL=TRUE"
 
  
