@@ -56,7 +56,7 @@ CHROOT_NAME=$2
 
 #---------------------------------------- basic useful folders ---------------------------------------------#
 
-BUILD_DIR=$ROOT_DIR/build/
+BUILD_DIR=$ROOT_DIR/build
 YARP_SCRIPT_DIR=$ROOT_DIR/linux-yarp-packaging/			# symlink to link folder extracted from yarp svn.
 
 #---------------------------------------- source yarp configs ---------------------------------------------#

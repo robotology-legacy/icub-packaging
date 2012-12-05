@@ -32,11 +32,11 @@ echo "Distro= $DISTRO"
 # make sure destination folder do exists
 ssh cardellino@geo "mkdir -p repository/$DISTRO/pool/$PLATFORM_KEY/contrib/science/$PLATFORM_HARDWARE"
 # copying yarp deb
-echo "scp $YARP_PACKAGE_DIR/yarp*.deb   cardellino@geo:~/repository/$DISTRO/pool/$PLATFORM_KEY/contrib/science/$PLATFORM_HARDWARE"
-scp $YARP_PACKAGE_DIR/yarp*.deb   cardellino@geo:~/repository/$DISTRO/pool/$PLATFORM_KEY/contrib/science/$PLATFORM_HARDWARE
+echo "scp $YARP_PACKAGE_DIR/yarp*.deb   ../repository/$DISTRO/pool/$PLATFORM_KEY/contrib/science/$PLATFORM_HARDWARE"
+scp $YARP_PACKAGE_DIR/yarp*.deb   ../repository/$DISTRO/pool/$PLATFORM_KEY/contrib/science/$PLATFORM_HARDWARE
 # copying iCub debs 
-echo "scp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb   cardellino@geo:~/repository/$DISTRO/pool/$PLATFORM_KEY/contrib/science/$PLATFORM_HARDWARE"
-scp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb   cardellino@geo:~/repository/$DISTRO/pool/$PLATFORM_KEY/contrib/science/$PLATFORM_HARDWARE
+echo "scp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb   ../repository/$DISTRO/pool/$PLATFORM_KEY/contrib/science/$PLATFORM_HARDWARE"
+scp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb   ../repository/$DISTRO/pool/$PLATFORM_KEY/contrib/science/$PLATFORM_HARDWARE
 
 #Copy debs to folders synched with sourceforge
 echo "-------------"
@@ -48,6 +48,6 @@ ssh cardellino@geo "mkdir -p sourceforge/$YARP_VERSION_NAME/linux; mkdir -p sour
 scp $YARP_PACKAGE_DIR/$YARP_PACKAGE_NAME   cardellino@geo:~/sourceforge/$YARP_VERSION_NAME/linux/$YARP_PACKAGE_NAME
 
 	#echo "scp $ICUB_BUILD_CHROOT/$ICUB_VERSION_NAME*.deb   cardellino@geo:~/sourceforge/$ICUB_VERSION_NAME"
-scp $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_VERSION_NAME*.deb   cardellino@geo:~/sourceforge/$ICUB_VERSION_NAME/linux/
+scp $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_VERSION_NAME*.deb   ../sourceforge/$ICUB_VERSION_NAME/linux/
 scp $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME*.deb   cardellino@geo:~/sourceforge/$ICUB_VERSION_NAME/linux/
 

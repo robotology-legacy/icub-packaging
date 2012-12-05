@@ -3,6 +3,7 @@ cd "`dirname $0`"
 echo $PWD
 ICUB_SCRIPT_DIR=$PWD
 cd $OLDPWD
+echo "ICUB SCRIPT DIR = $ICUB_SCRIPT_DIR"
 source $ICUB_SCRIPT_DIR/prepare.sh
 
 
@@ -183,9 +184,27 @@ ICUB_REQYARP_VERSION=$ICUB_REQYARP_VERSION_MAJOR.$ICUB_REQYARP_VERSION_MINOR.$IC
 echo "ICUB_REQYARP_VERSION=$ICUB_REQYARP_VERSION"																	>> $LOG_FILE 2>&1
 echo "Found Yarp version = $YARP_VERSION"																			>> $LOG_FILE 2>&1
 
-if [ $YARP_VERSION_MAJOR -lt $ICUB_REQYARP_VERSION_MAJOR ] || [ $YARP_VERSION_MINOR -lt $ICUB_REQYARP_VERSION_MINOR ] || [ $YARP_VERSION_PATCH -lt $ICUB_REQYARP_VERSION_PATCH ]; then
-	echo "Your yarp version is too old!! iCub version $ICUB_VERSION requires yarp version $ICUB_REQYARP_VERSION, please update it before proceeding" >> $LOG_FILE 2>&1
-	do_exit "3"
+
+if [ "$YARP_VERSION_MAJOR" -lt  "$ICUB_REQYARP_VERSION_MAJOR" ]
+then
+        echo "wrong major version"
+        exit 1
+fi
+if [ "$YARP_VERSION_MAJOR" -eq "$ICUB_REQYARP_VERSION_MAJOR" ]
+then
+        if [ "$YARP_VERSION_MINOR" -lt "$ICUB_REQYARP_VERSION_MINOR" ]
+        then
+                echo "wrong minor number"
+                exit 1
+        fi
+        if [ "$YARP_VERSION_MINOR" -eq "$ICUB_REQYARP_VERSION_MINOR" ]
+        then
+                if [ "$YARP_VERSION_PATCH" -lt "$ICUB_REQYARP_VERSION_PATCH" ]
+                then
+                        echo "wrong patch number"
+                        exit 1
+                fi
+        fi
 fi
 
 echo 	"++ OK -> Found compatible Yarp version!!"																	>> $LOG_FILE 2>&1
@@ -263,7 +282,7 @@ echo   "#----------------------------------- iCub ------------------------------
 echo   "#----------------------------------- iCub ----------------------------------------#"						>> $LOG_FILE 2>&1
 
 # Go ahead and configure
-run_in_chroot "mkdir -p $D_ICUB_DIR; cd $D_ICUB_DIR; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub -DENABLE_icubmod_DFKI_hand_calibrator=ON -DENABLE_icubmod_canmotioncontrol=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_debugInterfaceClient=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_gazecontrollerclient=ON -DENABLE_icubmod_icubarmcalibrator=ON -DENABLE_icubmod_icubarmcalibratorj4=ON -DENABLE_icubmod_icubarmcalibratorj8=ON -DENABLE_icubmod_icubhandcalibrator=ON -DENABLE_icubmod_icubheadcalibrator=ON -DENABLE_icubmod_icubheadcalibratorV2=ON -DENABLE_icubmod_icublegscalibrator=ON -DENABLE_icubmod_icubtorsoonlycalibrator=ON -DENABLE_icubmod_logpolarclient=ON -DENABLE_icubmod_logpolargrabber=ON -DENABLE_icubmod_skinprototype=ON -DENABLE_icubmod_socketcan=ON -DENABLE_icubmod_static_grabber=ON -DENABLE_icubmod_xsensmtx=ON  $D_ICUB_ROOT" 													>> $LOG_FILE 2>&1
+run_in_chroot "mkdir -p $D_ICUB_DIR; cd $D_ICUB_DIR; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub -DENABLE_icubmod_DFKI_hand_calibrator=ON -DENABLE_icubmod_canmotioncontrol=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_debugInterfaceClient=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_gazecontrollerclient=ON -DENABLE_icubmod_icubarmcalibrator=ON -DENABLE_icubmod_icubarmcalibratorj4=ON -DENABLE_icubmod_icubarmcalibratorj8=ON -DENABLE_icubmod_icubhandcalibrator=ON -DENABLE_icubmod_icubheadcalibrator=ON -DENABLE_icubmod_icubheadcalibratorV2=ON -DENABLE_icubmod_icublegscalibrator=ON -DENABLE_icubmod_icubtorsoonlycalibrator=ON -DENABLE_icubmod_logpolarclient=ON -DENABLE_icubmod_logpolargrabber=ON -DENABLE_icubmod_skinprototype=ON -DENABLE_icubmod_socketcan=ON -D ENABLE_icubmod_static_grabber=ON -D ENABLE_icubmod_xsensmtx=ON  $D_ICUB_ROOT" 													>> $LOG_FILE 2>&1
 
 # Go ahead and make, install and install_applications
 run_in_chroot "cd $D_ICUB_DIR; make; make install; make install_applications" 										>> $LOG_FILE 2>&1
