@@ -8,7 +8,7 @@ export BUNDLE_GLUT_VERSION=3.7.6
 export BUNDLE_ODE_VERSION=0.11.1
 export BUNDLE_ODE_QT3=""
 
-_BUNDLE_YARP_DIR="F:\cygwin\home\icub\yarp2\packaging\windows\build-2-3-20"
+_BUNDLE_YARP_DIR="F:\cygwin\home\icub\yarp2\packaging\windows\bundle-2-3-20"
 export BUNDLE_YARP_DIR=`cygpath $_BUNDLE_YARP_DIR`
 export BUNDLE_CMAKE_PARAMETERS="-DENABLE_icubmod_cartesiancontrollerclient:BOOL=TRUE -DENABLE_icubmod_cartesiancontrollerserver:BOOL=TRUE -DENABLE_icubmod_gazecontrollerclient:BOOL=TRUE -DENABLE_icubmod_logpolarclient:BOOL=TRUE -DENABLE_icubmod_logpolarserver:BOOL=TRUE -DENABLE_icubmod_debugInterfaceClient:BOOL=TRUE -DENABLE_icubmod_canmotioncontrol=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_static_grabber=ON"
 
