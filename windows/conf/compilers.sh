@@ -1,4 +1,4 @@
-compilers="v11" #v8 v9 v11"
+compilers="v9 v10 v11"
 # v9 v8 mingw" # list of compilers
 compiler_v11_family="msvc"
 compiler_v11_loader="F:/VS1/VC/vcvarsall.bat"
