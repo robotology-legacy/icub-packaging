@@ -70,6 +70,7 @@ for c in $compilers ; do
 
 		########## Release versions
 	    # we get a series of useful variables
+		echo "$BUNDLE_YARP_DIR"
 		cd $BUNDLE_YARP_DIR
 		# # brings in variables to locate all packages e.g. YARP_DIR, GSL_DIR, ACE_DIR, gtkmm
 		source yarp_${c}_${v}_Release.sh
