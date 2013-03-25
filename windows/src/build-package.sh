@@ -116,48 +116,53 @@ cp icub-export-install-debug.cmake icub-export-install-debug-fp.cmake
 
 file=icub-config-fp.cmake
 replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} $file
-insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
-
 replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
-insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)"  $file
-
 replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-
 replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
-insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
 
+insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)"  $file
+insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
+insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
 
 ##### fix cmake include file
 file=icub-export-install-includes-fp.cmake
 replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} $file
-insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
 replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
-insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
 replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
 replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
-insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
 
-##### fix export file
+insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
+insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
+insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
+
+##### fix export file, release
 file=icub-export-install-release-fp.cmake
 replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
-insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
 replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
 replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
-insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
 replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} $file
-insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" $file
 
-file=icub-export-install-debug-fp.cmake
-replace_string "$GSL_DIR_DBG" \${GSL_INSTALLED_LOCATION} $file
-insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
-replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
 insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
+insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" $file
+insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
+
+##### fix export file, debug
+file=icub-export-install-debug-fp.cmake
+
+# Note: binaries for debug can be in different locations w.r.t. release
+replace_string "$GSL_DIR_DBG" \${GSL_INSTALLED_LOCATION} $file
+replace_string "$OpenCV_DIR_DBG" \${OPENCV_INSTALLED_LOCATION} $file
+
+# some libraries do not place debug/release binaries in different locations
+replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
 replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} $file
+
+insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
+insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
 insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" $file
 
 # Function to prepare stub files for adding/removing files for an NSIS

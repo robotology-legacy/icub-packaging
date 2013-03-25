@@ -16,10 +16,10 @@ source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
 if [ "k$c" = "kv11" ]; then
-	packetname="Ipopt-3.10.1-win32-msvc10_mumps+metis+clapack"
+	packetname="Ipopt-3.10.1-win32-msvc11_mumps+metis+clapack"
 	archivename="$packetname.zip"
 	if [ ! -e $archivename ]; then
-       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc10/$archivename
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc11/$archivename
 	fi
 elif [ "k$c" = "kv10" ]; then
 	packetname="Ipopt-3.10.1-win32-msvc10_mumps+metis+clapack"
