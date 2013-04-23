@@ -9,13 +9,13 @@ SVN_OPTIONS="-q --force --non-interactive"  # -q is quiet option, do not prints 
 # See build-iCub-package.sh file, for further details
 
 #ICUB_DEPENDENCIES="libace-dev, libgsl0-dev, libc6, python (<= 3), libncurses5-dev, libgtkmm-2.4-dev, libglademm-2.4-dev, libqt3-mt-dev,  libcv-dev, libhighgui-dev, libcvaux-dev,  libsdl1.2-dev, subversion, gfortran, freeglut3-dev, cmake"  #Debian control file wants commas (,) to separate name of packages
-ICUB_DEPENDENCIES="libace-dev, libgsl0-dev, libc6, python (<= 3), libncurses5-dev, libgtkmm-2.4-dev, libglademm-2.4-dev, libqt4-dev, libqt4-opengl-dev, libcv-dev, libhighgui-dev, libcvaux-dev,  libsdl1.2-dev, subversion, gfortran, freeglut3-dev, cmake"  #Debian control file wants commas (,) to separate name of packages
+ICUB_DEPENDENCIES="libace-dev, libgsl0-dev, libc6, python (<= 3), libncurses5-dev, libgtkmm-2.4-dev, libglademm-2.4-dev, libqt4-dev, libqt4-opengl-dev, libcv-dev, libhighgui-dev, libcvaux-dev,  libsdl1.2-dev, subversion, gfortran, freeglut3-dev, cmake, libxmu-dev"  #Debian control file wants commas (,) to separate name of packages
 #BUILD_DEPENDENCIES="libace-dev libgsl0-dev cmake wget unzip subversion gfortran libncurses5-dev libgtkmm-2.4-dev libglademm-2.4-dev libqt3-mt-dev libcv-dev libhighgui-dev libcvaux-dev freeglut3-dev libsdl1.2-dev"   	# apt-get do not wants commas
-BUILD_DEPENDENCIES="libace-dev libgsl0-dev cmake wget unzip subversion gfortran libncurses5-dev libgtkmm-2.4-dev libglademm-2.4-dev libqt4-dev libqt4-opengl-dev libcv-dev libhighgui-dev libcvaux-dev freeglut3-dev libsdl1.2-dev"   	# apt-get do not wants commas
+BUILD_DEPENDENCIES="libace-dev libgsl0-dev cmake wget unzip subversion gfortran libncurses5-dev libgtkmm-2.4-dev libglademm-2.4-dev libqt4-dev libqt4-opengl-dev libcv-dev libhighgui-dev libcvaux-dev freeglut3-dev libsdl1.2-dev libxmu-dev"   	# apt-get do not wants commas
 
 ICUB_COMMON_CONFLICT="coinor-libipopt0, coinor-libipopt-dev"  
 
-if [ $PLATFORM_KEY = "lenny" ] || [ $PLATFORM_KEY = "lucid" ]; then
+if [ "$PLATFORM_KEY" == "lenny" ] || [ "$PLATFORM_KEY" == "lucid" ]; then
 	ICUB_COMMON_CONFLICT="$ICUB_COMMON_CONFLICT, libode-dev, libode0, libode0debian1"
 	EXTENDED_COMMENT=" and libode library"
 else
@@ -23,7 +23,7 @@ else
 	BUILD_DEPENDENCIES="$BUILD_DEPENDENCIES cmake-curses-gui libxmu-dev"		# apt-get DO NOT wants commas
 fi
 
-if [ $PLATFORM_KEY = "precise" ] ; then
+if [ "$PLATFORM_KEY" == "precise" ] || [ "$PLATFORM_KEY" == "quantal" ] ; then
 	ICUB_DEPENDENCIES="$ICUB_DEPENDENCIES, libopencv-dev"     	# Debian control file wants commas (,) to separate name of packages
 	BUILD_DEPENDENCIES="$BUILD_DEPENDENCIES libopencv-dev"		# apt-get DO NOT wants commas
 fi

@@ -57,7 +57,7 @@ echo        "###------------------- Preparing --------------------###"
 echo -e "\n\n###------------------- Preparing --------------------###\n\n" 			>> $LOG_FILE 2>&1
 
 # Check if test_CHROOT_NAME make target has been made
-if [ ! -e $BUILD_DIR/test_${CHROOT_NAME}.txt ]; then
+if [ ! -e "$BUILD_DIR/test_${CHROOT_NAME}.txt" ]; then
 	echo " | | ERROR: yarp test_${CHROOT_NAME}.txt has not been found, exiting!"
 	do_exit "1"
 else

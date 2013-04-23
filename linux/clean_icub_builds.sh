@@ -68,9 +68,6 @@ do
 #	DO "sudo rm 	$ROOT_DIR/linux-icub-packaging/log/Lintian-iCub-common*${PLATFORM_KEY}+${PLATFORM_HARDWARE}*.log"
 #	DO "sudo rm 	$ROOT_DIR/linux-icub-packaging/log/Lintian-iCub-common*${PLATFORM_KEY}+${PLATFORM_HARDWARE}*.info"
 	DO "sudo rm 	$ROOT_DIR/debs/$i/iCub*"
-	
-#	ssh cardellino@geo "rm  ~/repository/$DISTRO/pool/${PLATFORM_KEY}/contrib/science/${PLATFORM_HARDWARE}/yarp*"
-#	ssh cardellino@geo "rm  ~/repository/$DISTRO/pool/${PLATFORM_KEY}/contrib/science/${PLATFORM_HARDWARE}/iCub*"
 	echo -e "done\n"
 done
 
