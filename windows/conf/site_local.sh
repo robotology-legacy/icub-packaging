@@ -1,3 +1,2 @@
-
 site_dir="/home/frs/project/r/ro/robotcub/iCub-main"
-site_user="natta,robotcub"
+site_user="mbrunettini,robotcub"

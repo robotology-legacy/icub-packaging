@@ -292,6 +292,14 @@ for f in `ls -1 *.lib`; do
 	nsis_add icub_libraries $f $ICUB_SUB/lib/$f
 done
 
+## PDB files
+cd $ICUB_DIR_UNIX/lib || exit 1
+echo "*** searching for PDB files in $ICUB_DIR_UNIX/lib"
+for f in `ls -1 *.pdb`; do
+	nsis_add icub_libraries $f $ICUB_SUB/lib/$f
+	echo "** found PDB FILE : $f"
+done
+
 ## Modules
 cd $ICUB_DIR_UNIX/bin
 for f in `ls -1 *.exe`; do
@@ -441,7 +449,7 @@ if [ -e "$OPENCV_DIR_DBG_UNIX" ] ; then
 	for f in `ls *.lib`; do
 		nsis_add icub_opencv $f $OPENCV_SUB/lib/$f
 	done
-	
+
 	cd "$OPENCV_DIR_DBG_UNIX/bin"
 	for f in `ls *.dll`; do
 		nsis_add icub_opencv_bin $f $OPENCV_SUB/bin/$f
