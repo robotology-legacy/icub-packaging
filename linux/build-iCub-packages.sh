@@ -128,7 +128,7 @@ echo -e "\nGetting iCub source\n" 																				>> $LOG_FILE 2>&1
 if [ $TESTING ]; then
 	echo "Fetching iCub revision $ICUB_REVISION"
 	echo "Fetching iCub revision $ICUB_REVISION"																	>> $LOG_FILE 2>&1
-	cd $ICUB_SCRIPT_DIR/sources; svn co -r $ICUB_REVISION $SVN_OPTIONS https://robotcub.svn.sourceforge.net/svnroot/robotcub/trunk/iCub/ $ICUB_VERSION_NAME 
+	cd $ICUB_SCRIPT_DIR/sources; svn co -r $ICUB_REVISION $SVN_OPTIONS svn://svn.code.sf.net/p/robotcub/code/trunk/iCub/ $ICUB_VERSION_NAME 
 
 else
 	echo "Fetching iCub tag "																	
