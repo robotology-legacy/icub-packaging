@@ -20,7 +20,8 @@ source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v $3
 cd $BUILD_DIR
 
 if [ ! -e $source_dir ]; then
-	svn export https://robotcub.svn.sourceforge.net/svnroot/robotcub/tags/$source_dir/main $source_dir --native-eol CRLF || exit 1
+	#svn export https://robotcub.svn.sourceforge.net/svnroot/robotcub/tags/$source_dir/main $source_dir --native-eol CRLF || exit 1
+	svn export https://svn.code.sf.net/p/robotcub/code/tags/$source_dir/main $source_dir --native-eol CRLF || exit 1
 fi
 
 build_dir=$BUILD_DIR/$source_dir-$OPT_COMPILER-$OPT_VARIANT-$OPT_BUILD

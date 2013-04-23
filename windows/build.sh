@@ -43,6 +43,11 @@ YARP_BUNDLE_FILENAME=$SETTINGS_BUNDLE_FILENAME
 YARP_BUNDLE_SOURCE_DIR=$SETTINGS_SOURCE_DIR
 
 # reads in versions info from YARP build
+if [ ! -f "$YARP_BUNDLE_FILENAME" ]
+then
+	echo "ERROR: missing yarp bundle filename $YARP_BUNDLE_FILENAME"
+	exit 1
+fi
 source  $YARP_BUNDLE_FILENAME
 
 ##### GTKMM for now don't rely on yarp bundle
@@ -56,7 +61,17 @@ source  $YARP_BUNDLE_FILENAME
 source $ICUB_PACKAGE_SOURCE_DIR/conf/compilers.sh
 
 # read options from yarp
-source $BUNDLE_YARP_DIR/nsis_any_any_any.sh
+if [ ! -f "${BUNDLE_YARP_DIR}/nsis_any_any_any.sh" ]
+then
+	echo "ERROR: missing yarp file ${BUNDLE_YARP_DIR}/nsis_any_any_any.sh"
+	exit 1
+fi
+source ${BUNDLE_YARP_DIR}/nsis_any_any_any.sh
+if [ ! -f "${BUNDLE_YARP_DIR}/cmake_any_any_any.sh" ]
+then
+	echo "ERROR: missing yarp file ${BUNDLE_YARP_DIR}/cmake_any_any_any.sh"
+	exit 1
+fi
 source $BUNDLE_YARP_DIR/cmake_any_any_any.sh
 
 #while [ 3 -eq 4 ]
