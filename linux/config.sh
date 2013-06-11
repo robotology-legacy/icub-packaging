@@ -1,5 +1,5 @@
 ICUB_VERSION='1.1.11'
-DEBIAN_REVISION_NUMBER=0
+DEBIAN_REVISION_NUMBER=2
 IPOPT="Ipopt-3.10.1"
 
 APT_OPTIONS="-q --no-install-recommends -y --force-yes"
@@ -23,7 +23,7 @@ else
 	BUILD_DEPENDENCIES="$BUILD_DEPENDENCIES cmake-curses-gui libxmu-dev"		# apt-get DO NOT wants commas
 fi
 
-if [ "$PLATFORM_KEY" == "precise" ] || [ "$PLATFORM_KEY" == "quantal" ] ; then
-	ICUB_DEPENDENCIES="$ICUB_DEPENDENCIES, libopencv-dev"     	# Debian control file wants commas (,) to separate name of packages
-	BUILD_DEPENDENCIES="$BUILD_DEPENDENCIES libopencv-dev"		# apt-get DO NOT wants commas
+if [ "$PLATFORM_KEY" == "precise" ] || [ "$PLATFORM_KEY" == "quantal" ] || [ "$PLATFORM_KEY" == "wheezy" ] ; then
+	ICUB_DEPENDENCIES="$ICUB_DEPENDENCIES, libopencv-dev, libblas-dev"     	# Debian control file wants commas (,) to separate name of packages
+	BUILD_DEPENDENCIES="$BUILD_DEPENDENCIES libopencv-dev liblas-dev"	# apt-get DO NOT wants commas
 fi

@@ -1,7 +1,7 @@
 # Load everything needed from external files
 cd "`dirname $0`"
 echo $PWD
-ICUB_SCRIPT_DIR=$PWD
+ICUB_SCRIPT_DIR=$(pwd)
 cd $OLDPWD
 echo "ICUB SCRIPT DIR = $ICUB_SCRIPT_DIR"
 source $ICUB_SCRIPT_DIR/prepare.sh
@@ -107,13 +107,27 @@ echo -e "\n\n###------------------- Handle IpOpt --------------------###\n\n" 		
 
 if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done ]; then 
 	# Compile and install (twice) the lib IpOpt - components Blas, Lapack, Mumps and Metis are already downloaded and placed inside the correct ThirdParty folder
-	DO "sudo cp -R $ICUB_SCRIPT_DIR/sources/Ipopt/$IPOPT  $ICUB_BUILD_CHROOT/tmp/"								>> $LOG_FILE 2>&1
-
+	if [ ! -d "$ICUB_SCRIPT_DIR/sources/ipopt/$IPOPT" ]
+	then
+		echo "ERROR: missing IpOpt in path ${ICUB_SCRIPT_DIR}/sources/ipopt/${IPOPT}"
+		exit 1
+	fi
+	cp -rf ${ICUB_SCRIPT_DIR}/sources/ipopt/${IPOPT}  ${ICUB_BUILD_CHROOT}/tmp/
+	if [ "$?" != "0" ]
+	then
+		echo "ERROR: failed to copy ${ICUB_SCRIPT_DIR}/sources/ipopt/${IPOPT}"
+		exit 1
+	fi 
 	run_in_chroot "cd /tmp/$IPOPT/; mkdir -p build; cd build; ../configure --prefix=/usr"						>> $LOG_FILE 2>&1
-	run_in_chroot "cd /tmp/$IPOPT/build; make; make test; make install"											>> $LOG_FILE 2>&1
-	sudo touch $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done															>> $LOG_FILE 2>&1
+	run_in_chroot "cd /tmp/$IPOPT/build && make &&  make test && make install; if [ "$?" == "0" ] ; then touch /tmp/${IPOPT}-usr.done ; fi"	>> $LOG_FILE 2>&1
+	if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/${IPOPT}-usr.done" ]
+	then															
+		echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed" >> $LOG_FILE 2>&1
+		echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed"
+		exit 1
+	fi
 else
-	echo "IpOpt libraries (/usr) already handled."																>> $LOG_FILE 2>&1
+	echo "IpOpt libraries (/usr) already handled." >> $LOG_FILE 2>&1
 fi
 
 # <-- Handle IpOpt - end
