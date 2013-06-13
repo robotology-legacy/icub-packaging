@@ -24,6 +24,6 @@ else
 fi
 
 if [ "$PLATFORM_KEY" == "precise" ] || [ "$PLATFORM_KEY" == "quantal" ] || [ "$PLATFORM_KEY" == "wheezy" ] ; then
-	ICUB_DEPENDENCIES="$ICUB_DEPENDENCIES, libopencv-dev, libblas-dev"     	# Debian control file wants commas (,) to separate name of packages
-	BUILD_DEPENDENCIES="$BUILD_DEPENDENCIES libopencv-dev liblas-dev"	# apt-get DO NOT wants commas
+	ICUB_DEPENDENCIES="$ICUB_DEPENDENCIES, libopencv-dev"     	# Debian control file wants commas (,) to separate name of packages
+	BUILD_DEPENDENCIES="$BUILD_DEPENDENCIES libopencv-dev"	# apt-get DO NOT wants commas
 fi
