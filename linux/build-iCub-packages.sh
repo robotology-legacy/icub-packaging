@@ -139,16 +139,33 @@ fi
 echo    "Getting iCub source"
 echo -e "\nGetting iCub source\n" 																				>> $LOG_FILE 2>&1
 
+if [ "$ICUB_REPO_URL" == "" ]
+then
+	echo "ERROR: missinig ICUB_REPO_URL parameter in config file"
+	exit 1
+fi
+
 if [ $TESTING ]; then
 	echo "Fetching iCub revision $ICUB_REVISION"
 	echo "Fetching iCub revision $ICUB_REVISION"																	>> $LOG_FILE 2>&1
-	cd $ICUB_SCRIPT_DIR/sources; svn co -r $ICUB_REVISION $SVN_OPTIONS svn://svn.code.sf.net/p/robotcub/code/trunk/iCub/ $ICUB_VERSION_NAME 
-
+	cd $ICUB_SCRIPT_DIR/sources
+	svn co -r $ICUB_REVISION $SVN_OPTIONS ${ICUB_REPO_URL}/trunk/iCub $ICUB_VERSION_NAME
+	if [ "$?" != "0" ]
+        then
+		echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/trunk/iCub"
+                exit 1
+        fi
 else
 	echo "Fetching iCub tag "																	
 	if [ ! -d $ICUB_SCRIPT_DIR/sources/$ICUB_VERSION_NAME ]; then
 		echo "Fetching iCub tag $ICUB_VERSION_NAME"																	>> $LOG_FILE 2>&1
-		cd $ICUB_SCRIPT_DIR/sources; svn co $SVN_OPTIONS https://robotcub.svn.sourceforge.net/svnroot/robotcub/tags/$ICUB_VERSION_NAME/ $ICUB_VERSION_NAME >> $LOG_FILE 2>&1
+		cd $ICUB_SCRIPT_DIR/sources
+		svn co $SVN_OPTIONS ${ICUB_REPO_URL}/tags/$ICUB_VERSION_NAME $ICUB_VERSION_NAME >> $LOG_FILE 2>&1
+		if [ "$?" != "0" ]
+		then
+			echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/tags/$ICUB_VERSION_NAME"
+			exit 1
+		fi
 	else
 		echo "iCub tag $ICUB_VERSION_NAME already downloaded..."													>> $LOG_FILE 2>&1
 	fi
@@ -181,6 +198,11 @@ fi
 
 # Find which version of yarp is required
 STRING=$(cat "$ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/main/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)
+if [ "$STRING" == "" ]
+then
+	echo "ERROR: Yarp version string not found in $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/main/CMakeLists.txt"
+	exit 1
+fi
 TMP=$(echo $STRING | awk '{ split($0, array, "MAJOR" ); print array[2] }')
 ICUB_REQYARP_VERSION_MAJOR=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
 
@@ -296,8 +318,27 @@ echo   "#----------------------------------- iCub ------------------------------
 echo   "#----------------------------------- iCub ----------------------------------------#"						>> $LOG_FILE 2>&1
 
 # Go ahead and configure
-run_in_chroot "mkdir -p $D_ICUB_DIR; cd $D_ICUB_DIR; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub -DENABLE_icubmod_DFKI_hand_calibrator=ON -DENABLE_icubmod_canmotioncontrol=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_debugInterfaceClient=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_gazecontrollerclient=ON -DENABLE_icubmod_icubarmcalibrator=ON -DENABLE_icubmod_icubarmcalibratorj4=ON -DENABLE_icubmod_icubarmcalibratorj8=ON -DENABLE_icubmod_icubhandcalibrator=ON -DENABLE_icubmod_icubheadcalibrator=ON -DENABLE_icubmod_icubheadcalibratorV2=ON -DENABLE_icubmod_icublegscalibrator=ON -DENABLE_icubmod_icubtorsoonlycalibrator=ON -DENABLE_icubmod_logpolarclient=ON -DENABLE_icubmod_logpolargrabber=ON -DENABLE_icubmod_skinprototype=ON -DENABLE_icubmod_socketcan=ON -D ENABLE_icubmod_static_grabber=ON -D ENABLE_icubmod_xsensmtx=ON  $D_ICUB_ROOT" 													>> $LOG_FILE 2>&1
-
+if [ "$PLATFORM_KEY" == "squeeze" ]
+then
+  echo "Fixing cmake in squeeze.."
+  run_in_chroot build_chroot "apt-get install -y libgoocanvasmm-dev"
+  run_in_chroot build_chroot "echo 'deb http://backports.debian.org/debian-backports/ squeeze-backports main' >> /etc/apt/sources.list"
+  run_in_chroot build_chroot "apt-get update && apt-get install -y -t squeeze-backports cmake"
+fi
+run_in_chroot "mkdir -p $D_ICUB_DIR"
+if [ ! -d "${ICUB_BUILD_CHROOT}/${D_ICUB_DIR}" ]
+then
+	echo "ERROR: Build of iCub package in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed, unable to create dir ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR}" >> $LOG_FILE 2>&1
+	echo "ERROR: Build of iCub package in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed, unable to create dir ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR}"
+	exit 1
+fi
+run_in_chroot "cd $D_ICUB_DIR ; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub -DENABLE_icubmod_DFKI_hand_calibrator=ON -DENABLE_icubmod_canmotioncontrol=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_debugInterfaceClient=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_gazecontrollerclient=ON -DENABLE_icubmod_icubarmcalibrator=ON -DENABLE_icubmod_icubarmcalibratorj4=ON -DENABLE_icubmod_icubarmcalibratorj8=ON -DENABLE_icubmod_icubhandcalibrator=ON -DENABLE_icubmod_icubheadcalibrator=ON -DENABLE_icubmod_icubheadcalibratorV2=ON -DENABLE_icubmod_icublegscalibrator=ON -DENABLE_icubmod_icubtorsoonlycalibrator=ON -DENABLE_icubmod_logpolarclient=ON -DENABLE_icubmod_logpolargrabber=ON -DENABLE_icubmod_skinprototype=ON -DENABLE_icubmod_socketcan=ON -D ENABLE_icubmod_static_grabber=ON -D ENABLE_icubmod_xsensmtx=ON  $D_ICUB_ROOT && touch /tmp/build-icub-package.done" >> $LOG_FILE 2>&1
+if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/build-icub-package.done" ]
+then
+        echo "ERROR: Build of iCub package in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed" >> $LOG_FILE 2>&1
+        echo "ERROR: Build of iCub package  in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed"
+        exit 1
+fi
 # Go ahead and make, install and install_applications
 run_in_chroot "cd $D_ICUB_DIR; make; make install; make install_applications" 										>> $LOG_FILE 2>&1
 
