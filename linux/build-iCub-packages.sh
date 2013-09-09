@@ -318,6 +318,7 @@ echo   "#----------------------------------- iCub ------------------------------
 echo   "#----------------------------------- iCub ----------------------------------------#"						>> $LOG_FILE 2>&1
 
 # Go ahead and configure
+echo "***$PLATFORM_KEY****"
 if [ "$PLATFORM_KEY" == "squeeze" ]
 then
   echo "Fixing cmake in squeeze.."
@@ -391,7 +392,7 @@ Version: $ICUB_VERSION-$DEBIAN_REVISION_NUMBER
 Section: contrib/science
 Priority: optional
 Architecture: $PLATFORM_HARDWARE
-Depends: icub-common ( =$ICUB_COMMON_VERSION), yarp ( >= $ICUB_REQYARP_VERSION)
+Depends: icub-common (=$ICUB_COMMON_VERSION), yarp (>=$ICUB_REQYARP_VERSION)
 Installed-Size:  $SIZE
 Homepage: http://www.robotcub.org
 Maintainer: Alberto Cardellino <alberto.cardellino@iit.it>
