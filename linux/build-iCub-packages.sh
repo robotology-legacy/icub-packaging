@@ -295,7 +295,7 @@ run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN; touch /tmp/i
 
 echo "Generating icub-common package"																				>> $LOG_FILE 2>&1
 echo "Package: icub-common
-Version: $ICUB_VERSION-$DEBIAN_REVISION_NUMBER
+Version: $ICUB_VERSION-$DEBIAN_REVISION_NUMBER~${PLATFORM_KEY}
 Section: contrib/science
 Priority: optional
 Architecture: $PLATFORM_HARDWARE
@@ -388,11 +388,11 @@ sudo touch $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums								>> $LOG_
  
 echo "Generating icub package"
 echo "Package: icub
-Version: $ICUB_VERSION-$DEBIAN_REVISION_NUMBER
+Version: ${ICUB_VERSION}-${DEBIAN_REVISION_NUMBER}~${PLATFORM_KEY}
 Section: contrib/science
 Priority: optional
-Architecture: $PLATFORM_HARDWARE
-Depends: icub-common (=$ICUB_COMMON_VERSION), yarp (>=$ICUB_REQYARP_VERSION)
+Architecture: ${PLATFORM_HARDWARE}
+Depends: icub-common (= ${ICUB_COMMON_VERSION}~${PLATFORM_KEY}), yarp (>= ${ICUB_REQYARP_VERSION})
 Installed-Size:  $SIZE
 Homepage: http://www.robotcub.org
 Maintainer: Alberto Cardellino <alberto.cardellino@iit.it>
