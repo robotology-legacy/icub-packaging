@@ -245,7 +245,7 @@ nsis_setup icub_cmake
 nsis_setup icub_vc_dlls
 
 nsis_setup icub_modules
-nsis_setup icub_applications
+nsis_setup icub_data_dirs
 
 nsis_setup icub_ipopt
 nsis_setup icub_opencv
@@ -284,7 +284,7 @@ nsis_add icub_base icub-export-install-release-fp.cmake $ICUB_SUB/lib/ICUB/icub-
 nsis_add icub_base icub-export-install-debug-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-debug.cmake
 
 cd $ICUB_DIR_UNIX
-nsis_add_recurse icub_base share $ICUB_SUB/share
+nsis_add_recurse icub_data_dirs share $ICUB_SUB/share
 
 ## Libraries
 cd $ICUB_DIR_UNIX/lib || exit 1
@@ -309,11 +309,6 @@ done
 ## header files
 cd $ICUB_DIR_UNIX
 nsis_add_recurse icub_headers include $ICUB_SUB/include
-
-## applications
-cd $ICUB_DIR_UNIX
-nsis_add icub_applications ICUB_ROOT.ini $ICUB_SUB/ICUB_ROOT.ini
-nsis_add_recurse icub_applications app $ICUB_SUB/app
 
 # Add stuff to NSIS
 ## add SDL 

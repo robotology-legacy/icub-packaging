@@ -316,9 +316,9 @@ SectionGroup "iCub" SeciCub
      !include ${NSIS_OUTPUT_PATH}\icub_modules_add.nsi
   SectionEnd
 
-  Section "Applications" SecApplications
+  Section "DataDirs" SecDataDirs
      SetOutPath "$INSTDIR"
-     !include ${NSIS_OUTPUT_PATH}\icub_applications_add.nsi
+     !include ${NSIS_OUTPUT_PATH}\icub_data_dirs_add.nsi
   SectionEnd
 
   Section "Libraries" SecLibraries
@@ -394,8 +394,8 @@ Section "Environment variables" SecPath
    isSel:
       DetailPrint "Adding iCub environment variables and PATH"
       WriteRegExpandStr ${WriteEnvStr_RegKey} ICUB_DIR "$INSTDIR\${INST2}"
-	  WriteRegExpandStr ${WriteEnvStr_RegKey} ICUB_ROOT "$INSTDIR\${INST2}"
-      !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${INST2}\bin"
+	  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${INST2}\bin"
+	  !insertmacro UpdateEnvironmentAppend YARP_DATA_DIRS "$INSTDIR\${INST2}\share\iCub"
    endif:
 
    !insertmacro SectionFlagIsSet ${SecIpopt} ${SF_SELECTED} isIpoptSel notIpoptSel
@@ -468,7 +468,7 @@ SectionEnd
 ;Language strings
 LangString DESC_SeciCub ${LANG_ENGLISH} "iCub software. You need first to install YARP binaries or you can uncheck this item if you want to compile the iCub software from svn."
 LangString DESC_SecModules ${LANG_ENGLISH} "Modules."
-LangString DESC_SecApplications ${LANG_ENGLISH} "Applications."
+LangString DESC_SecDataDirs ${LANG_ENGLISH} "All data, config, templates and XML files."
 LangString DESC_SecDevelopment ${LANG_ENGLISH} "Files for developers."
 LangString DESC_SecLibraries ${LANG_ENGLISH} "C++ libraries."
 LangString DESC_SecHeaders ${LANG_ENGLISH} "Header files."
@@ -486,7 +486,7 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Modify user environment. Add executable
   !insertmacro MUI_DESCRIPTION_TEXT ${SeciCub} $(DESC_SeciCub)
   ; !insertmacro MUI_DESCRIPTION_TEXT ${SecBase} $(DESC_SecBase)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecModules} $(DESC_SecModules)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecApplications} $(DESC_SecApplications)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecDataDirs} $(DESC_SecDataDirs)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecLibraries} $(DESC_SecLibraries)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecIpopt} $(DESC_SecIpopt)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecOpenCV} $(DESC_SecOpenCV)
@@ -515,8 +515,8 @@ Section "Uninstall"
     iCubFound:
 		DetailPrint "Removing iCub environment variables and PATH"
 		DeleteRegValue ${WriteEnvStr_RegKey} ICUB_DIR
-		DeleteRegValue ${WriteEnvStr_RegKey} ICUB_ROOT
 		!insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${INST2}\bin"
+		!insertmacro un.UpdateEnvironmentAppend YARP_DATA_DIRS "$INSTDIR\${INST2}\share\iCub"
 	
 	iCubNotFound:
 
@@ -617,7 +617,7 @@ Section "Uninstall"
   !include ${NSIS_OUTPUT_PATH}\icub_qt3_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_qt3_bin_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_modules_remove.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_applications_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_data_dirs_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_headers_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_vc_dlls_remove.nsi
       
@@ -660,7 +660,7 @@ Function .onInit
   notyarp:
 	DetailPrint "YARP was not found at $YARP_PATH"
 	${UnSelectSection} ${SecModules}
-    ${UnSelectSection} ${SecApplications}
+    ${UnSelectSection} ${SecDataDirs}
     ${UnSelectSection} ${SecLibraries}
     ${UnSelectSection} ${SecHeaders}
 	${UnSelectSection} ${SecHeaders}

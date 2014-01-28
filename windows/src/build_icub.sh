@@ -21,7 +21,9 @@ cd $BUILD_DIR
 
 if [ ! -e $source_dir ]; then
 	#svn export https://robotcub.svn.sourceforge.net/svnroot/robotcub/tags/$source_dir/main $source_dir --native-eol CRLF || exit 1
-	svn export https://svn.code.sf.net/p/robotcub/code/tags/$source_dir/main $source_dir --native-eol CRLF || exit 1
+	#svn export https://svn.code.sf.net/p/robotcub/code/tags/$source_dir/main $source_dir --native-eol CRLF || exit 1
+	echo "svn export https://github.com/robotology/icub-main/trunk $source_dir --native-eol CRLF || exit 1"
+	svn export https://github.com/robotology/icub-main/trunk $source_dir --native-eol CRLF || exit 1
 fi
 
 build_dir=$BUILD_DIR/$source_dir-$OPT_COMPILER-$OPT_VARIANT-$OPT_BUILD
@@ -49,7 +51,7 @@ CMAKE_PARAMETERS=$BUNDLE_CMAKE_PARAMETERS
 "$CMAKE_BIN" $CMAKE_PARAMETERS -DCMAKE_INSTALL_PREFIX=$ICUB_DIR -G "$OPT_GENERATOR" ../$source_dir || exit 1
 
 ## first call msbuild for target 
-## apparently the following builds and calls install_applications
+## following builds all projects
 $OPT_BUILDER iCub.sln /t:Build $OPT_CONFIGURATION_COMMAND $OPT_PLATFORM_COMMAND
 # the following install code
 "$CMAKE_BIN" --build . --target install --config ${OPT_BUILD} || exit 1
