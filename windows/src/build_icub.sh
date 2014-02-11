@@ -19,12 +19,21 @@ cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v $3
 cd $BUILD_DIR
 
-if [ ! -e $source_dir ]; then
-	#svn export https://robotcub.svn.sourceforge.net/svnroot/robotcub/tags/$source_dir/main $source_dir --native-eol CRLF || exit 1
-	#svn export https://svn.code.sf.net/p/robotcub/code/tags/$source_dir/main $source_dir --native-eol CRLF || exit 1
-	echo "svn export https://github.com/robotology/icub-main/trunk $source_dir --native-eol CRLF || exit 1"
-	svn export https://github.com/robotology/icub-main/trunk $source_dir --native-eol CRLF || exit 1
-fi
+if [ ! -e $source_dir ]
+then
+  if [ "$BUNDLE_ICUB_VERSION" == "" ] || [ "$BUNDLE_ICUB_VERSION" == "trunk" ]
+  then
+			svn co https://github.com/robotology/icub-main/trunk $source_dir || {
+				echo "Cannot fetch iCub"
+				exit 1
+			}
+  else
+    svn co https://github.com/robotology/icub-main/tags/v${BUNDLE_ICUB_VERSION} $source_dir || {
+				echo "Cannot fetch iCub"
+				exit 1
+			}
+  fi
+fi  
 
 build_dir=$BUILD_DIR/$source_dir-$OPT_COMPILER-$OPT_VARIANT-$OPT_BUILD
 
