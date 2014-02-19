@@ -2,7 +2,6 @@
 # Passaggi:
 # cerca filettini .sh per le varie distro realizzate
 #        parametro $1 = cartella in cui si trovano le build di yarp
-
 SVN_REVISION=""
 
 if [ "K${1}" = "K" ]; then
@@ -15,7 +14,7 @@ HERE="`dirname $0`"
 cd $HERE
 
 
-if [ "K${2}" = "Kcopy" ]; then
+if [ "$2" == "copy" ]; then
 	echo "copying..."
 	for i in "${ROOT_DIR}"/build/chroot_*.sh
 	do

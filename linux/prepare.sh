@@ -8,9 +8,7 @@
 # Compila e make install
 # Creare pacchetto .deb
 # Verifica tramite installazione pacchetto e lancio iCub_SIM
-
 # Se i path sono scorretti, controllare (o rimuovere) /etc/dchroot.conf
-
 #--------------------------------- Helpers --------------------------------------------------------------#
 # Helper for running a command within the build chroot
 function run_in_chroot 
@@ -31,6 +29,24 @@ function do_exit
 	exit $1
 }
 
+#------------------------ Check if traget distribuition is supported--------------------------------------#
+# 
+echo "Checking if distribution $PLATFORM_KEY is supported"
+echo $SUPPORTED_DISTRO_LIST
+DISTRO_OK="false"
+for distro in "$SUPPORTED_DISTRO_LIST"
+do
+  if [ "$distro" == "$PLATFORM_KEY" ]
+  then
+    DISTRO_OK="true"
+  fi
+done
+if [ "$DISTRO_OK" != "true" ]
+then 
+  echo "ERROR : distribuition $PLATFORM_KEY is not supported"
+  do_exit
+fi
+
 #---------------------------------- Check input values ---------------------------------------------------#
 # 
 
@@ -41,14 +57,15 @@ cd $OLDPWD
 
 
 # $1 is ROOT_DIR, in this case simply /data/
-if [ "K${1}" = "K" ]; then
-	echo " | | Please insert path to the yarp builds."
-	exit 1
+if [ "$1" == "" ]
+then
+  echo "ERROR :  Please insert path to the yarp builds."
+  exit 1
 fi
 
-if [ "K${2}" = "K" ]; then
-	echo " | | Please insert chroot name."
-	exit 1
+if [ "$2" == "" ]; then
+  echo "ERROR : Please insert chroot name."
+  exit 1
 fi
 
 ROOT_DIR=$1
@@ -112,7 +129,7 @@ ICUB_COMMON_PKG_NAME=iCub-common$ICUB_VERSION-$DEBIAN_REVISION
 # Defining variables to be used inside DCHROOT environment
 
 CMAKE=cmake
-D_ICUB_ROOT=/tmp/$ICUB_VERSION_NAME/main
+D_ICUB_ROOT=/tmp/$ICUB_VERSION_NAME
 D_ICUB_DIR=$D_ICUB_ROOT/build
 D_ICUB_INSTALL_DIR=/tmp/install_dir/$ICUB_VERSION_NAME
 

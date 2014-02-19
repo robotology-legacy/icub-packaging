@@ -1,3 +1,4 @@
+#!/bin/bash
 # Load everything needed from external files
 cd "`dirname $0`"
 echo $PWD
@@ -5,8 +6,6 @@ ICUB_SCRIPT_DIR=$(pwd)
 cd $OLDPWD
 echo "ICUB SCRIPT DIR = $ICUB_SCRIPT_DIR"
 source $ICUB_SCRIPT_DIR/prepare.sh
-
-
 
 #----------------------------------- Debug variables------------------------------------------------#
 
@@ -52,9 +51,7 @@ fi
 
 run_in_chroot "mount -t proc proc /proc" >> $LOG_FILE 2>&1
 
-			 ###------------------- Preparing --------------------###
-echo        "###------------------- Preparing --------------------###"
-echo -e "\n\n###------------------- Preparing --------------------###\n\n" 			>> $LOG_FILE 2>&1
+###------------------- Preparing --------------------###
 
 # Check if test_CHROOT_NAME make target has been made
 if [ ! -e "$BUILD_DIR/test_${CHROOT_NAME}.txt" ]; then
@@ -78,35 +75,26 @@ run_in_chroot "apt-get $APT_OPTIONS install -f"									>> $LOG_FILE 2>&1
 run_in_chroot "apt-get install $APT_OPTIONS $BUILD_DEPENDENCIES"  				>> $LOG_FILE 2>&1
 run_in_chroot "apt-get $APT_OPTIONS install -f"												>> $LOG_FILE 2>&1
 
-echo        "###------------------- Handle libode --------------------###"
-echo -e "\n\n###------------------- Handle libode --------------------###\n\n" 	>> $LOG_FILE 2>&1
-# --> Handle libode 
-echo "PLATFORM_KEY is $PLATFORM_KEY"											>> $LOG_FILE 2>&1
-if [ $PLATFORM_KEY = "lenny" ] || [ $PLATFORM_KEY = "lucid" ]; then
-	# We need to download and compile libode manually
-	if [ ! -e $ICUB_BUILD_CHROOT/tmp/libode.done ]; then
-		run_in_chroot "cd /tmp && wget http://sourceforge.net/projects/opende/files/ODE/0.11.1/ode-0.11.1.zip && echo A | unzip ode-0.11.1.zip >> /dev/null" >> $LOG_FILE 2>&1
-		run_in_chroot "cd /tmp/ode-0.11.1 && ./configure --prefix=/usr --enable-double-precision --enable-shared --disable-drawstuff --disable-demos && make && make install" >> $LOG_FILE 2>&1
-		sudo touch  $ICUB_BUILD_CHROOT/tmp/libode.done
-		echo "libode done"																						>> $LOG_FILE 2>&1
-	else
-		echo "libode already installed"																			>> $LOG_FILE 2>&1
-	fi
-	
-else  # if linux version is squeeze or maverick (and newer too, hopefully), libode from synaptic is ok!
-	echo "Installing libode-dev"																				>> $LOG_FILE 2>&1
-	run_in_chroot "apt-get $APT_OPTIONS install -f"																			>> $LOG_FILE 2>&1
-	run_in_chroot "apt-get install $APT_OPTIONS libode-dev"														>> $LOG_FILE 2>&1
-	run_in_chroot "apt-get $APT_OPTIONS install -f"																			>> $LOG_FILE 2>&1
-	echo "libode done"																							>> $LOG_FILE 2>&1
+###------------------- Handle libode --------------------###
+echo "PLATFORM_KEY is $PLATFORM_KEY" >> $LOG_FILE 2>&1
+echo "Installing libode-dev" >> $LOG_FILE 2>&1
+run_in_chroot "apt-get $APT_OPTIONS install -f"	>> $LOG_FILE 2>&1
+run_in_chroot "apt-get install $APT_OPTIONS libode-dev"	>> $LOG_FILE 2>&1
+run_in_chroot "apt-get $APT_OPTIONS install -f"	>> $LOG_FILE 2>&1
+echo "libode done" >> $LOG_FILE 2>&1
+if [ $PLATFORM_KEY = "squeeze" ]
+then
+  # need to add backports for cmake 
+  echo "upgrading cmake from squeeze-backports"
+  echo "deb http://backports.debian.org/debian-backports/ squeeze-backports main" > $ICUB_BUILD_CHROOT/etc/apt/sources.list.d/backports.list
+  run_in_chroot "apt-get update; apt-get -f -t squeeze-backports install cmake"
 fi
 
-echo        "###------------------- Handle IpOpt --------------------###"
-echo -e "\n\n###------------------- Handle IpOpt --------------------###\n\n" 									>> $LOG_FILE 2>&1
-# --> Handle IpOpt using Mumps
+###------------------- Handle IpOpt --------------------###
 
 if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done ]; then 
 	# Compile and install (twice) the lib IpOpt - components Blas, Lapack, Mumps and Metis are already downloaded and placed inside the correct ThirdParty folder
+        echo "Usign IpOpt ver $IPOPT"
 	if [ ! -d "$ICUB_SCRIPT_DIR/sources/ipopt/$IPOPT" ]
 	then
 		echo "ERROR: missing IpOpt in path ${ICUB_SCRIPT_DIR}/sources/ipopt/${IPOPT}"
@@ -118,8 +106,8 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done ]; then
 		echo "ERROR: failed to copy ${ICUB_SCRIPT_DIR}/sources/ipopt/${IPOPT}"
 		exit 1
 	fi 
-	run_in_chroot "cd /tmp/$IPOPT/; mkdir -p build; cd build; ../configure --prefix=/usr"						>> $LOG_FILE 2>&1
-	run_in_chroot "cd /tmp/$IPOPT/build && make &&  make test && make install; if [ "$?" == "0" ] ; then touch /tmp/${IPOPT}-usr.done ; fi"	>> $LOG_FILE 2>&1
+	run_in_chroot "cd /tmp/$IPOPT/; mkdir -p build; cd build; ../configure --prefix=/usr"
+	run_in_chroot "cd /tmp/$IPOPT/build && make &&  make test && make install; if [ "$?" == "0" ] ; then touch /tmp/${IPOPT}-usr.done ; fi"
 	if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/${IPOPT}-usr.done" ]
 	then															
 		echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed" >> $LOG_FILE 2>&1
@@ -160,10 +148,10 @@ else
 	if [ ! -d $ICUB_SCRIPT_DIR/sources/$ICUB_VERSION_NAME ]; then
 		echo "Fetching iCub tag $ICUB_VERSION_NAME"																	>> $LOG_FILE 2>&1
 		cd $ICUB_SCRIPT_DIR/sources
-		svn co $SVN_OPTIONS ${ICUB_REPO_URL}/tags/$ICUB_VERSION_NAME $ICUB_VERSION_NAME >> $LOG_FILE 2>&1
+		svn co $SVN_OPTIONS ${ICUB_REPO_URL}/tags/v${ICUB_VERSION} $ICUB_VERSION_NAME >> $LOG_FILE 2>&1
 		if [ "$?" != "0" ]
 		then
-			echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/tags/$ICUB_VERSION_NAME"
+			echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/tags/v${ICUB_VERSION}"
 			exit 1
 		fi
 	else
@@ -185,22 +173,22 @@ fi
 # Fix cmakelist.txt for version 1.1.7, missing execution permissions for some script
 if [ $ICUB_VERSION = "1.1.7" ]; then
 	echo "Version 1.1.7- fixing cmakelist"																		>> $LOG_FILE 2>&1
-	sudo cp $ICUB_SCRIPT_DIR/sources/CMakeLists_1.1.7.txt $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/main/CMakeLists.txt
+	sudo cp $ICUB_SCRIPT_DIR/sources/CMakeLists_1.1.7.txt $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/CMakeLists.txt
 else
 	# Fix cmakelist.txt for version 1.1.8, missing execution permissions for some script
 	if [ $ICUB_VERSION = "1.1.8" ]; then
 		echo "Version 1.1.8 - fixing cmakelist"																		>> $LOG_FILE 2>&1
-		sudo cp $ICUB_SCRIPT_DIR/sources/CMakeLists_1.1.8.txt $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/main/CMakeLists.txt
+		sudo cp $ICUB_SCRIPT_DIR/sources/CMakeLists_1.1.8.txt $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/CMakeLists.txt
 	else
 		echo "Version higer than 1.1.9, cmakelist ok"																>> $LOG_FILE 2>&1
 	fi
 fi
 
 # Find which version of yarp is required
-STRING=$(cat "$ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/main/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)
+STRING=$(cat "$ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)
 if [ "$STRING" == "" ]
 then
-	echo "ERROR: Yarp version string not found in $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/main/CMakeLists.txt"
+	echo "ERROR: Yarp version string not found in $ICUB_BUILD_CHROOT/tmp/$ICUB_VERSION_NAME/CMakeLists.txt"
 	exit 1
 fi
 TMP=$(echo $STRING | awk '{ split($0, array, "MAJOR" ); print array[2] }')
@@ -250,21 +238,6 @@ echo   "#----------------------------------- iCub-common -----------------------
 
 run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/usr"													>> $LOG_FILE 2>&1
 run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN"													>> $LOG_FILE 2>&1
-
-if [ $PLATFORM_KEY = "lenny" ] || [ $PLATFORM_KEY = "lucid" ]; then
-	# We need to download and compile libode manually and include it
-	echo "working on $PLATFORM_KEY, so won't add libode to the dependencies, instead we need to download and compile libode manually and include it"										>> $LOG_FILE 2>&1
-# if I'm here the library has already been downloaded
-#		run_in_chroot "cd /tmp && wget http://sourceforge.net/projects/opende/files/ODE/0.11.1/ode-0.11.1.zip && echo A | unzip ode-0.11.1.zip >> /dev/null" >> $LOG_FILE 2>&1
-# we need to do the configure angain because the path changes
-		run_in_chroot "cd /tmp/ode-0.11.1 && ./configure --prefix=/tmp/install_dir/$ICUB_COMMON_NAME/usr --enable-double-precision --enable-shared --disable-drawstuff --disable-demos && make && make install" >> $LOG_FILE 2>&1
-
-else  # if linux version is squeeze or maverick (and newer too, hopefully), libode from synaptic is ok!
-	echo "Installing libode-dev"																					>> $LOG_FILE 2>&1
-	run_in_chroot "apt-get install $APT_OPTIONS libode-dev"															>> $LOG_FILE 2>&1
-	run_in_chroot "apt-get $APT_OPTIONS install -f"																				>> $LOG_FILE 2>&1
-	ICUB_DEPENDENCIES="$ICUB_DEPENDENCIES, libode1 (>= 0.11.1), libode-dev"
-fi
 
 echo "Building IpOpt libraries for iCub package..."
 echo "Building IpOpt libraries for iCub package..."														>> $LOG_FILE 2>&1
@@ -318,7 +291,6 @@ echo   "#----------------------------------- iCub ------------------------------
 echo   "#----------------------------------- iCub ----------------------------------------#"						>> $LOG_FILE 2>&1
 
 # Go ahead and configure
-echo "***$PLATFORM_KEY****"
 if [ "$PLATFORM_KEY" == "squeeze" ]
 then
   echo "Fixing cmake in squeeze.."
@@ -333,6 +305,7 @@ then
 	echo "ERROR: Build of iCub package in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed, unable to create dir ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR}"
 	exit 1
 fi
+
 run_in_chroot "cd $D_ICUB_DIR ; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub -DENABLE_icubmod_DFKI_hand_calibrator=ON -DENABLE_icubmod_canmotioncontrol=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_debugInterfaceClient=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_gazecontrollerclient=ON -DENABLE_icubmod_icubarmcalibrator=ON -DENABLE_icubmod_icubarmcalibratorj4=ON -DENABLE_icubmod_icubarmcalibratorj8=ON -DENABLE_icubmod_icubhandcalibrator=ON -DENABLE_icubmod_icubheadcalibrator=ON -DENABLE_icubmod_icubheadcalibratorV2=ON -DENABLE_icubmod_icublegscalibrator=ON -DENABLE_icubmod_icubtorsoonlycalibrator=ON -DENABLE_icubmod_logpolarclient=ON -DENABLE_icubmod_logpolargrabber=ON -DENABLE_icubmod_skinprototype=ON -DENABLE_icubmod_socketcan=ON -D ENABLE_icubmod_static_grabber=ON -D ENABLE_icubmod_xsensmtx=ON  $D_ICUB_ROOT && touch /tmp/build-icub-package.done" >> $LOG_FILE 2>&1
 if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/build-icub-package.done" ]
 then
@@ -357,6 +330,19 @@ run_in_chroot "rm $D_ICUB_INSTALL_DIR/usr/share/iCub/ICUB_ROOT.ini"													
 sudo mkdir -p $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/
 sudo cp $ICUB_SCRIPT_DIR/sources/ICUB_ROOT.ini $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/
 
+ICUB_INI_PATH="$ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/usr/share/yarp/config/path.d"
+ICUB_INI_FILE="iCub.ini"
+
+# this fixes missing iCub.ini file
+if [ ! -e "${ICUB_INI_PATH}/${ICUB_INI_FILE}" ]
+then
+  mkdir -p $ICUB_INI_PATH
+  touch ${ICUB_INI_PATH}/${ICUB_INI_FILE}
+  echo ###### This file is automatically generated by CMake. >> ${ICUB_INI_PATH}/${ICUB_INI_FILE}
+  echo [search iCub] >> ${ICUB_INI_PATH}/${ICUB_INI_FILE}
+  echo path "/usr/share/iCub">> ${ICUB_INI_PATH}/${ICUB_INI_FILE}
+fi
+
 # Fix path inside cmake files
 sudo /$ICUB_SCRIPT_DIR/fix_cmake_path.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR  $ICUB_VERSION_NAME					>> $LOG_FILE 2>&1
 
@@ -372,8 +358,8 @@ fi
 # Generate dpkg DEBIAN/control file 
 run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/DEBIAN; touch $D_ICUB_INSTALL_DIR/DEBIAN/control" 						>> $LOG_FILE 2>&1
 run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/usr/share/doc/icub"
-run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/COPYING $D_ICUB_INSTALL_DIR/usr/share/doc/icub/copyright"
-run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/main/AUTHORS $D_ICUB_INSTALL_DIR/usr/share/doc/icub/AUTHORS"
+run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/COPYING $D_ICUB_INSTALL_DIR/usr/share/doc/icub/copyright"
+run_in_chroot "cp /tmp/$ICUB_VERSION_NAME/AUTHORS $D_ICUB_INSTALL_DIR/usr/share/doc/icub/AUTHORS"
 
 sudo touch $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums								>> $LOG_FILE 2>&1
 
@@ -430,7 +416,7 @@ echo "kill all" >> $LOG_FILE 2>&1
 sudo killall iCub_SIM
 sudo killall yarpserver3
 
-#run_in_chroot "cd /tmp/iCub1.1.7/main/src/libraries/iKin/tutorials/; mkdir -p build; cd build; cmake ..; make; "
+#run_in_chroot "cd /tmp/iCub1.1.7/src/libraries/iKin/tutorials/; mkdir -p build; cd build; cmake ..; make; "
 run_in_chroot "umount /proc" 			>> $LOG_FILE 2>&1	
 
 
