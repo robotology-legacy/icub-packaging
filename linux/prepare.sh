@@ -13,7 +13,8 @@
 # Helper for running a command within the build chroot
 function run_in_chroot 
 {
-	sudo dchroot -c $CHROOT_NAME --directory=/ "$1"
+#	sudo dchroot -c $CHROOT_NAME --directory=/ "$1"
+	sudo chroot $ICUB_BUILD_CHROOT bash -c "$1"
 }
 
 function DO
@@ -138,3 +139,59 @@ YARP_VERSION_NAME=yarp-${YARP_VERSION}
 YARP_PACKAGE_NAME=$YARP_PACKAGE
 # YARP_PACKAGE_NAME=yarp-${YARP_VERSION}-${PLATFORM_KEY}-${PLATFORM_HARDWARE}.deb
 
+
+#-------------------------------------- Download IpOpt -----------------------------------#
+
+CURR_DIR=$PWD  #save current folder to get back on track when done
+cd ${ICUB_SCRIPT_DIR}/sources/
+if [ -f "${IPOPT}.tar.gz" ]
+then
+  rm ${IPOPT}.tar.gz
+fi
+if [ -f "${IPOPT}.tar.zip" ]
+then
+  rm ${IPOPT}.tar.gz
+fi
+if [ -d "${IPOPT}" ]
+then
+  rm -rf "${IPOPT}"
+fi
+# download from icub website
+echo "Trying to Download ${IPOPT} from icub website"
+wget http://www.icub.org/download/software/linux/${IPOPT}.tar.gz
+if [ "$?" != "0" ]
+then
+  echo "Trying to Download ${IPOPT} from main source archive"
+  # Download main souce archive
+  wget http://www.coin-or.org/download/source/Ipopt/${IPOPT}.zip
+  if [ "$?" != "0" ]
+  then 
+    echo "ERROR unable to Download ${IPOPT}"
+    exit 1
+  fi
+  unzip -q ${IPOPT}.zip
+  if [ "$?" != "0" ]
+  then 
+    echo "ERROR unable to decompress ${IPOPT}"
+    exit 1
+  fi
+
+  for path in $(ls ${ICUB_SCRIPT_DIR}/sources/${IPOPT}/ThirdParty)
+  do
+    cd ${ICUB_SCRIPT_DIR}/sources/${IPOPT}/ThirdParty/${path}	
+    echo "Processing Solver $path"
+    ./get.${path}
+    if [ "$?" != "0" ]
+    then
+      echo "ERROR unable to get solver $path"
+    fi
+  done
+else
+  tar xzf ${IPOPT}.tar.gz
+  if [ "$?" != "0" ]
+  then 
+    echo "ERROR unable to decompress ${IPOPT}"
+    exit 1
+  fi
+fi
+cd $CURR_DIR   # go back

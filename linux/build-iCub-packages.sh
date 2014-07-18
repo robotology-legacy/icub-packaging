@@ -4,8 +4,13 @@ cd "`dirname $0`"
 echo $PWD
 ICUB_SCRIPT_DIR=$(pwd)
 cd $OLDPWD
-echo "ICUB SCRIPT DIR = $ICUB_SCRIPT_DIR"
 source $ICUB_SCRIPT_DIR/prepare.sh
+if [ "$IPOPT" == "Ipopt-3.11.7" ]
+then
+  IPOPT_BUILD_FLAGS="--enable-dependency-linking"
+else
+  IPOPT_BUILD_FLAGS=""
+fi
 
 #----------------------------------- Debug variables------------------------------------------------#
 
@@ -82,7 +87,7 @@ run_in_chroot "apt-get $APT_OPTIONS install -f"	>> $LOG_FILE 2>&1
 run_in_chroot "apt-get install $APT_OPTIONS libode-dev"	>> $LOG_FILE 2>&1
 run_in_chroot "apt-get $APT_OPTIONS install -f"	>> $LOG_FILE 2>&1
 echo "libode done" >> $LOG_FILE 2>&1
-if [ $PLATFORM_KEY = "squeeze" ]
+if [ "$PLATFORM_KEY" == "squeeze" ]
 then
   # need to add backports for cmake 
   echo "upgrading cmake from squeeze-backports"
@@ -95,19 +100,30 @@ fi
 if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done ]; then 
 	# Compile and install (twice) the lib IpOpt - components Blas, Lapack, Mumps and Metis are already downloaded and placed inside the correct ThirdParty folder
         echo "Usign IpOpt ver $IPOPT"
-	if [ ! -d "$ICUB_SCRIPT_DIR/sources/ipopt/$IPOPT" ]
+	if [ ! -d "$ICUB_SCRIPT_DIR/sources/$IPOPT" ]
 	then
-		echo "ERROR: missing IpOpt in path ${ICUB_SCRIPT_DIR}/sources/ipopt/${IPOPT}"
+		echo "ERROR: missing IpOpt in path ${ICUB_SCRIPT_DIR}/sources/${IPOPT}"
 		exit 1
 	fi
-	cp -rf ${ICUB_SCRIPT_DIR}/sources/ipopt/${IPOPT}  ${ICUB_BUILD_CHROOT}/tmp/
+	cp -rf ${ICUB_SCRIPT_DIR}/sources/${IPOPT}  ${ICUB_BUILD_CHROOT}/tmp/
 	if [ "$?" != "0" ]
 	then
-		echo "ERROR: failed to copy ${ICUB_SCRIPT_DIR}/sources/ipopt/${IPOPT}"
+		echo "ERROR: failed to copy ${ICUB_SCRIPT_DIR}/sources/${IPOPT}"
 		exit 1
-	fi 
-	run_in_chroot "cd /tmp/$IPOPT/; mkdir -p build; cd build; ../configure --prefix=/usr"
-	run_in_chroot "cd /tmp/$IPOPT/build && make &&  make test && make install; if [ "$?" == "0" ] ; then touch /tmp/${IPOPT}-usr.done ; fi"
+	fi
+        THIRD_PARTY="ASL Blas Lapack Metis Mumps"
+        for package in $THIRD_PARTY
+	do
+		echo "Getting third party module $package"
+		run_in_chroot "cd /tmp/$IPOPT/ThirdParty/${package}; ./get.${package}"
+	done	
+	run_in_chroot "cd /tmp/$IPOPT/; mkdir -p build; cd build; ../configure $IPOPT_BUILD_FLAGS --prefix=/usr && touch /tmp/${IPOPT}_configure-usr.done"
+	if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/${IPOPT}_configure-usr.done" ]
+	then
+		echo "ERROR: failed to configure ipopt in ${ICUB_BUILD_CHROOT}/tmp/"
+		exit 1
+	fi
+	run_in_chroot "cd /tmp/$IPOPT/build && make &&  make test && make install && touch /tmp/${IPOPT}-usr.done"
 	if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/${IPOPT}-usr.done" ]
 	then															
 		echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed" >> $LOG_FILE 2>&1
@@ -242,8 +258,13 @@ run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN"													
 echo "Building IpOpt libraries for iCub package..."
 echo "Building IpOpt libraries for iCub package..."														>> $LOG_FILE 2>&1
 if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done ]; then 
-	run_in_chroot "cd /tmp/$IPOPT/build; ../configure --prefix=/tmp/install_dir/$ICUB_COMMON_NAME/usr; make install"	>> $LOG_FILE 2>&1
-	sudo touch $ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done														>> $LOG_FILE 2>&1
+	run_in_chroot "cd /tmp/$IPOPT/build; ../configure $IPOPT_BUILD_FLAGS --prefix=/tmp/install_dir/$ICUB_COMMON_NAME/usr; make install ; if [ "$?" == "0" ] ; then touch /tmp/$IPOPT-icub.done; fi"	>> $LOG_FILE 2>&1
+	if [ ! -f "$ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done" ]
+	then
+                echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed"
+                exit 1
+	fi
+
 else
 	echo "IpOpt libraries (/icub) already handled."									>> $LOG_FILE 2>&1
 fi
@@ -306,7 +327,7 @@ then
 	exit 1
 fi
 
-run_in_chroot "cd $D_ICUB_DIR ; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub -DENABLE_icubmod_DFKI_hand_calibrator=ON -DENABLE_icubmod_canmotioncontrol=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_debugInterfaceClient=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_gazecontrollerclient=ON -DENABLE_icubmod_icubarmcalibrator=ON -DENABLE_icubmod_icubarmcalibratorj4=ON -DENABLE_icubmod_icubarmcalibratorj8=ON -DENABLE_icubmod_icubhandcalibrator=ON -DENABLE_icubmod_icubheadcalibrator=ON -DENABLE_icubmod_icubheadcalibratorV2=ON -DENABLE_icubmod_icublegscalibrator=ON -DENABLE_icubmod_icubtorsoonlycalibrator=ON -DENABLE_icubmod_logpolarclient=ON -DENABLE_icubmod_logpolargrabber=ON -DENABLE_icubmod_skinprototype=ON -DENABLE_icubmod_socketcan=ON -D ENABLE_icubmod_static_grabber=ON -D ENABLE_icubmod_xsensmtx=ON  $D_ICUB_ROOT && touch /tmp/build-icub-package.done" >> $LOG_FILE 2>&1
+run_in_chroot "cd $D_ICUB_DIR ; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub -DENABLE_icubmod_DFKI_hand_calibrator=ON -DENABLE_icubmod_canmotioncontrol=OFF -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_debugInterfaceClient=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_gazecontrollerclient=ON -DENABLE_icubmod_icubarmcalibrator=ON -DENABLE_icubmod_icubarmcalibratorj4=ON -DENABLE_icubmod_icubarmcalibratorj8=ON -DENABLE_icubmod_icubhandcalibrator=ON -DENABLE_icubmod_icubheadcalibrator=ON -DENABLE_icubmod_icubheadcalibratorV2=ON -DENABLE_icubmod_icublegscalibrator=ON -DENABLE_icubmod_icubtorsoonlycalibrator=ON -DENABLE_icubmod_logpolarclient=ON -DENABLE_icubmod_logpolargrabber=ON -DENABLE_icubmod_skinprototype=ON -DENABLE_icubmod_socketcan=ON -D ENABLE_icubmod_static_grabber=ON -D ENABLE_icubmod_xsensmtx=ON  $D_ICUB_ROOT && touch /tmp/build-icub-package.done" >> $LOG_FILE 2>&1
 if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/build-icub-package.done" ]
 then
         echo "ERROR: Build of iCub package in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed" >> $LOG_FILE 2>&1
@@ -323,12 +344,6 @@ echo "Size: $SIZE"
 # Generate dpkg DEBIAN folder
 run_in_chroot "mkdir -p $D_ICUB_INSTALL_DIR/DEBIAN"																	>> $LOG_FILE 2>&1
 
-# Remove standard ICUB_ROOT.ini file and substitute it with the ad-hoc one.
-run_in_chroot "rm $D_ICUB_INSTALL_DIR/usr/share/iCub/ICUB_ROOT.ini"													>> $LOG_FILE 2>&1
-
-#echo "mkdir -p $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/; cp $ICUB_SCRIPT_DIR/ICUB_ROOT.ini $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/"
-sudo mkdir -p $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/
-sudo cp $ICUB_SCRIPT_DIR/sources/ICUB_ROOT.ini $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/etc/
 
 ICUB_INI_PATH="$ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/usr/share/yarp/config/path.d"
 ICUB_INI_FILE="iCub.ini"
@@ -348,7 +363,6 @@ sudo /$ICUB_SCRIPT_DIR/fix_cmake_path.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR 
 
 # Generate 'conffiles' file
 sudo touch $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/conffiles
-echo "/etc/ICUB_ROOT.ini" | sudo tee $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/conffiles						>> $LOG_FILE 2>&1
 
 # Generate DEBIAN/md5sums file
 if [ -f $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR/DEBIAN/md5sums ]; then

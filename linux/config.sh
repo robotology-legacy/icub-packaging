@@ -1,7 +1,13 @@
-ICUB_VERSION='1.1.14'
-DEBIAN_REVISION_NUMBER=0
-IPOPT="Ipopt-3.10.1"
-SUPPORTED_DISTRO_LIST="precise quantal raring squeeze wheezy"
+ICUB_VERSION='1.1.15'
+DEBIAN_REVISION_NUMBER=1
+# Always use a revision number >=1
+SUPPORTED_DISTRO_LIST="trusty squeeze wheezy"
+#if [ "$PLATFORM_KEY" == "wheezy" ]
+#then
+#	IPOPT="Ipopt-3.10.1"
+#else 
+	IPOPT="Ipopt-3.11.7"
+#fi
 
 APT_OPTIONS="-q --no-install-recommends -y --force-yes"
 SVN_OPTIONS="-q --force --non-interactive"  # -q is quiet option, do not prints out each file downloaded, less verbose log file.
@@ -14,9 +20,16 @@ BUILD_DEPENDENCIES="libace-dev libgsl0-dev cmake wget unzip subversion gfortran 
 
 ICUB_COMMON_CONFLICT="coinor-libipopt0, coinor-libipopt-dev"  
 
-if [ "$PLATFORM_KEY" == "precise" ] || [ "$PLATFORM_KEY" == "quantal" ] || [ "$PLATFORM_KEY" == "wheezy" ] ; then
+if [ "$PLATFORM_KEY" != "squeeze" ] 
+then
 	ICUB_DEPENDENCIES="$ICUB_DEPENDENCIES, libopencv-dev"     	# Debian control file wants commas (,) to separate name of packages
 	BUILD_DEPENDENCIES="$BUILD_DEPENDENCIES libopencv-dev"	# apt-get DO NOT wants commas
+fi
+
+if [ "$PLATFORM_KEY" == "trusty" ] 
+then
+	ICUB_DEPENDENCIES="$ICUB_DEPENDENCIES, libblas-dev"     	# Debian control file wants commas (,) to separate name of packages
+	BUILD_DEPENDENCIES="$BUILD_DEPENDENCIES libblas-dev"	# apt-get DO NOT wants commas
 fi
 
 ICUB_REPO_URL="https://github.com/robotology/icub-main"
