@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+#!/usr/bin/bash
 
 # For simplicity, make sure this script is not called in-place
 if [ -e build.sh ]; then
@@ -92,6 +93,7 @@ for c in $compilers ; do
 		source gsl_${c}_${v}_Release.sh
 		source ace_${c}_${v}_Release.sh
 		source gtkmm_${c}_${v}_Release.sh
+		source qt_${c}_${v}_Release.sh
 		
 		cd $BUILD_DIR
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_sdl.sh
@@ -99,13 +101,13 @@ for c in $compilers ; do
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ode.sh
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Release
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ipopt.sh
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build_qt3.sh
+#		source $ICUB_PACKAGE_SOURCE_DIR/src/build_qt3.sh
 		
 		source sdl_${c}_${v}_any.sh
 		source glut_${c}_${v}_any.sh
 		source ode_${c}_${v}_any.sh
 		source ipopt_${c}_${v}_any.sh
-		source qt3_${c}_${v}_any.sh
+#		source qt3_${c}_${v}_any.sh
 		
 	    source opencv_${c}_${v}_Release.sh
 		
@@ -119,6 +121,7 @@ for c in $compilers ; do
      	source gsl_${c}_${v}_Debug.sh
 		source ace_${c}_${v}_Debug.sh
 		source gtkmm_${c}_${v}_Debug.sh
+		source qt_${c}_${v}_Debug.sh
 
 		cd $BUILD_DIR
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Debug

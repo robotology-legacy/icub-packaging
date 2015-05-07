@@ -15,32 +15,27 @@ cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
-if [ "k$c" = "kv11" ]; then
+if [ "$c" == "v12" ]; then
+	packetname="Ipopt-3.10.1-win32-msvc12_mumps+metis+clapack"
+	archivename="$packetname.zip"
+	if [ ! -e $archivename ]; then
+       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc11/$archivename
+	fi
+elif [ "$c" == "v11" ]; then
 	packetname="Ipopt-3.10.1-win32-msvc11_mumps+metis+clapack"
 	archivename="$packetname.zip"
 	if [ ! -e $archivename ]; then
        wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc11/$archivename
 	fi
-elif [ "k$c" = "kv10" ]; then
+
+elif [ "$c" == "v10" ]; then
 	packetname="Ipopt-3.10.1-win32-msvc10_mumps+metis+clapack"
 	archivename="$packetname.zip"
 	if [ ! -e $archivename ]; then
        wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc10/$archivename
 	fi
-elif [ "k$c" = "kv8" ]; then
-	packetname="Ipopt-3.10.1-win32-msvc8_mumps+metis+clapack"
-	archivename="$packetname.zip"
-	if [ ! -e $archivename ]; then
-       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc8/$archivename
-	fi
-elif [ "k$c" = "kv9" ]; then
-	packetname="Ipopt-3.10.1-win32-msvc9_mumps+metis+clapack"
-	archivename="$packetname.zip"
-	if [ ! -e $archivename ]; then
-       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc9/$archivename
-	fi	
 else
-	echo "Compiler version not yet supported"
+	echo "ERROR: Compiler version not yet supported with IPOPT package"
 	exit -1
 fi
 

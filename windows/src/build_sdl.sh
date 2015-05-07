@@ -13,9 +13,19 @@ cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
-archivename="SDL-1.2.13-bin.zip"
+if [ "BUNDLE_SDL_VERSION" == "" ] || [ "BUNDLE_SDL_URL" == "" ]; then
+  echo "ERROR: Please specify SDL version and download URL in the configuration script"
+  echo "BUNDLE_SDL_VERSION=$BUNDLE_SDL_VERSION"
+  echo "BUNDLE_SDL_URL=$BUNDLE_SDL_URL"
+  exit 1
+fi
+archivename="SDL-${BUNDLE_SDL_VERSION}-bin.zip"
 if [ ! -e $archivename ]; then
-	wget http://wiki.icub.org/iCub/downloads/packages/windows/common/$archivename
+	wget ${BUNDLE_SDL_URL}/$archivename 
+	if [ "$?" != "0" ]; then
+		echo "ERROR: Cannot fetch SDL from ${BUNDLE_SDL_URL}/${archivename}"
+		exit 1
+	fi
 fi
 
 mkdir $source_dir

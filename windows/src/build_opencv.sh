@@ -14,25 +14,26 @@ cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $1 $2 $3
 cd $BUILD_DIR
 
-#source_dir=OpenCV-2.2.0
-#fname=OpenCV-2.4.2-win.zip 
-source_dir=opencv
-fname=opencv-snapshot-26-09-12.zip 
-if [ ! -e $fname ]; then
-	#wget http://sourceforge.net/projects/opencvlibrary/files/opencv-win/2.4.2/$fname || (
-	wget http://wiki.icub.org/iCub/downloads/packages/windows/common/$fname || (
-		echo "Cannot fetch OpenCV"
+if [ "BUNDLE_OPENCV_VERSION" == "" ] || [ "BUNDLE_OPENCV_URL" == "" ]; then
+  echo "ERROR: Please specify OpenCV version and download URL in the configuration script"
+  echo "BUNDLE_OPENCV_VERSION=$BUNDLE_OPENCV_VERSION"
+  echo "BUNDLE_OPENCV_URL=$BUNDLE_OPENCV_URL"
+  exit 1
+fi
+ifname="${BUNDLE_OPENCV_URL}/${BUNDLE_OPENCV_VERSION}.zip"
+ofname="OpenCV-${BUNDLE_OPENCV_VERSION}.zip"
+if [ ! -e $ofname ]; then
+	wget $ifname --output-document=${ofname} 
+	if [ "$?" != "0" ]; then
+		echo "ERROR: Cannot fetch OpenCV from ${ifname}"
 		exit 1
-	)
+	fi
 fi
 
-mkdir $source_dir
-unzip -o $fname -d ./
-
+source_dir="opencv-${BUNDLE_OPENCV_VERSION}"
+unzip -o $ofname -d ./
 build_dir=$BUILD_DIR/$source_dir-$OPT_COMPILER-$OPT_VARIANT-$OPT_BUILD
-
 OpenCV_DIR=`cygpath --mixed "$build_dir/install"`
-
 mkdir $build_dir
 cd $build_dir
 rm CMakeCache.txt
@@ -48,6 +49,7 @@ find ./ -type f -name *.obj -exec rm -rf {} \;
 
 # Cache icub paths and variables, for dependent packages to read
 OpenCV_DIR=`cygpath --mixed "$build_dir/install"`
+
 (
 	echo "export OpenCV_DIR='$OpenCV_DIR'"
 ) > $BUILD_DIR/opencv_${OPT_COMPILER}_${OPT_VARIANT}_${OPT_BUILD}.sh

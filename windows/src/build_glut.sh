@@ -14,9 +14,20 @@ cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
-archivename="glut-3.7.6.icub-bin.zip"
+if [ "BUNDLE_GLUT_VERSION" == "" ] || [ "BUNDLE_GLUT_URL" == "" ]; then
+  echo "ERROR: Please specify GLUT version and download URL in the configuration script"
+  echo "BUNDLE_GLUT_VERSION=$BUNDLE_GLUT_VERSION"
+  echo "BUNDLE_GLUT_URL=$BUNDLE_GLUT_URL"
+  exit 1
+fi
+archivename="glut-${BUNDLE_GLUT_VERSION}.icub-bin.zip"
+
 if [ ! -e $archivename ]; then
-	wget http://wiki.icub.org/iCub/downloads/packages/windows/common/$archivename
+    wget ${BUNDLE_GLUT_URL}/${archivename}
+	if [ "$?" != "0" ]; then
+		echo "ERROR: Cannot fetch GLUT from ${BUNDLE_GLUT_URL}/${archivename}"
+		exit 1
+	fi
 fi
 
 mkdir $source_dir

@@ -254,8 +254,8 @@ nsis_setup icub_opencv_bin
 nsis_setup icub_glut
 nsis_setup icub_glut_bin
 
-nsis_setup icub_qt3
-nsis_setup icub_qt3_bin
+#nsis_setup icub_qt3
+#nsis_setup icub_qt3_bin
 
 nsis_setup icub_sdl
 nsis_setup icub_sdl_bin
@@ -266,7 +266,7 @@ ICUB_SUB="icub-$BUNDLE_ICUB_VERSION"
 IPOPT_SUB="ipopt-$BUNDLE_IPOPT_VERSION"
 OPENCV_SUB="opencv-$BUNDLE_OPENCV_VERSION"
 GLUT_SUB="glut-$BUNDLE_GLUT_VERSION"
-QT3_SUB="qt3"
+#QT3_SUB="qt3"
 SDL_SUB="sdl-$BUNDLE_SDL_VERSION"
 ODE_SUB="ode-$BUNDLE_ODE_VERSION"
 
@@ -348,23 +348,23 @@ fi
 
 
 ## add QT3
-echo "QT3: QTDIR"
-if [ -e "$QTDIR" ]; then
-	cd "$QTDIR"
+# echo "QT3: QTDIR"
+# if [ -e "$QTDIR" ]; then
+	# cd "$QTDIR"
 	
-	for f in `find ./ -maxdepth 1 -type f`; do
-		nsis_add icub_qt3 $f $QT3_SUB/$f
-	done
+	# for f in `find ./ -maxdepth 1 -type f`; do
+		# nsis_add icub_qt3 $f $QT3_SUB/$f
+	# done
 	
-	nsis_add_recurse icub_qt3 include $QT3_SUB/include
-	nsis_add_recurse icub_qt3 lib $QT3_SUB/lib
-	nsis_add_recurse icub_qt3 mkspecs $QT3_SUB/mkspecs
+	# nsis_add_recurse icub_qt3 include $QT3_SUB/include
+	# nsis_add_recurse icub_qt3 lib $QT3_SUB/lib
+	# nsis_add_recurse icub_qt3 mkspecs $QT3_SUB/mkspecs
 	
-	cd "$QTDIR/bin"
-	for f in `find ./ -maxdepth 1 -type f`; do
-		nsis_add icub_qt3_bin $f $QT3_SUB/bin/$f
-	done
-fi
+	# cd "$QTDIR/bin"
+	# for f in `find ./ -maxdepth 1 -type f`; do
+		# nsis_add icub_qt3_bin $f $QT3_SUB/bin/$f
+	# done
+# fi
 
 ## add ODE
 echo "ODE: $ODE_DIR"
@@ -418,38 +418,59 @@ if [ -e 3rdParty ]; then
 	nsis_add_recurse icub_opencv 3rdparty $OPENCV_SUB/3rdparty
 fi
 	
-nsis_add_recurse icub_opencv doc $OPENCV_SUB/doc
 nsis_add_recurse icub_opencv include $OPENCV_SUB/include
-nsis_add_recurse icub_opencv lib $OPENCV_SUB/lib
 nsis_add icub_opencv $file $OPENCV_SUB/OpenCVConfig.cmake
+file="OpenCVConfig-version.cmake"
+nsis_add icub_opencv $file $OPENCV_SUB/$file
 
 echo echo "OpenCV Release: $OPENCV_DIR_UNIX"
-## add runtime for OpenCV
-if [ -e "$OPENCV_DIR_UNIX" ]; then
-   cd "$OPENCV_DIR_UNIX/bin" || exit 1
-   for f in `ls *.dll`; do
-        nsis_add icub_opencv_bin $f $OPENCV_SUB/bin/$f
-   done
-   
-   for f in `ls *.exe`; do
-        nsis_add icub_opencv_bin $f $OPENCV_SUB/bin/$f
-   done
-   
-fi
 
-# Add debug stuff
-echo $OPENCV_DIR_DBG_UNIX
-if [ -e "$OPENCV_DIR_DBG_UNIX" ] ; then
-	cd "$OPENCV_DIR_DBG_UNIX/lib" || exit 1
-	for f in `ls *.lib`; do
-		nsis_add icub_opencv $f $OPENCV_SUB/lib/$f
-	done
+case "$c" in
+"v10" )
+  OPENCV_OBJ_SUFFIX_PATH="${v}/vc10"
+  ;;
+"v11" )
+  OPENCV_OBJ_SUFFIX_PATH="${v}/vc11"
+  ;;
+"v12" )
+  OPENCV_OBJ_SUFFIX_PATH="${v}/vc12"
+  ;;
+*)
+  echo "ERROR: compiler version $v not supported."
+  exit 1
+  ;;
+esac
+ 
+# add binaries for OpenCV
+cd "${OPENCV_DIR_UNIX}/${OPENCV_OBJ_SUFFIX_PATH}/bin" || exit 1
+for f in `ls *.dll`; do
+  nsis_add icub_opencv_bin $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/bin/$f
+done
+for f in `ls *.exe`; do
+  nsis_add icub_opencv_bin $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/bin/$f
+done
+# add libraries for OpenCV
+cd "${OPENCV_DIR_UNIX}/${OPENCV_OBJ_SUFFIX_PATH}/lib" || exit 1
+for f in `ls *.lib`; do
+		nsis_add icub_opencv $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/lib/$f
+done
+for f in `ls *.cmake`; do
+		nsis_add icub_opencv $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/lib/$f
+done
 
-	cd "$OPENCV_DIR_DBG_UNIX/bin"
-	for f in `ls *.dll`; do
-		nsis_add icub_opencv_bin $f $OPENCV_SUB/bin/$f
-	done
-fi
+# add debug binaries for OpenCV
+cd "${OPENCV_DIR_DBG_UNIX}/${OPENCV_OBJ_SUFFIX_PATH}/bin" || exit 1
+for f in `ls *.dll`; do
+     nsis_add icub_opencv_bin $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/bin/$f
+done
+for f in `ls *.exe`; do
+     nsis_add icub_opencv_bin $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/bin/$f
+done
+# add debug libraries for OpenCV
+cd "${OPENCV_DIR_DBG_UNIX}/${OPENCV_OBJ_SUFFIX_PATH}/lib" || exit 1
+for f in `ls *.lib`; do
+		nsis_add icub_opencv $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/lib/$f
+done
 
 # Run NSIS
 cd $OUT_DIR
@@ -457,8 +478,8 @@ echo $OUT_DIR
 echo $ICUB_PACKAGE_SOURCE_DIR
 cp $ICUB_PACKAGE_SOURCE_DIR/nsis/*.nsh .
 
-$NSIS_BIN -DACE_SUB=$ACE_SUB -DQT3_SUB=$QT3_SUB -DODE_SUB=$ODE_SUB -DGLUT_SUB=$GLUT_SUB -DSDL_SUB=$SDL_SUB -DOPENCV_SUB=$OPENCV_SUB -DIPOPT_SUB=$IPOPT_SUB -DYARP_VERSION=$BUNDLE_YARP_VERSION -DINST2=$ICUB_SUB -DGSL_VERSION=$BUNDLE_GSL_VERSION -DICUB_VERSION=$BUNDLE_ICUB_VERSION -DICUB_TWEAK=$BUNDLE_ICUB_TWEAK -DBUILD_VERSION=${OPT_COMPILER}_${OPT_VARIANT} -DVENDOR=$VENDOR -DICUB_LOGO=$ICUB_LOGO -DICUB_LICENSE=$ICUB_LICENSE -DICUB_ORG_DIR=$ICUB_DIR -DGSL_ORG_DIR=$GSL_DIR -DNSIS_OUTPUT_PATH=`cygpath -w $PWD` `cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi` || exit 1
-
+#$NSIS_BIN -DACE_SUB=$ACE_SUB -DQT3_SUB=$QT3_SUB -DODE_SUB=$ODE_SUB -DGLUT_SUB=$GLUT_SUB -DSDL_SUB=$SDL_SUB -DOPENCV_SUB=$OPENCV_SUB -DIPOPT_SUB=$IPOPT_SUB -DYARP_VERSION=$BUNDLE_YARP_VERSION -DINST2=$ICUB_SUB -DGSL_VERSION=$BUNDLE_GSL_VERSION -DICUB_VERSION=$BUNDLE_ICUB_VERSION -DICUB_TWEAK=$BUNDLE_ICUB_TWEAK -DBUILD_VERSION=${OPT_COMPILER}_${OPT_VARIANT} -DVENDOR=$VENDOR -DICUB_LOGO=$ICUB_LOGO -DICUB_LICENSE=$ICUB_LICENSE -DICUB_ORG_DIR=$ICUB_DIR -DGSL_ORG_DIR=$GSL_DIR -DNSIS_OUTPUT_PATH=`cygpath -w $PWD` `cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi` || exit 1
+$NSIS_BIN -DACE_SUB=$ACE_SUB -DODE_SUB=$ODE_SUB -DGLUT_SUB=$GLUT_SUB -DSDL_SUB=$SDL_SUB -DOPENCV_SUB=$OPENCV_SUB -DIPOPT_SUB=$IPOPT_SUB -DYARP_VERSION=$BUNDLE_YARP_VERSION -DINST2=$ICUB_SUB -DGSL_VERSION=$BUNDLE_GSL_VERSION -DICUB_VERSION=$BUNDLE_ICUB_VERSION -DICUB_TWEAK=$BUNDLE_ICUB_TWEAK -DBUILD_VERSION=${OPT_COMPILER}_${OPT_VARIANT} -DVENDOR=$VENDOR -DICUB_LOGO=$ICUB_LOGO -DICUB_LICENSE=$ICUB_LICENSE -DICUB_ORG_DIR=$ICUB_DIR -DGSL_ORG_DIR=$GSL_DIR -DNSIS_OUTPUT_PATH=`cygpath -w $PWD` `cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi` || exit 1
 cd $BUILD_DIR
 
 touch $guard_file

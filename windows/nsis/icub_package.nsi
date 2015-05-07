@@ -306,7 +306,7 @@ Section "-first"
   !insertmacro RegisterPackage sdl ${SDL_SUB}
   !insertmacro RegisterPackage ode ${ODE_SUB}
   !insertmacro RegisterPackage glut ${GLUT_SUB}
-  !insertmacro RegisterPackage qt3 ${QT3_SUB}  
+  #!insertmacro RegisterPackage qt3 ${QT3_SUB}  
 SectionEnd
 
 SectionGroup "iCub" SeciCub
@@ -360,11 +360,11 @@ Section "SDL files" SecSDL
 	!include ${NSIS_OUTPUT_PATH}\icub_sdl_bin_add.nsi
 SectionEnd
 
-Section "QT3 files" SecQt3
-    SetOutPath "$INSTDIR"
-    !include ${NSIS_OUTPUT_PATH}\icub_qt3_add.nsi
-	!include ${NSIS_OUTPUT_PATH}\icub_qt3_bin_add.nsi
-SectionEnd
+#Section "QT3 files" SecQt3
+#    SetOutPath "$INSTDIR"
+#    !include ${NSIS_OUTPUT_PATH}\icub_qt3_add.nsi
+#	!include ${NSIS_OUTPUT_PATH}\icub_qt3_bin_add.nsi
+#SectionEnd
 
 Section "GLUT files" SecGLUT
     SetOutPath "$INSTDIR"
@@ -421,13 +421,13 @@ Section "Environment variables" SecPath
 	  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\bin"
    endOpenCVIf:
    
-   !insertmacro SectionFlagIsSet ${SecQT3} ${SF_SELECTED} isQT3Sel notQt3Sel
-   notQt3Sel:
-	  Goto qt3Endif 
-   isQT3Sel:
-      WriteRegExpandStr ${WriteEnvStr_RegKey} QTDIR "$INSTDIR\${QT3_SUB}"
-	  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${QT3_SUB}\bin"
-   qt3Endif:
+#   !insertmacro SectionFlagIsSet ${SecQT3} ${SF_SELECTED} isQT3Sel notQt3Sel
+#   notQt3Sel:
+#	  Goto qt3Endif 
+#   isQT3Sel:
+#      WriteRegExpandStr ${WriteEnvStr_RegKey} QTDIR "$INSTDIR\${QT3_SUB}"
+#	  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${QT3_SUB}\bin"
+#   qt3Endif:
 
    !insertmacro SectionFlagIsSet ${SecSDL} ${SF_SELECTED} isSelSDL notSDLSel
    notSDLSel:
@@ -477,7 +477,7 @@ LangString DESC_SecOpenCV ${LANG_ENGLISH} "Open Source Computer Vision library (
 LangString DESC_SecVcDlls ${LANG_ENGLISH} "Visual Studio runtime redistributable files.  Not free software. If you already have Visual Studio installed, you may want to skip this."
 LangString DESC_SecSDL ${LANG_ENGLISH} "Simple Direct Layer (SDL). Used by the simulator."
 LangString DESC_SecGLUT ${LANG_ENGLISH} "The OpenGL Utility Toolkit (GLUT). Used by the iCub visualization gui."
-LangString DESC_SecQT3 ${LANG_ENGLISH} "Qt3 Cross-platformm application and UI framework."
+#LangString DESC_SecQT3 ${LANG_ENGLISH} "Qt3 Cross-platformm application and UI framework."
 LangString DESC_SecODE ${LANG_ENGLISH} "Open Dynamics Engine (ODE). Used by the simulator"
 LangString DESC_SecPath ${LANG_ENGLISH} "Modify user environment. Add executables and DLLs to the PATH, set variables used by CMake (e.g. ICUB_DIR, IPOPT_DIR, etc.)"
 
@@ -494,7 +494,7 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Modify user environment. Add executable
   !insertmacro MUI_DESCRIPTION_TEXT ${SecVcDlls} $(DESC_SecVcDlls)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecPath} $(DESC_SecPath)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecGLUT} $(DESC_SecGLUT)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecQT3} $(DESC_SecQT3)
+#  !insertmacro MUI_DESCRIPTION_TEXT ${SecQT3} $(DESC_SecQT3)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecSDL} $(DESC_SecSDL)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecODE} $(DESC_SecODE)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
@@ -559,18 +559,16 @@ Section "Uninstall"
 		!insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\bin"
 	opencvNotFound:
 	
-	ClearErrors
-	ReadRegStr $0 HKCU "Software\${VENDOR}\qt3\${QT3_SUB}" ""
-
-	IfErrors 0 qt3Found
-	DetailPrint "QT3 was not found in the system"
-	Goto qt3NotFound
-	
-    qt3Found:
-		DetailPrint "Removing qt3 environment variables"
-		DeleteRegValue ${WriteEnvStr_RegKey} QTDIR
-		!insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${QT3_SUB}\bin"
-	qt3NotFound:
+#	ClearErrors
+#	ReadRegStr $0 HKCU "Software\${VENDOR}\qt3\${QT3_SUB}" ""
+#	IfErrors 0 qt3Found
+#	DetailPrint "QT3 was not found in the system"
+#	Goto qt3NotFound
+#    qt3Found:
+#		DetailPrint "Removing qt3 environment variables"
+#		DeleteRegValue ${WriteEnvStr_RegKey} QTDIR
+#		!insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${QT3_SUB}\bin"
+#	qt3NotFound:
 
 	ClearErrors
 	ReadRegStr $0 HKCU "Software\${VENDOR}\sdl\${SDL_SUB}" ""
@@ -614,8 +612,8 @@ Section "Uninstall"
   !include ${NSIS_OUTPUT_PATH}\icub_glut_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_glut_bin_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_ode_remove.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_qt3_remove.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_qt3_bin_remove.nsi
+#  !include ${NSIS_OUTPUT_PATH}\icub_qt3_remove.nsi
+#  !include ${NSIS_OUTPUT_PATH}\icub_qt3_bin_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_modules_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_data_dirs_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_headers_remove.nsi
@@ -636,7 +634,7 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\${SDL_SUB}"
   RMDir /r "$INSTDIR\${GLUT_SUB}"
   RMDir /r "$INSTDIR\${ODE_SUB}"
-  RMDir /r "$INSTDIR\${QT3_SUB}"
+#  RMDir /r "$INSTDIR\${QT3_SUB}"
 
   !insertmacro UnregisterPackage iCub ${INST2}
   !insertmacro UnregisterPackage ipopt ${IPOPT_SUB}
@@ -644,7 +642,7 @@ Section "Uninstall"
   
   !insertmacro UnregisterPackage sdl ${SDL_SUB}
   !insertmacro UnregisterPackage glut ${GLUT_SUB}
-  !insertmacro UnregisterPackage qt3 ${QT3_SUB}
+#  !insertmacro UnregisterPackage qt3 ${QT3_SUB}
   !insertmacro UnregisterPackage ode ${ODE_SUB}
   
 SectionEnd

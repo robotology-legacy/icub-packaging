@@ -15,30 +15,43 @@ cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
-if [ "k$c" = "kv11" ]; then
-	archivename="ode-0.11.1-bin-msvc11.zip"
-	if [ ! -e $archivename ]; then
-       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc11/$archivename
-	fi
-elif [ "k$c" = "kv10" ]; then
-	archivename="ode-0.11.1-bin-msvc10.zip"
-	if [ ! -e $archivename ]; then
-       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc10/$archivename
-	fi
-elif [ "k$c" = "kv8" ]; then
-	archivename="ode-0.11.1-bin-msvc8.zip"
-	if [ ! -e $archivename ]; then
-       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc8/$archivename
-	fi
-elif [ "k$c" = "kv9" ]; then
-	archivename="ode-0.11.1-bin-msvc9.zip"
-	if [ ! -e $archivename ]; then
-       wget http://wiki.icub.org/iCub/downloads/packages/windows/msvc9/$archivename
-	fi	
+if [ "BUNDLE_ODE_VERSION" == "" ] || [ "BUNDLE_ODE_URL" == "" ]; then
+  echo "ERROR: Please specify ODE version and download URL in the configuration script"
+  echo "BUNDLE_ODE_VERSION=$BUNDLE_ODE_VERSION"
+  echo "BUNDLE_ODE_URL=$BUNDLE_ODE_URL"
+  exit 1
+fi
+
+archivename=""
+archive_url=""
+
+if [ "$c" == "v12" ]; then
+	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc12.zip"
+	archive_url="${BUNDLE_ODE_URL}/msvc12"
+elif [ "$c" == "v11" ]; then
+	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc11.zip"
+	archive_url="${BUNDLE_ODE_URL}/msvc11"
+elif [ "$c" == "v10" ]; then
+	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc10.zip"
+	archive_url="${BUNDLE_ODE_URL}/msvc10"
+elif [ "$c" == "v8" ]; then
+	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc8.zip"
+	archive_url="${BUNDLE_ODE_URL}/msvc8"
+elif [ "$c" == "v9" ]; then
+	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc9.zip"
+	archive_url="${BUNDLE_ODE_URL}/msvc9"
 else
 	echo "Compiler version not yet supported"
-	exit -1
+	exit 1
 fi
+
+if [ ! -e $archivename ]; then
+    wget ${archive_url}/${archivename}
+	if [ "$?" != "0" ]; then
+		echo "ERROR: Cannot fetch ODE from ${archive_url}/${archivename}"
+		exit 1
+	fi
+fi	
 
 mkdir $source_dir
 unzip -o $archivename -d ./$source_dir
