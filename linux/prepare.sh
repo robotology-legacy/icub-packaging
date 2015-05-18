@@ -30,24 +30,6 @@ function do_exit
 	exit $1
 }
 
-#------------------------ Check if traget distribuition is supported--------------------------------------#
-# 
-echo "Checking if distribution $PLATFORM_KEY is supported"
-echo $SUPPORTED_DISTRO_LIST
-DISTRO_OK="false"
-for distro in "$SUPPORTED_DISTRO_LIST"
-do
-  if [ "$distro" == "$PLATFORM_KEY" ]
-  then
-    DISTRO_OK="true"
-  fi
-done
-if [ "$DISTRO_OK" != "true" ]
-then 
-  echo "ERROR : distribuition $PLATFORM_KEY is not supported"
-  do_exit
-fi
-
 #---------------------------------- Check input values ---------------------------------------------------#
 # 
 
@@ -55,7 +37,6 @@ cd "`dirname $0`"
 echo $PWD
 ICUB_SCRIPT_DIR=$PWD
 cd $OLDPWD
-
 
 # $1 is ROOT_DIR, in this case simply /data/
 if [ "$1" == "" ]
@@ -83,24 +64,15 @@ source $BUILD_DIR/yarp_${CHROOT_NAME}.sh   			# Load YARP_PACKAGE_DIR & YARP_PAC
 source $BUILD_DIR/config_${CHROOT_NAME}.sh			# Load PLATFORM_KEY & PLATFORM_HARDWARE
 
 #---------------------------------------- source icub configs ---------------------------------------------#
-source $ICUB_SCRIPT_DIR/config.sh						# Load ICUB_VERSION & DEBIAN_REVISION_NUMBER variables
-source $BUILD_DIR/settings.sh							# Load BUNDLE_NAME variable - written by yarp scripts
+source $ICUB_SCRIPT_DIR/config.sh				# Load ICUB_VERSION & DEBIAN_REVISION_NUMBER variables
+source $BUILD_DIR/settings.sh					# Load BUNDLE_NAME variable - written by yarp scripts
 source $YARP_SCRIPT_DIR/conf/$BUNDLE_NAME.sh			# Load YARP_VERSION variable - written by yarp scripts
-
-if [ "k$3" = "ktest" ]; then
-	TESTING="TRUE"
-	echo "testing revision $4"
-	ICUB_VERSION="rev-$4"
-	ICUB_REVISION=$4
-else
-	echo "using tags"
-fi
 
 #----------------------------------- global environment --------------------------------------------------#
 # Defining variables to be used in the global environment
 
-# 	Variables used in the script and sourced directly from yarp packaging files
-# DEBIAN_REVISION_NUMBER								-> comes from ICUB_SCRIPT_DIR/version.sh
+# Variables used in the script and sourced directly from yarp packaging files
+# DEBIAN_REVISION_NUMBER					-> comes from ICUB_SCRIPT_DIR/version.sh
 # YARP_PACKAGE_DIR=$BUILD_ROOT/yarp_${CHROOT_NAME}		-> comes from yarp_distro.sh file inside BUILD_DIR
 # YARP_PACKAGE=yarp-${YARP_VERSION}-${PLATFORM_KEY}-${PLATFORM_HARDWARE}.deb
 # CHROOT_NAME=$BUILD_DIR/chroot_${CHROOT_NAME}   		-> comes from chroot_distro.sh file inside BUILD_DIR
@@ -108,7 +80,7 @@ fi
 
 YARP_BUILD_CHROOT=$YARP_PACKAGE_DIR/build_chroot
 YARP_TEST_CHROOT=$YARP_PACKAGE_DIR/test_chroot
-ICUB_BUILD_CHROOT=$YARP_PACKAGE_DIR/test_chroot
+ICUB_BUILD_CHROOT=$YARP_TEST_CHROOT
 
 #----------------------------------- iCub and yarp variables----------------------------------------#
 
@@ -118,80 +90,43 @@ YARP_VERSION_MINOR=$(echo $YARP_VERSION | awk '{ split($0, array, "." ); print a
 YARP_VERSION_PATCH=$(echo $YARP_VERSION | awk '{ split($0, array, "." ); print array[3] }')
 
 
-ICUB_VERSION_NAME=iCub$ICUB_VERSION
+if [ "$ICUB_SOURCES_VERSION" == "" ]; then
+  ICUB_SOURCES_VERSION="trunk"
+fi
 DEBIAN_REVISION="${DEBIAN_REVISION_NUMBER}~${PLATFORM_KEY}_${PLATFORM_HARDWARE}"
-PACKAGE_NAME=$ICUB_VERSION_NAME-$DEBIAN_REVISION.deb
+PACKAGE_NAME=iCub${PACKAGE_VERSION}-${DEBIAN_REVISION}.deb
 
-ICUB_COMMON_VERSION=$ICUB_VERSION-$DEBIAN_REVISION_NUMBER
+ICUB_COMMON_VERSION=$PACKAGE_VERSION-$DEBIAN_REVISION_NUMBER
 ICUB_COMMON_NAME=iCub-common${ICUB_COMMON_VERSION}
-ICUB_COMMON_PKG_NAME=iCub-common$ICUB_VERSION-$DEBIAN_REVISION
+ICUB_COMMON_PKG_NAME=iCub-common$PACKAGE_VERSION-$DEBIAN_REVISION
 
 #---------------------------------- DCHROOT environment ---------------------------------------------------#
 # Defining variables to be used inside DCHROOT environment
 
 CMAKE=cmake
-D_ICUB_ROOT=/tmp/$ICUB_VERSION_NAME
+D_ICUB_ROOT=/tmp/icub-sources-${ICUB_SOURCES_VERSION}
 D_ICUB_DIR=$D_ICUB_ROOT/build
-D_ICUB_INSTALL_DIR=/tmp/install_dir/$ICUB_VERSION_NAME
+D_ICUB_INSTALL_DIR=/tmp/install_dir/icub-install-${ICUB_SOURCES_VERSION}
 
 #-------------------------------------- Others ------------------------------------------#
 YARP_VERSION_NAME=yarp-${YARP_VERSION}
 YARP_PACKAGE_NAME=$YARP_PACKAGE
 # YARP_PACKAGE_NAME=yarp-${YARP_VERSION}-${PLATFORM_KEY}-${PLATFORM_HARDWARE}.deb
 
-
-#-------------------------------------- Download IpOpt -----------------------------------#
-
-CURR_DIR=$PWD  #save current folder to get back on track when done
-cd ${ICUB_SCRIPT_DIR}/sources/
-if [ -f "${IPOPT}.tar.gz" ]
-then
-  rm ${IPOPT}.tar.gz
-fi
-if [ -f "${IPOPT}.tar.zip" ]
-then
-  rm ${IPOPT}.tar.gz
-fi
-if [ -d "${IPOPT}" ]
-then
-  rm -rf "${IPOPT}"
-fi
-# download from icub website
-echo "Trying to Download ${IPOPT} from icub website"
-wget http://www.icub.org/download/software/linux/${IPOPT}.tar.gz
-if [ "$?" != "0" ]
-then
-  echo "Trying to Download ${IPOPT} from main source archive"
-  # Download main souce archive
-  wget http://www.coin-or.org/download/source/Ipopt/${IPOPT}.zip
-  if [ "$?" != "0" ]
-  then 
-    echo "ERROR unable to Download ${IPOPT}"
-    exit 1
+#------------------------ Check if traget distribuition is supported--------------------------------------#
+# 
+echo "Checking if distribution $PLATFORM_KEY is supported among the following: $SUPPORTED_DISTRO_LIST"
+DISTRO_OK="false"
+for distro in $SUPPORTED_DISTRO_LIST; do
+  if [ "$distro" == "$PLATFORM_KEY" ]
+  then
+    DISTRO_OK="true"
+    echo "Good, $PLATFORM_KEY is supported"
   fi
-  unzip -q ${IPOPT}.zip
-  if [ "$?" != "0" ]
-  then 
-    echo "ERROR unable to decompress ${IPOPT}"
-    exit 1
-  fi
-
-  for path in $(ls ${ICUB_SCRIPT_DIR}/sources/${IPOPT}/ThirdParty)
-  do
-    cd ${ICUB_SCRIPT_DIR}/sources/${IPOPT}/ThirdParty/${path}	
-    echo "Processing Solver $path"
-    ./get.${path}
-    if [ "$?" != "0" ]
-    then
-      echo "ERROR unable to get solver $path"
-    fi
-  done
-else
-  tar xzf ${IPOPT}.tar.gz
-  if [ "$?" != "0" ]
-  then 
-    echo "ERROR unable to decompress ${IPOPT}"
-    exit 1
-  fi
+done
+if [ "$DISTRO_OK" != "true" ]
+then 
+  echo "ERROR : distribuition $PLATFORM_KEY is not supported"
+  exit 1
 fi
-cd $CURR_DIR   # go back
+
