@@ -1,7 +1,7 @@
 
 guard_file="build_opencv_$1_$2_$3.txt"
 
-if [ -e $guard_file ]; then
+if [ -e "$guard_file" ]; then
     echo "Skipping build_opencv_$1_$2_$3"
     return
 fi
@@ -32,11 +32,16 @@ fi
 
 source_dir="opencv-${BUNDLE_OPENCV_VERSION}"
 unzip -o $ofname -d ./
-build_dir=$BUILD_DIR/$source_dir-$OPT_COMPILER-$OPT_VARIANT-$OPT_BUILD
+build_dir="$BUILD_DIR/$source_dir-$OPT_COMPILER-$OPT_VARIANT-$OPT_BUILD"
 OpenCV_DIR=`cygpath --mixed "$build_dir/install"`
-mkdir $build_dir
+
+if [ ! -d "$build_dir" ]; then
+	mkdir $build_dir
+fi
 cd $build_dir
-rm CMakeCache.txt
+if [ -f "CMakeCache.txt" ]; then
+	rm CMakeCache.txt
+fi
 "$CMAKE_BIN" -DCMAKE_INSTALL_PREFIX=$OpenCV_DIR -G "$OPT_GENERATOR" ../$source_dir || exit 1
 ## first call msbuild for target 
 # build

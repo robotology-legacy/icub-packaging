@@ -11,8 +11,8 @@ BUILD_DIR=$PWD
 
 source_dir=ode-$c-$v
 
-cd $BUNDLE_YARP_DIR
-source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
+#cd $BUNDLE_YARP_DIR
+#source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
 if [ "BUNDLE_ODE_VERSION" == "" ] || [ "BUNDLE_ODE_URL" == "" ]; then
@@ -41,7 +41,7 @@ elif [ "$c" == "v9" ]; then
 	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc9.zip"
 	archive_url="${BUNDLE_ODE_URL}/msvc9"
 else
-	echo "Compiler version not yet supported"
+	echo "ERROR: Compiler version $c not supported yet"
 	exit 1
 fi
 

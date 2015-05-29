@@ -1,5 +1,4 @@
-#!/usr/bin/bash
-#!/usr/bin/bash
+#!/bin/bash -e
 
 # For simplicity, make sure this script is not called in-place
 if [ -e build.sh ]; then
@@ -75,9 +74,6 @@ then
 fi
 source $BUNDLE_YARP_DIR/cmake_any_any_any.sh
 
-#while [ 3 -eq 4 ]
-#do
-	
 for c in $compilers ; do
 	variants=compiler_${c}_variants
     for v in ${!variants}; do
@@ -92,16 +88,20 @@ for c in $compilers ; do
 		source yarp_${c}_${v}_Release.sh
 		source gsl_${c}_${v}_Release.sh
 		source ace_${c}_${v}_Release.sh
-		source gtkmm_${c}_${v}_Release.sh
-		source qt_${c}_${v}_Release.sh
+		if [ -f "gtkmm_${c}_${v}_Release.sh" ]; then
+			source gtkmm_${c}_${v}_Release.sh
+		fi
+		if [ -f "qt_${c}_${v}_Release.sh" ]; then
+			source qt_${c}_${v}_Release.sh
+		fi
 		
 		cd $BUILD_DIR
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build_sdl.sh
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build_glut.sh
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ode.sh
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_sdl.sh $c $v Release
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_glut.sh $c $v Release
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ode.sh $c $v Release
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Release
-		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ipopt.sh
-#		source $ICUB_PACKAGE_SOURCE_DIR/src/build_qt3.sh
+		source $ICUB_PACKAGE_SOURCE_DIR/src/build_ipopt.sh $c $v Release
+#		$ICUB_PACKAGE_SOURCE_DIR/src/build_qt3.sh
 		
 		source sdl_${c}_${v}_any.sh
 		source glut_${c}_${v}_any.sh
@@ -120,8 +120,12 @@ for c in $compilers ; do
 		source yarp_${c}_${v}_Debug.sh
      	source gsl_${c}_${v}_Debug.sh
 		source ace_${c}_${v}_Debug.sh
-		source gtkmm_${c}_${v}_Debug.sh
-		source qt_${c}_${v}_Debug.sh
+		if [ -f "gtkmm_${c}_${v}_Debug.sh" ]; then
+			source gtkmm_${c}_${v}_Debug.sh
+		fi
+		if [ -f "qt_${c}_${v}_Debug.sh" ]; then
+			source qt_${c}_${v}_Debug.sh
+		fi
 
 		cd $BUILD_DIR
 		source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Debug
@@ -138,8 +142,3 @@ for c in $compilers ; do
 	done
 done
 #done
-
-## prepare for sync to sourceforge 
-source $ICUB_PACKAGE_SOURCE_DIR/src/build_transfer.sh
- 
-

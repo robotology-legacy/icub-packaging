@@ -7,6 +7,7 @@
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
 !include "EnvVarUpdate.nsh"
+!include "x64.nsh"
 
 !define MULTIUSER_EXECUTIONLEVEL Highest
 !include MultiUser.nsh
@@ -418,7 +419,24 @@ Section "Environment variables" SecPath
 	  Goto endOpenCVIf 
    isOpenCVSel:
       WriteRegExpandStr ${WriteEnvStr_RegKey} OPENCV_DIR "$INSTDIR\${OPENCV_SUB}"
-	  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\bin"
+        ${If} ${ICUB_PLATFORM} == "x64"
+		${OrIf} ${ICUB_PLATFORM} == "amd64"
+		${OrIf} ${ICUB_PLATFORM} == "x86_amd64"
+		  StrCpy $0 "x64"
+		 ${EndIf}
+		 ${If} ${ICUB_PLATFORM} == "x86"
+		  StrCpy $0 "x86"
+		${EndIf}
+		${If} ${ICUB_VARIANT} == "v10"
+		  StrCpy $1 "vc10"
+	    ${EndIf}
+	    ${If} ${ICUB_VARIANT} == "v11"
+		  StrCpy $1 "vc11"
+	    ${EndIf}
+	    ${If} ${ICUB_VARIANT} == "v12"
+	 	  StrCpy $1 "vc12"
+	    ${EndIf}
+	  !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\$0\$1\bin"
    endOpenCVIf:
    
 #   !insertmacro SectionFlagIsSet ${SecQT3} ${SF_SELECTED} isQT3Sel notQt3Sel
@@ -556,7 +574,24 @@ Section "Uninstall"
     opencvFound:
 		DetailPrint "Removing opencv environment variables"
 		DeleteRegValue ${WriteEnvStr_RegKey} OPENCV_DIR
-		!insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\bin"
+		${If} ${ICUB_PLATFORM} == "x64"
+		${OrIf} ${ICUB_PLATFORM} == "amd64"
+		${OrIf} ${ICUB_PLATFORM} == "x86_amd64"
+		  StrCpy $0 "x64"
+		 ${EndIf}
+		 ${If} ${ICUB_PLATFORM} == "x86"
+		  StrCpy $0 "x86"
+		${EndIf}
+		${If} ${ICUB_VARIANT} == "v10"
+		  StrCpy $1 "vc10"
+	    ${EndIf}
+	    ${If} ${ICUB_VARIANT} == "v11"
+		  StrCpy $1 "vc11"
+	    ${EndIf}
+	    ${If} ${ICUB_VARIANT} == "v12"
+	 	  StrCpy $1 "vc12"
+	    ${EndIf}
+		!insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\$0\$1\bin"
 	opencvNotFound:
 	
 #	ClearErrors

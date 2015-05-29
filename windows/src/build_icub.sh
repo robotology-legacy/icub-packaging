@@ -54,8 +54,12 @@ ICUB_DIR=`cygpath --mixed "$build_dir/install"`
 ICUB_ROOT=`cygpath --mixed "$build_dir/install"`
 # make it visible to cmake
 export ICUB_ROOT 
-rm $ICUB_DIR/app -rf 
-rm CMakeCache.txt
+if [ -d "$ICUB_DIR/app" ]; then
+	rm $ICUB_DIR/app -rf 
+fi
+if [ -f "CMakeCache.txt" ]; then
+	rm CMakeCache.txt
+fi
 CMAKE_PARAMETERS=$BUNDLE_CMAKE_PARAMETERS
 "$CMAKE_BIN" $CMAKE_PARAMETERS -DCMAKE_INSTALL_PREFIX=$ICUB_DIR -G "$OPT_GENERATOR" ../$source_dir || exit 1
 
