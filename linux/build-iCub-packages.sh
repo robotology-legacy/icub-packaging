@@ -155,11 +155,7 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done ]; then
 else
 	echo "IpOpt libraries (/usr) already handled." >> $LOG_FILE 2>&1
 fi
-
 # <-- Handle IpOpt - end
-# <-- Handle all dependencies - end
-
-
 #----------------------------------- Download iCub source to correctly resolve iCub-common's dependencies ----------------------------------------#	
 #
 if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done ]; then
