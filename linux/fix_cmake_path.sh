@@ -6,27 +6,23 @@
 
 #folder=/data/build/yarp_squeeze_amd64/test_chroot/tmp/install_dir/iCub1.1.6/
 
-OLD_DIR=$PWD
-FOLDER=$1
-ICUB_VER=$2
+_FOLDER=$1
+_STRING_TO_REPLACE=$2
 
-echo "cartella: $FOLDER"
-if [ ! -d $FOLDER ]; then
-	echo -e "\n\n || ERROR cartella non esiste!! "
+if [ ! -d $_FOLDER ]; then
+	echo -e "ERROR : path $_FOLDER not found"
 	exit 1
 fi
 
-cd $FOLDER	
-files=$(find ./ -name *.cmake)
+files=$(find $_FOLDER -name *.cmake)
 
 for file in $files
 do
 	echo $file
 	# s/A/B/g file_in > file_out ==>> s= substitute string A with B, g= globally (each instance) 
 	# in this case substitute  "\/tmp\/install_dir\/$1" with nothing ( //)
-	sed 's/'"\/tmp\/install_dir\/$ICUB_VER"'//g' $file > $file.out
-	rm $file
-	mv $file.out $file
+	#sed 's/'"\/tmp\/install_dir\/$ICUB_VER"'//g' $file > $file.out
+	sed -i "s/$_STRING_TO_REPLACE//g" $file
 done
 
-cd $OLD_DIR
+exit 0

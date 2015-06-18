@@ -393,7 +393,12 @@ if [ ! -e ${ICUB_BUILD_CHROOT}/tmp/iCub-package.done ]; then
   fi
   
   # Fix path inside cmake files
-  sudo /$ICUB_SCRIPT_DIR/fix_cmake_path.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR  icub-sources-${ICUB_SOURCES_VERSION}
+  #sudo /$ICUB_SCRIPT_DIR/fix_cmake_path.sh $ICUB_BUILD_CHROOT/$D_ICUB_INSTALL_DIR $D_ICUB_INSTALL_DIR
+  _cmake_files=$(find ${ICUB_BUILD_CHROOT}/${D_ICUB_INSTALL_DIR} -name *.cmake)
+  for f in $_cmake_files ; do
+    sed -i "s|$D_ICUB_INSTALL_DIR||g" $f
+  done
+
   
   # Generate 'conffiles' file
   run_in_chroot "touch ${D_ICUB_INSTALL_DIR}/DEBIAN/conffiles"
