@@ -273,6 +273,9 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-common-package.done ]; then
                   echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed"
                   exit 1
   	fi
+	# fixes the wrong install path
+	run_in_chroot "sed -i 's|/tmp/install_dir/$ICUB_COMMON_NAME||g' /tmp/install_dir/$ICUB_COMMON_NAME/usr/lib/pkgconfig/*.pc"
+	run_in_chroot "sed -i 's|/tmp/install_dir/$ICUB_COMMON_NAME||g' /tmp/install_dir/$ICUB_COMMON_NAME/usr/share/coin/doc/Ipopt/*.txt"
   
   else
   	echo "IpOpt libraries (/icub) already handled."
@@ -283,7 +286,7 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-common-package.done ]; then
   echo "Size: $SIZE"
   run_in_chroot "touch /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums"
   cd $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/
-  FILES=$(find -path ./DEBIAN -prune -o -print)
+  #FILES=$(find -path ./DEBIAN -prune -o -print)
   #for FILE in $FILES
   #do
   #	if [ ! -d $FILE ]; then
@@ -351,7 +354,7 @@ if [ ! -e ${ICUB_BUILD_CHROOT}/tmp/iCub-package.done ]; then
   if [ -f "${ICUB_BUILD_CHROOT}/tmp/configure-icub-package.done" ]; then
     rm "${ICUB_BUILD_CHROOT}/tmp/configure-icub-package.done"
   fi
-  run_in_chroot "cd $D_ICUB_DIR ; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_USE_SDL=ON -DICUB_USE_ODE=ON -DICUB_SIM_OLD_RESPONDER=ON -DIPOPT_DIR=/usr -DICUB_USE_IPOPT=ON -DICUB_SIM_OMIT_LOGPOLAR=ON -DICUB_USE_GLUT=ON -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub -DENABLE_icubmod_DFKI_hand_calibrator=ON -DENABLE_icubmod_canmotioncontrol=OFF -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_debugInterfaceClient=ON -DENABLE_icubmod_fakecan=ON -DENABLE_icubmod_gazecontrollerclient=ON -DENABLE_icubmod_icubarmcalibrator=ON -DENABLE_icubmod_icubarmcalibratorj4=ON -DENABLE_icubmod_icubarmcalibratorj8=ON -DENABLE_icubmod_icubhandcalibrator=ON -DENABLE_icubmod_icubheadcalibrator=ON -DENABLE_icubmod_icubheadcalibratorV2=ON -DENABLE_icubmod_icublegscalibrator=ON -DENABLE_icubmod_icubtorsoonlycalibrator=ON -DENABLE_icubmod_logpolarclient=ON -DENABLE_icubmod_logpolargrabber=ON -DENABLE_icubmod_skinprototype=ON -DENABLE_icubmod_socketcan=ON -D ENABLE_icubmod_static_grabber=ON -D ENABLE_icubmod_xsensmtx=ON  $D_ICUB_ROOT && touch /tmp/configure-icub-package.done"
+  run_in_chroot "cd $D_ICUB_DIR ; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE $ICUB_CMAKE_OPTIONS -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub $D_ICUB_ROOT && touch /tmp/configure-icub-package.done"
   if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/configure-icub-package.done" ]
   then
     echo "ERROR: cmake of iCub package in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed"
@@ -363,6 +366,7 @@ if [ ! -e ${ICUB_BUILD_CHROOT}/tmp/iCub-package.done ]; then
   fi
 
   run_in_chroot "cd $D_ICUB_DIR && make && make install && touch /tmp/build-icub-package.done"
+  #run_in_chroot "export DESTDIR=$D_ICUB_INSTALL_DIR; cd $D_ICUB_DIR && make && make install && touch /tmp/build-icub-package.done"
   if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/build-icub-package.done" ]
   then
     echo "ERROR: Build of iCub package  in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed"
@@ -399,6 +403,11 @@ if [ ! -e ${ICUB_BUILD_CHROOT}/tmp/iCub-package.done ]; then
     sed -i "s|$D_ICUB_INSTALL_DIR||g" $f
   done
 
+  # Fix path inside  ini files
+  _ini_files=$(find ${ICUB_BUILD_CHROOT}/${D_ICUB_INSTALL_DIR} -name *.ini)
+  for f in $_ini_files ; do
+    sed -i "s|$D_ICUB_INSTALL_DIR||g" $f
+  done
   
   # Generate 'conffiles' file
   run_in_chroot "touch ${D_ICUB_INSTALL_DIR}/DEBIAN/conffiles"
