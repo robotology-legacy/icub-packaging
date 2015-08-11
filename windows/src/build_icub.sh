@@ -60,8 +60,8 @@ fi
 if [ -f "CMakeCache.txt" ]; then
 	rm CMakeCache.txt
 fi
-CMAKE_PARAMETERS=$BUNDLE_CMAKE_PARAMETERS
-"$CMAKE_BIN" $CMAKE_PARAMETERS -DCMAKE_INSTALL_PREFIX=$ICUB_DIR -G "$OPT_GENERATOR" ../$source_dir || exit 1
+
+"$CMAKE_BIN" -G "$OPT_GENERATOR" -DCMAKE_INSTALL_PREFIX=$ICUB_DIR $BUNDLE_CMAKE_PARAMETERS ../$source_dir || exit 1
 
 ## first call msbuild for target 
 ## following builds all projects

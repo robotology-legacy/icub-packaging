@@ -311,6 +311,8 @@ cd $ICUB_DIR_UNIX/bin
 for f in `ls -1 *.exe`; do
 	nsis_add icub_modules $f $ICUB_SUB/bin/$f
 done
+cd $ICUB_DIR_UNIX/lib
+nsis_add_recurse icub_modules iCub $ICUB_SUB/lib/iCub
 
 ## header files
 cd $ICUB_DIR_UNIX
