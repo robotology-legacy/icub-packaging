@@ -1,5 +1,5 @@
 export BUNDLE_ICUB_VERSION=1.1.16
-export BUNDLE_ICUB_TWEAK=1
+export BUNDLE_ICUB_TWEAK=2
 export BUNDLE_OPENCV_VERSION=2.4.9
 export BUNDLE_OPENCV_URL="https://github.com/Itseez/opencv/archive"
 export BUNDLE_ODE_VERSION="0.11.1"

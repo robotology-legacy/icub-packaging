@@ -1,4 +1,4 @@
-compilers="v11 v10 v12" # v11 v10 v9 v8"  list of compilers
+compilers="v10 v11 v12" # v11 v10 v9 v8"  list of compilers
 compiler_v12_family="msvc"
 compiler_v12_loader="E:/VisualStudio/VS12/VC/vcvarsall.bat"
 compiler_v12_variants="x86" #x86 64-bit, etc

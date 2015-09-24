@@ -262,7 +262,6 @@ FunctionEnd
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
-  
   !insertmacro MUI_UNPAGE_CONFIRM
   !insertmacro MUI_UNPAGE_INSTFILES
   
@@ -280,27 +279,6 @@ Section "-first"
   Var /GLOBAL YARP_FOUND
   Var /GLOBAL GSL_FOUND
   
-  SectionIn RO
-  !include ${NSIS_OUTPUT_PATH}\icub_base_add.nsi
-  ${StrRepLocal} $0 "$INSTDIR\${INST2}" "\" "/"
-
-  !insertmacro FixCMakeForPackage __NSIS_ICUB_INSTALLED_LOCATION__ $\"$0$\"
-  ${StrRepLocal} $0 "$GSL_PATH" "\" "/"
-  !insertmacro FixCMakeForPackage __NSIS_GSL_INSTALLED_LOCATION__ $\"$0$\"
-  
-  ${StrRepLocal} $0 "$INSTDIR\${IPOPT_SUB}" "\" "/"
-  !insertmacro FixCMakeForPackage __NSIS_IPOPT_INSTALLED_LOCATION__ $\"$0$\"
-
-  ${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
-  !insertmacro FixCMakeForPackage __NSIS_OPENCV_INSTALLED_LOCATION__ $\"$0$\"
-
-  ${StrRepLocal} $0 "$INSTDIR\${ACE_SUB}" "\" "/"
-  !insertmacro FixCMakeForPackage __NSIS_ACE_INSTALLED_LOCATION__ $\"$0$\"
-  
-  DetailPrint "Fixing: $INSTDIR\${OPENCV_SUB}\OpenCVConfig.cmake"
-  ${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
-  !insertmacro ReplaceInFile "$INSTDIR\${OPENCV_SUB}\OpenCVConfig.cmake" __NSIS_OPENCV_INSTALLED_LOCATION__ $\"$0$\"
-  
   SetOutPath "$INSTDIR"
   !insertmacro RegisterPackage ipopt ${IPOPT_SUB}
   !insertmacro RegisterPackage OpenCV ${OPENCV_SUB}
@@ -308,6 +286,8 @@ Section "-first"
   !insertmacro RegisterPackage ode ${ODE_SUB}
   !insertmacro RegisterPackage glut ${GLUT_SUB}
   #!insertmacro RegisterPackage qt3 ${QT3_SUB}  
+  
+  SectionIn RO
 SectionEnd
 
 SectionGroup "iCub" SeciCub
@@ -349,7 +329,22 @@ SectionGroup "iCub" SeciCub
     SetOutPath "$INSTDIR"
     !include ${NSIS_OUTPUT_PATH}\icub_vc_dlls_add.nsi
   SectionEnd
-   
+    
+  Section "CMake Files" SecCMake
+    SetOutPath "$INSTDIR"
+    !include ${NSIS_OUTPUT_PATH}\icub_base_add.nsi
+    ${StrRepLocal} $0 "$INSTDIR\${INST2}" "\" "/"
+    !insertmacro FixCMakeForPackage __NSIS_ICUB_INSTALLED_LOCATION__ $\"$0$\"
+	${StrRepLocal} $0 "$GSL_PATH" "\" "/"
+    !insertmacro FixCMakeForPackage __NSIS_GSL_INSTALLED_LOCATION__ $\"$0$\"
+    ${StrRepLocal} $0 "$INSTDIR\${ACE_SUB}" "\" "/"
+    !insertmacro FixCMakeForPackage __NSIS_ACE_INSTALLED_LOCATION__ $\"$0$\"
+	${StrRepLocal} $0 "$INSTDIR\${IPOPT_SUB}" "\" "/"
+    !insertmacro FixCMakeForPackage __NSIS_IPOPT_INSTALLED_LOCATION__ $\"$0$\"
+	${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
+    !insertmacro FixCMakeForPackage __NSIS_OPENCV_INSTALLED_LOCATION__ $\"$0$\"
+  SectionEnd
+ 
 SectionGroupEnd
 
 Section "Ipopt files" SecIpopt
@@ -361,6 +356,8 @@ Section "OpenCV files" SecOpenCV
     SetOutPath "$INSTDIR"
     !include ${NSIS_OUTPUT_PATH}\icub_opencv_add.nsi
 	!include ${NSIS_OUTPUT_PATH}\icub_opencv_bin_add.nsi
+	${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
+    !insertmacro ReplaceInFile "$INSTDIR\${OPENCV_SUB}\OpenCVConfig.cmake" __NSIS_OPENCV_INSTALLED_LOCATION__ $\"$0$\"
 SectionEnd
 
 Section "ODE files" SecODE
@@ -503,6 +500,7 @@ LangString DESC_SecDataDirs ${LANG_ENGLISH} "All data, config, templates and XML
 LangString DESC_SecDevelopment ${LANG_ENGLISH} "Files for developers."
 LangString DESC_SecLibraries ${LANG_ENGLISH} "C++ libraries."
 LangString DESC_SecHeaders ${LANG_ENGLISH} "Header files."
+LangString DESC_SecCMake ${LANG_ENGLISH} "CMake files."
 LangString DESC_SecIpopt ${LANG_ENGLISH} "Interior Point OPTimizer (Ipopt), used for solving inverse problems."
 LangString DESC_SecOpenCV ${LANG_ENGLISH} "Open Source Computer Vision library (OpenCV)."
 LangString DESC_SecVcDlls ${LANG_ENGLISH} "Visual Studio runtime redistributable files.  Not free software. If you already have Visual Studio installed, you may want to skip this."
@@ -522,6 +520,7 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Modify user environment. Add executable
   !insertmacro MUI_DESCRIPTION_TEXT ${SecIpopt} $(DESC_SecIpopt)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecOpenCV} $(DESC_SecOpenCV)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecHeaders} $(DESC_SecHeaders)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecCMake} $(DESC_SecCMake)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecVcDlls} $(DESC_SecVcDlls)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecPath} $(DESC_SecPath)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecGLUT} $(DESC_SecGLUT)
@@ -705,14 +704,17 @@ Function .onInit
 	Goto yarpdone
   notyarp:
 	DetailPrint "YARP was not found at $YARP_PATH"
+	${SetSectionGroup} ${SeciCub}
 	${UnSelectSection} ${SecModules}
     ${UnSelectSection} ${SecDataDirs}
     ${UnSelectSection} ${SecLibraries}
     ${UnSelectSection} ${SecHeaders}
 	${UnSelectSection} ${SecHeaders}
 	${UnSelectSection} ${SecVcDlls}
- 	${MakeGroupReadOnly} ${SeciCub}
-    ${SetSectionGroup} ${SeciCub}
+	${UnSelectSection} ${SecCMake}
+    ${MakeGroupReadOnly} ${SeciCub}
+	;IntOp $R0 ${SECTION_OFF} | ${SF_RO}
+	;SectionSetFlags ${SecCMake} $R0
   yarpdone:
   
   StrCmp $GSL_FOUND "1" gsl notgsl
