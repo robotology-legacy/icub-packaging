@@ -107,69 +107,66 @@ cd $fname2 || exit 1
 OUT_DIR=$PWD
 
 ### Copy some iCub files from debug tree
-cp $ICUB_DIR_DBG_UNIX/lib/ICUB/icub-export-install-debug.cmake $ICUB_DIR_UNIX/lib/ICUB
-cp $ICUB_DIR_DBG_UNIX/lib/*.lib $ICUB_DIR_UNIX/lib
+cp $ICUB_DIR_DBG_UNIX/lib/ICUB/icub-export-install-debug.cmake $ICUB_DIR_UNIX/lib/ICUB/
+cp $ICUB_DIR_DBG_UNIX/lib/*.lib $ICUB_DIR_UNIX/lib/
 
 cd $ICUB_DIR_UNIX/lib/ICUB || exit 1
 
-# backup
-cp icub-config.cmake icub-config-fp.cmake
-cp icub-export-install-includes.cmake icub-export-install-includes-fp.cmake 
-cp icub-export-install-release.cmake icub-export-install-release-fp.cmake
-cp icub-export-install-debug.cmake icub-export-install-debug-fp.cmake
+# cp icub-config.cmake icub-config-fp.cmake
+# cp icub-export-install-includes.cmake icub-export-install-includes-fp.cmake 
+# cp icub-export-install-release.cmake icub-export-install-release-fp.cmake
+# cp icub-export-install-debug.cmake icub-export-install-debug-fp.cmake
 
-#replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} icub-config-tmp.cmake
+# file=icub-config-fp.cmake
+# replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} $file
+# replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
+# replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
+# replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
 
-file=icub-config-fp.cmake
-replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} $file
-replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
-replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
+# insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)"  $file
+# insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+# insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
+# insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
 
-insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)"  $file
-insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
-insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
+#### fix cmake include file
+# file=icub-export-install-includes-fp.cmake
+# replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} $file
+# replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
+# replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
+# replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
 
-##### fix cmake include file
-file=icub-export-install-includes-fp.cmake
-replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} $file
-replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
-replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
+# insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
+# insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+# insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
+# insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
 
-insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
-insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
-insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
+#### fix export file, release
+# file=icub-export-install-release-fp.cmake
+# replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
+# replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
+# replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
+# replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} $file
 
-##### fix export file, release
-file=icub-export-install-release-fp.cmake
-replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
-replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
-replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} $file
+# insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+# insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
+# insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" $file
+# insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
 
-insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
-insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" $file
-insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
+#### fix export file, debug
+# file=icub-export-install-debug-fp.cmake
 
-##### fix export file, debug
-file=icub-export-install-debug-fp.cmake
+##Note: binaries for debug can be in different locations w.r.t. release
+# replace_string "$GSL_DIR_DBG" \${GSL_INSTALLED_LOCATION} $file
+# replace_string "$OpenCV_DIR_DBG" \${OPENCV_INSTALLED_LOCATION} $file
 
-# Note: binaries for debug can be in different locations w.r.t. release
-replace_string "$GSL_DIR_DBG" \${GSL_INSTALLED_LOCATION} $file
-replace_string "$OpenCV_DIR_DBG" \${OPENCV_INSTALLED_LOCATION} $file
+##Some libraries do not place debug/release binaries in different locations
+# replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
+# replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} $file
 
-# some libraries do not place debug/release binaries in different locations
-replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} $file
-
-insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
-insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
-insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" $file
+# insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
+# insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+# insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
+# insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" $file
 
 # Function to prepare stub files for adding/removing files for an NSIS
 # section, and for building the corresponding zip file
@@ -281,16 +278,57 @@ cd $ICUB_DIR_UNIX || exit 1
 ICUB_LICENSE=`cygpath --windows "$ICUB_ROOT/conf/package/license.txt"`
 ICUB_LOGO=`cygpath --windows "$ICUB_ROOT/conf/package/robotcublogo.bmp"`
 
-## Now cmake files
-cd $ICUB_DIR_UNIX/lib/ICUB || exit 1
-nsis_add icub_base icub-config-fp.cmake $ICUB_SUB/cmake/icub-config.cmake
-nsis_add icub_base icub-export-install.cmake $ICUB_SUB/lib/ICUB/icub-export-install.cmake
-nsis_add icub_base icub-export-install-includes-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-includes.cmake
-nsis_add icub_base icub-export-install-release-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-release.cmake
-nsis_add icub_base icub-export-install-debug-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-debug.cmake
+### Now cmake files
+#cd $ICUB_DIR_UNIX/lib/ICUB || exit 1
+# nsis_add icub_base icub-config-fp.cmake $ICUB_SUB/cmake/icub-config.cmake
+# nsis_add icub_base icub-export-install.cmake $ICUB_SUB/lib/ICUB/icub-export-install.cmake
+# nsis_add icub_base icub-export-install-includes-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-includes.cmake
+# nsis_add icub_base icub-export-install-release-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-release.cmake
+# nsis_add icub_base icub-export-install-debug-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-debug.cmake
 
 cd $ICUB_DIR_UNIX
 nsis_add_recurse icub_data_dirs share $ICUB_SUB/share
+
+## CMake files
+cd $ICUB_DIR_UNIX/lib/ICUB || exit 1
+
+#replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} icub-config-tmp.cmake
+files_to_fix="icub-config.cmake icub-export-install-includes.cmake icub-export-install-release.cmake icub-export-install-debug.cmake"
+for f in $files_to_fix
+do
+  echo "processing file ${f}"
+  cp "${f}" "${f}.backup"
+  replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} "${f}.backup"
+  
+  replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} "${f}.backup"
+  GSL_DEBUG_STRING=$(echo $GSL_DIR | sed "s/Release/Debug/g")
+  replace_string "$GSL_DEBUG_STRING" \${GSL_INSTALLED_LOCATION} "${f}.backup"
+  
+  replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} "${f}.backup"
+  IPOPT_DEBUG_STRING=$(echo $IPOPT_DIR | sed "s/Release/Debug/g")
+  replace_string "$IPOPT_DEBUG_STRING" \${IPOPT_INSTALLED_LOCATION} "${f}.backup"
+  
+  replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} "${f}.backup"
+  OpenCV_DEBUG_STRING=$(echo $OpenCV_DIR | sed "s/Release/Debug/g")
+  replace_string "$OpenCV_DEBUG_STRING" \${OPENCV_INSTALLED_LOCATION} "${f}.backup"
+  
+  replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} "${f}.backup"
+  ACE_DEBUG_STRING=$(echo $ACE_DIR | sed "s/Release/Debug/g")
+  replace_string "$ACE_DEBUG_STRING" \${ACE_INSTALLED_LOCATION} "${f}.backup"
+
+  insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" "${f}.backup"
+  insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" "${f}.backup"
+  insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  "${f}.backup"
+  insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" "${f}.backup"
+  insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" "${f}.backup"
+  mv ${f}.backup ${f}
+done
+
+nsis_add icub_base icub-config.cmake $ICUB_SUB/cmake/icub-config.cmake
+nsis_add icub_base icub-export-install.cmake $ICUB_SUB/lib/ICUB/icub-export-install.cmake
+nsis_add icub_base icub-export-install-includes.cmake $ICUB_SUB/lib/ICUB/icub-export-install-includes.cmake
+nsis_add icub_base icub-export-install-release.cmake $ICUB_SUB/lib/ICUB/icub-export-install-release.cmake
+nsis_add icub_base icub-export-install-debug.cmake $ICUB_SUB/lib/ICUB/icub-export-install-debug.cmake
 
 ## Libraries
 cd $ICUB_DIR_UNIX/lib || exit 1
@@ -417,17 +455,16 @@ echo $OpenCV_DIR
 cd $OpenCV_DIR
 
 cp OpenCVConfig.cmake OpenCVConfig-fp.cmake
-
-file=OpenCVConfig-fp.cmake
-replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
-insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
+replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} OpenCVConfig-fp.cmake
+insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" OpenCVConfig-fp.cmake
+mv OpenCVConfig-fp.cmake OpenCVConfig.cmake
 
 if [ -e 3rdParty ]; then
 	nsis_add_recurse icub_opencv 3rdparty $OPENCV_SUB/3rdparty
 fi
 	
 nsis_add_recurse icub_opencv include $OPENCV_SUB/include
-nsis_add icub_opencv $file $OPENCV_SUB/OpenCVConfig.cmake
+nsis_add icub_opencv OpenCVConfig.cmake $OPENCV_SUB/OpenCVConfig.cmake
 file="OpenCVConfig-version.cmake"
 nsis_add icub_opencv $file $OPENCV_SUB/$file
 
