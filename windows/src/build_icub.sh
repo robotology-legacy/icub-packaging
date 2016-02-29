@@ -13,32 +13,45 @@ echo "Proceeding build_icub_${c}_${v}_$3"
 	
 BUILD_DIR=$PWD
 
-source_dir=iCub$BUNDLE_ICUB_VERSION
+source_name="icub-main"
+source_url="https://github.com/robotology/${source_name}" 
+source_dir="${source_name}"
 
 cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v $3
 cd $BUILD_DIR
 
-if [ ! -e $source_dir ]
+if [ ! -e "$source_name" ]; then
+  git clone $source_url || {
+    echo "Cannot fetch ${source_name} from $source_url"
+	exit 1
+  }
+fi
+cd $source_name
+git  pull || {
+    echo "Cannot update $source_name from $source_url"
+	exit 1
+  }
+if [ "$BUNDLE_ICUB_VERSION" == "" ] || [ "$BUNDLE_ICUB_VERSION" == "trunk" ] || [ "$BUNDLE_ICUB_VERSION" == "master" ]
 then
-  if [ "$BUNDLE_ICUB_VERSION" == "" ] || [ "$BUNDLE_ICUB_VERSION" == "trunk" ]
-  then
-			svn co https://github.com/robotology/icub-main/trunk $source_dir || {
-				echo "Cannot fetch iCub"
-				exit 1
-			}
-  else
-    svn co https://github.com/robotology/icub-main/tags/v${BUNDLE_ICUB_VERSION} $source_dir || {
-				echo "Cannot fetch iCub"
-				exit 1
-			}
-  fi
-fi  
-
-build_dir=$BUILD_DIR/$source_dir-$OPT_COMPILER-$OPT_VARIANT-$OPT_BUILD
-
+  git checkout master || {
+    echo "Cannot fetch master"
+	exit 1
+  }
+else
+  git checkout  v${BUNDLE_YARP_VERSION} || {
+    echo "Cannot fetch v${BUNDLE_ICUB_VERSION}"
+    exit 1
+  }
+fi
+cd ..
+build_dir="${source_name}-${OPT_COMPILER}-${OPT_VARIANT}-${OPT_BUILD}"
+echo "Building to ${build_dir}"
+if [ -d "$build_dir" ]; then
+  rm -rf $build_dir
+fi
 mkdir -p $build_dir
-cd $build_dir || exit 1
+cd $build_dir
 
 echo "Using ACE from $ACE_ROOT"
 echo "Using YARP from $YARP_DIR"
@@ -49,9 +62,9 @@ echo "Using OpenCV from $OpenCV_DIR"
 echo "OPT_GENERATOR: $OPT_GENERATOR"
 echo "CMake: $CMAKE_BIN"
 
-ICUB_DIR=`cygpath --mixed "$build_dir/install"`
+ICUB_DIR=`cygpath --mixed "${PWD}/install"`
 # cmake uses the following to decide where to install applications
-ICUB_ROOT=`cygpath --mixed "$build_dir/install"`
+ICUB_ROOT=`cygpath --mixed "${PWD}/install"`
 # make it visible to cmake
 export ICUB_ROOT 
 if [ -d "$ICUB_DIR/app" ]; then

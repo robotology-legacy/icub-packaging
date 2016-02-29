@@ -19,7 +19,9 @@ if [ "BUNDLE_SDL_VERSION" == "" ] || [ "BUNDLE_SDL_URL" == "" ]; then
   echo "BUNDLE_SDL_URL=$BUNDLE_SDL_URL"
   exit 1
 fi
-archivename="SDL-${BUNDLE_SDL_VERSION}-bin.zip"
+packetname="SDL-${BUNDLE_SDL_VERSION}" 
+archivename="${packetname}.zip"
+
 if [ ! -e $archivename ]; then
 	wget ${BUNDLE_SDL_URL}/$archivename 
 	if [ "$?" != "0" ]; then
@@ -30,9 +32,13 @@ fi
 
 mkdir $source_dir
 unzip -o $archivename -d ./$source_dir
+if [ "$?" != "0" ]; then
+  echo "ERROR: unable to decompress file $archivename"
+  exit -1
+fi
 
 # Cache icub paths and variables, for dependent packages to read
-SDLDIR=`cygpath --mixed "$BUILD_DIR/$source_dir/SDL-1.2.13"`
+SDLDIR=`cygpath --mixed "$BUILD_DIR/$source_dir/${packetname}"`
 (
 	echo "export SDLDIR='$SDLDIR'"
 ) > $BUILD_DIR/sdl_${OPT_COMPILER}_${OPT_VARIANT}_any.sh

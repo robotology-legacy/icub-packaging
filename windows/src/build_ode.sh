@@ -22,45 +22,46 @@ if [ "BUNDLE_ODE_VERSION" == "" ] || [ "BUNDLE_ODE_URL" == "" ]; then
   exit 1
 fi
 
-archivename=""
-archive_url=""
-
-if [ "$c" == "v12" ]; then
-	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc12.zip"
-	archive_url="${BUNDLE_ODE_URL}/msvc12"
-elif [ "$c" == "v11" ]; then
-	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc11.zip"
-	archive_url="${BUNDLE_ODE_URL}/msvc11"
-elif [ "$c" == "v10" ]; then
-	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc10.zip"
-	archive_url="${BUNDLE_ODE_URL}/msvc10"
-elif [ "$c" == "v8" ]; then
-	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc8.zip"
-	archive_url="${BUNDLE_ODE_URL}/msvc8"
-elif [ "$c" == "v9" ]; then
-	archivename="ode-${BUNDLE_ODE_VERSION}-bin-msvc9.zip"
-	archive_url="${BUNDLE_ODE_URL}/msvc9"
-else
-	echo "ERROR: Compiler version $c not supported yet"
-	exit 1
+ODE_VARIANT=""
+ODE_ARCH="$v"
+case "$c" in
+	"v12" )
+		ODE_VARIANT="msvc12"
+		;;
+	"v11" )
+		ODE_VARIANT="msvc11"
+		;;
+	"v10" )
+		ODE_VARIANT="msvc10"
+		;;
+	"" )
+		echo "ERROR: Empty compiler variant string for ODE"
+		exit 1
+		;;
+	"*" )
+		echo "ERROR: Usupported compiler variant for ODE: $c"
+		exit 1
+		;;
+esac
+packetname="ode-${BUNDLE_ODE_VERSION}_${ODE_VARIANT}_${ODE_ARCH}"
+archivename="$packetname.zip"
+if [ ! -e "$archivename" ]; then
+    wget ${BUNDLE_ODE_URL}/${archivename}
+	if [ "$?" != "0" ]; then
+		echo "ERROR: unable to download file $archivename from ${BUNDLE_ODE_URL}"
+		exit -1
+	fi
 fi
 
-if [ ! -e $archivename ]; then
-    wget ${archive_url}/${archivename}
-	if [ "$?" != "0" ]; then
-		echo "ERROR: Cannot fetch ODE from ${archive_url}/${archivename}"
-		exit 1
-	fi
-fi	
 
 mkdir $source_dir
 unzip -o $archivename -d ./$source_dir
 
 # Cache icub paths and variables, for dependent packages to read
-ODE_DIR=`cygpath --mixed "$BUILD_DIR/$source_dir/ode-0.11.1"`
+ODE_DIR=`cygpath --mixed "$BUILD_DIR/$source_dir/${packetname}"`
 (
 	echo "export ODE_DIR='$ODE_DIR'"
-) > $BUILD_DIR/ode_${OPT_COMPILER}_${OPT_VARIANT}_any.sh
+) > $BUILD_DIR/ode_${c}_${v}_any.sh
 
 cd $BUILD_DIR
 

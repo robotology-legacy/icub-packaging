@@ -15,8 +15,15 @@ cd $BUNDLE_YARP_DIR
 source  $YARP_BUNDLE_SOURCE_DIR/src/process_options.sh $c $v Release
 cd $BUILD_DIR
 
+if [ "BUNDLE_IPOPT_VERSION" == "" ] || [ "BUNDLE_IPOPT_URL" == "" ]; then
+  echo "ERROR: Please specify IPOPT version and download URL in the configuration script"
+  echo "BUNDLE_IPOPT_VERSION=$BUNDLE_IPOPT_VERSION"
+  echo "BUNDLE_IPOPT_URL=$BUNDLE_IPOPT_URL"
+  exit 1
+fi
+
 IPOPT_VARIANT=""
-IPOPT_ARCH=""
+IPOPT_ARCH="$v"
 case "$c" in
 	"v12" )
 		IPOPT_VARIANT="msvc12"
@@ -36,31 +43,12 @@ case "$c" in
 		exit 1
 		;;
 esac
-case "$v" in
-	"x86" )
-		IPOPT_ARCH="win32"
-		;;
-	"x86_64" )
-		IPOPT_ARCH="win64"
-		;;
-	"amd64" )
-		IPOPT_ARCH="win64"
-		;;
-	"*" )
-		echo "ERROR: Empty compiler architecture string for IPOPT"
-		exit 1
-		;;
-	"*" )
-		echo "ERROR: Usupported compiler architecture for IPOPT: $c"
-		exit 1
-		;;
-esac
-packetname="Ipopt-${BUNDLE_IPOPT_VERSION}-${IPOPT_ARCH}-${IPOPT_VARIANT}_mumps+metis+clapack"
+packetname="ipopt-${BUNDLE_IPOPT_VERSION}_${IPOPT_VARIANT}_${IPOPT_ARCH}"
 archivename="$packetname.zip"
 if [ ! -e "$archivename" ]; then
-    wget http://www.icub.org/download/packages/windows/${IPOPT_VARIANT}/${archivename}
+    wget ${BUNDLE_IPOPT_URL}/${archivename}
 	if [ "$?" != "0" ]; then
-		echo "ERROR: unable to download file $archivename"
+		echo "ERROR: unable to download file $archivename from ${BUNDLE_IPOPT_URL}"
 		exit -1
 	fi
 fi
@@ -68,19 +56,13 @@ fi
 mkdir $source_dir
 unzip -o $archivename -d ./$source_dir
 if [ "$?" != "0" ]; then
-	echo "ERROR: unable to decompress file $archivename"
-	exit -1
+  echo "ERROR: unable to decompress file $archivename"
+  exit -1
 fi
-rm ./$source_dir/Ipopt-${BUNDLE_IPOPT_VERSION} -rf
-mv ./$source_dir/${packetname} ./$source_dir/Ipopt-${BUNDLE_IPOPT_VERSION}
 
-if [ ! -d "$BUILD_DIR/$source_dir/Ipopt-${BUNDLE_IPOPT_VERSION}" ]; then
-	echo "ERROR: unable to decompress file $archivename"
-	exit -1
-fi
 
 # Cache icub paths and variables, for dependent packages to read
-IPOPT_DIR=`cygpath --mixed "$BUILD_DIR/$source_dir/Ipopt-${BUNDLE_IPOPT_VERSION}"`
+IPOPT_DIR=`cygpath --mixed "$BUILD_DIR/${source_dir}/${packetname}"`
 (
 	echo "export IPOPT_DIR='$IPOPT_DIR'"
 ) > $BUILD_DIR/ipopt_${OPT_COMPILER}_${OPT_VARIANT}_any.sh

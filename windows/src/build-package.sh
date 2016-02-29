@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#set -x
 ##############################################################################
 #
 # Copyright: (C) 2011 Department of Robotics Brain and Cognitive Sciences, Istituto Italiano di Tecnologia
@@ -105,11 +105,10 @@ else
 fi
 cd $fname2 || exit 1
 OUT_DIR=$PWD
-
+echo $(pwd)
 ### Copy some iCub files from debug tree
 cp $ICUB_DIR_DBG_UNIX/lib/ICUB/icub-export-install-debug.cmake $ICUB_DIR_UNIX/lib/ICUB/
 cp $ICUB_DIR_DBG_UNIX/lib/*.lib $ICUB_DIR_UNIX/lib/
-
 cd $ICUB_DIR_UNIX/lib/ICUB || exit 1
 
 # cp icub-config.cmake icub-config-fp.cmake
@@ -393,25 +392,6 @@ if [ -e "$GLUT_DIR" ] ; then
 fi
 
 
-## add QT3
-# echo "QT3: QTDIR"
-# if [ -e "$QTDIR" ]; then
-	# cd "$QTDIR"
-	
-	# for f in `find ./ -maxdepth 1 -type f`; do
-		# nsis_add icub_qt3 $f $QT3_SUB/$f
-	# done
-	
-	# nsis_add_recurse icub_qt3 include $QT3_SUB/include
-	# nsis_add_recurse icub_qt3 lib $QT3_SUB/lib
-	# nsis_add_recurse icub_qt3 mkspecs $QT3_SUB/mkspecs
-	
-	# cd "$QTDIR/bin"
-	# for f in `find ./ -maxdepth 1 -type f`; do
-		# nsis_add icub_qt3_bin $f $QT3_SUB/bin/$f
-	# done
-# fi
-
 ## add ODE
 echo "ODE: $ODE_DIR"
 if [ -e "$ODE_DIR" ]; then
@@ -444,8 +424,7 @@ fi
 # Add ipopt
 cd $IPOPT_DIR
 nsis_add_recurse icub_ipopt include $IPOPT_SUB/include
-nsis_add icub_ipopt lib/libipopt.lib $IPOPT_SUB/lib/libipopt.lib 
-nsis_add icub_ipopt lib/libipoptD.lib $IPOPT_SUB/lib/libipoptD.lib 
+nsis_add_recurse icub_ipopt lib/libipopt.lib $IPOPT_SUB/lib 
 nsis_add_recurse icub_ipopt share $IPOPT_SUB/share
 nsis_add_recurse icub_ipopt bin $IPOPT_SUB/bin
 
@@ -470,21 +449,33 @@ nsis_add icub_opencv $file $OPENCV_SUB/$file
 
 echo echo "OpenCV Release: $OPENCV_DIR_UNIX"
 
+case "$v" in
+"x68" )
+  OPENCV_OBJ_PLAT="x86"
+  ;;
+"x64" | "x86_64" | "x86_amd64" )
+  OPENCV_OBJ_PLAT="x64"
+  ;;
+*)
+  echo "ERROR: platform $v not supported."
+  exit 1
+esac
 case "$c" in
 "v10" )
-  OPENCV_OBJ_SUFFIX_PATH="${v}/vc10"
+  OPENCV_OBJ_VARIANT="vc10"
   ;;
 "v11" )
-  OPENCV_OBJ_SUFFIX_PATH="${v}/vc11"
+  OPENCV_OBJ_VARIANT="vc11"
   ;;
 "v12" )
-  OPENCV_OBJ_SUFFIX_PATH="${v}/vc12"
+  OPENCV_OBJ_VARIANT="vc12"
   ;;
 *)
   echo "ERROR: compiler version $v not supported."
   exit 1
   ;;
 esac
+OPENCV_OBJ_SUFFIX_PATH="${OPENCV_OBJ_PLAT}/${OPENCV_OBJ_VARIANT}"
  
 # add binaries for OpenCV
 cd "${OPENCV_DIR_UNIX}/${OPENCV_OBJ_SUFFIX_PATH}/bin" || exit 1

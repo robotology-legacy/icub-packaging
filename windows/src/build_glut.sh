@@ -5,7 +5,6 @@ if [ -e $guard_file ]; then
     return
 fi
 
-
 BUILD_DIR=$PWD
 
 source_dir=glut-$c-$v
@@ -20,7 +19,8 @@ if [ "BUNDLE_GLUT_VERSION" == "" ] || [ "BUNDLE_GLUT_URL" == "" ]; then
   echo "BUNDLE_GLUT_URL=$BUNDLE_GLUT_URL"
   exit 1
 fi
-archivename="glut-${BUNDLE_GLUT_VERSION}.icub-bin.zip"
+packetname="glut-${BUNDLE_GLUT_VERSION}" 
+archivename="${packetname}_icub.zip"
 
 if [ ! -e $archivename ]; then
     wget ${BUNDLE_GLUT_URL}/${archivename}
@@ -32,9 +32,13 @@ fi
 
 mkdir $source_dir
 unzip -o $archivename -d ./$source_dir
+if [ "$?" != "0" ]; then
+  echo "ERROR: unable to decompress file $archivename"
+  exit -1
+fi
 
 # Cache icub paths and variables, for dependent packages to read
-GLUT_DIR=`cygpath --mixed "$BUILD_DIR/$source_dir/glut-3.7.6-bin"`
+GLUT_DIR=`cygpath --mixed "$BUILD_DIR/$source_dir/${packetname}"`
 (
 	echo "export GLUT_DIR='$GLUT_DIR'"
 ) > $BUILD_DIR/glut_${OPT_COMPILER}_${OPT_VARIANT}_any.sh
