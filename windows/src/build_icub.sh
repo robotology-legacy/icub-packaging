@@ -28,18 +28,19 @@ if [ ! -e "$source_name" ]; then
   }
 fi
 cd $source_name
-git  pull || {
-    echo "Cannot update $source_name from $source_url"
-	exit 1
-  }
+
 if [ "$BUNDLE_ICUB_VERSION" == "" ] || [ "$BUNDLE_ICUB_VERSION" == "trunk" ] || [ "$BUNDLE_ICUB_VERSION" == "master" ]
 then
   git checkout master || {
     echo "Cannot fetch master"
 	exit 1
   }
+  git pull || {
+    echo "Cannot update $source_name from $source_url"
+	exit 1
+  }
 else
-  git checkout  v${BUNDLE_YARP_VERSION} || {
+  git checkout  v${BUNDLE_ICUB_VERSION} || {
     echo "Cannot fetch v${BUNDLE_ICUB_VERSION}"
     exit 1
   }
@@ -58,6 +59,16 @@ echo "Using YARP from $YARP_DIR"
 echo "Using SDL from $SDLDIR"
 echo "Using GLUT from $GLUT_DIR"
 echo "Using ODE from $ODE_DIR"
+if [ "$Qt5_DIR" != "" ]; then
+  echo "Using Qt5 from $Qt5_DIR"
+else
+  echo "Skipping QT5"
+fi
+if [ "$GTKMM_DIR" != "" ]; then
+  echo "Using GTKMM from $GTKMM_DIR"
+else
+  echo "Skipping GTKMM"
+fi
 echo "Using OpenCV from $OpenCV_DIR"
 echo "OPT_GENERATOR: $OPT_GENERATOR"
 echo "CMake: $CMAKE_BIN"
