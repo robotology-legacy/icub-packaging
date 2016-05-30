@@ -256,9 +256,6 @@ nsis_setup icub_opencv_bin
 nsis_setup icub_glut
 nsis_setup icub_glut_bin
 
-#nsis_setup icub_qt3
-#nsis_setup icub_qt3_bin
-
 nsis_setup icub_sdl
 nsis_setup icub_sdl_bin
 
@@ -276,13 +273,6 @@ cd $ICUB_DIR_UNIX || exit 1
 ICUB_LICENSE=`cygpath --windows "$ICUB_ROOT/conf/package/license.txt"`
 ICUB_LOGO=`cygpath --windows "$ICUB_ROOT/conf/package/robotcublogo.bmp"`
 
-### Now cmake files
-#cd $ICUB_DIR_UNIX/lib/ICUB || exit 1
-# nsis_add icub_base icub-config-fp.cmake $ICUB_SUB/cmake/icub-config.cmake
-# nsis_add icub_base icub-export-install.cmake $ICUB_SUB/lib/ICUB/icub-export-install.cmake
-# nsis_add icub_base icub-export-install-includes-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-includes.cmake
-# nsis_add icub_base icub-export-install-release-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-release.cmake
-# nsis_add icub_base icub-export-install-debug-fp.cmake $ICUB_SUB/lib/ICUB/icub-export-install-debug.cmake
 
 cd $ICUB_DIR_UNIX
 nsis_add_recurse icub_data_dirs share $ICUB_SUB/share
@@ -442,7 +432,7 @@ fi
 # Add ipopt
 cd $IPOPT_DIR
 nsis_add_recurse icub_ipopt include $IPOPT_SUB/include
-nsis_add_recurse icub_ipopt lib/libipopt.lib $IPOPT_SUB/lib 
+nsis_add_recurse icub_ipopt lib $IPOPT_SUB/lib 
 nsis_add_recurse icub_ipopt share $IPOPT_SUB/share
 nsis_add_recurse icub_ipopt bin $IPOPT_SUB/bin
 

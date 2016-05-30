@@ -447,13 +447,14 @@ Section "Environment variables" SecPath
     Goto sdlEndif 
    isSelSDL:
     !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${SDL_SUB}\lib"
+    WriteRegExpandStr ${WriteEnvStr_RegKey} SDLDIR "$INSTDIR\${SDL_SUB}"
    sdlEndif:
    
    !insertmacro SectionFlagIsSet ${SecGLUT} ${SF_SELECTED} isGLUTSel notGLUTSel
    notGLUTSel:
     Goto endifGLUT 
    isGLUTSel:
-         WriteRegExpandStr ${WriteEnvStr_RegKey} GLUT_DIR "$INSTDIR\${GLUT_SUB}"
+    WriteRegExpandStr ${WriteEnvStr_RegKey} GLUT_DIR "$INSTDIR\${GLUT_SUB}"
     !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${GLUT_SUB}"
    endifGLUT:
   
