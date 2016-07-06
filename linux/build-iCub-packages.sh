@@ -129,7 +129,7 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done ]; then
     echo "ERROR: missing IpOpt in path ${ICUB_SCRIPT_DIR}/sources/${IPOPT}"
     do_exit 1
   fi
-  cp -rf ${ICUB_SCRIPT_DIR}/sources/${IPOPT}  ${ICUB_BUILD_CHROOT}/tmp/
+  sudo cp -rf ${ICUB_SCRIPT_DIR}/sources/${IPOPT}  ${ICUB_BUILD_CHROOT}/tmp/
   if [ "$?" != "0" ]
   then
     echo "ERROR: failed to copy ${ICUB_SCRIPT_DIR}/sources/${IPOPT}"
@@ -171,14 +171,14 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done ]; th
     cd $ICUB_SCRIPT_DIR/sources
     if [ -d "icub-sources-${ICUB_SOURCES_VERSION}" ]; then
       cd icub-sources-${ICUB_SOURCES_VERSION}
-      svn update
+      sudo svn update
       if [ "$?" != "0" ]; then
         echo "Error: unable to update icub repositoy from ${ICUB_REPO_URL}/trunk"
         exit 1
       fi
       cd ..
     else
-      svn co $SVN_OPTIONS ${ICUB_REPO_URL}/trunk icub-sources-$ICUB_SOURCES_VERSION
+      sudo svn co $SVN_OPTIONS ${ICUB_REPO_URL}/trunk icub-sources-$ICUB_SOURCES_VERSION
       if [ "$?" != "0" ]; then
         echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/trunk"
         exit 1
@@ -188,7 +188,7 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done ]; th
     echo "Fetching iCub tag v${ICUB_SOURCES_VERSION}"																	
     if [ ! -d $ICUB_SCRIPT_DIR/sources/$ICUB_SOURCES_VERSION ]; then
       cd $ICUB_SCRIPT_DIR/sources
-      svn co $SVN_OPTIONS ${ICUB_REPO_URL}/tags/v${ICUB_SOURCES_VERSION} icub-sources-$ICUB_SOURCES_VERSION
+      sudo svn co $SVN_OPTIONS ${ICUB_REPO_URL}/tags/v${ICUB_SOURCES_VERSION} icub-sources-$ICUB_SOURCES_VERSION
       if [ "$?" != "0" ]; then
         echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/tags/v${ICUB_SOURCES_VERSION}"
         exit 1
