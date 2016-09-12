@@ -14,7 +14,7 @@ SVN_OPTIONS="-q --force --non-interactive"  # -q is quiet option, do not prints 
 
 ICUB_COMMON_CONFLICT="coinor-libipopt0, coinor-libipopt-dev, coinor-libipopt1v5"  
 
-ICUB_DEPS_COMMON="libace-dev libgsl0-dev libc6 python libncurses5-dev libcv-dev libhighgui-dev libcvaux-dev libsdl1.2-dev subversion git gfortran cmake libxmu-dev libode-dev wget unzip qtbase5-dev qtdeclarative5-dev qtmultimedia5-dev libqt5svg5 libqt5opengl5-dev libopencv-dev freeglut3-dev libtinyxml-dev"
+ICUB_DEPS_COMMON="libace-dev libgsl0-dev libc6 python libncurses5-dev libcv-dev libhighgui-dev libcvaux-dev libsdl1.2-dev subversion git gfortran cmake libxmu-dev libode-dev wget unzip qtbase5-dev qtdeclarative5-dev qtmultimedia5-dev libqt5svg5 libqt5opengl5-dev libopencv-dev freeglut3-dev libtinyxml-dev libedit-dev"
 ICUB_DEPS_trusty="libblas-dev qtdeclarative5-qtquick2-plugin qtdeclarative5-window-plugin qtdeclarative5-qtmultimedia-plugin qtdeclarative5-controls-plugin qtdeclarative5-dialogs-plugin libgtkdataboxmm-dev libgoocanvasmm-dev"
 ICUB_DEPS_xenial="qml-module-qtquick2 qml-module-qtquick-window2 qml-module-qtmultimedia qml-module-qtquick-dialogs qml-module-qtquick-controls libgtkdataboxmm-dev libgoocanvasmm-2.0-dev libode4"
 ICUB_DEPS_wily="qml-module-qtquick2 qml-module-qtquick-window2 qml-module-qtmultimedia qml-module-qtquick-dialogs qml-module-qtquick-controls libgtkdataboxmm-dev libgoocanvasmm-2.0-dev libode1"
