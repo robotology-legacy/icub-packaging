@@ -18,8 +18,6 @@ fi
 
 #----------------------------------- Debug variables------------------------------------------------#
 
-LOG_FILE=$ICUB_SCRIPT_DIR/log/$CHROOT_NAME.log
-
 echo -e "Printing debug information\n"
 
 echo "PACKAGE_VERSION = $PACKAGE_VERSION"
@@ -28,19 +26,14 @@ echo "ICUB_INSTALL_DIR = $D_ICUB_INSTALL_DIR"
 echo "Path to yarp is: $YARP_PACKAGE_DIR"
 echo "Path to the yarp scripts is $YARP_SCRIPT_DIR"
 echo "Path to the yarp builds  is $ICUB_SCRIPT_DIR"
-echo -e "$CHROOT_NAME; log file=$LOG_FILE\n"
-echo "Yarp version = $YARP_VERSION"
+echo -e "$CHROOT_NAME\n"
 echo "iCub Sources version = $ICUB_SOURCES_VERSION"
-echo "YARP_VERSION_MAJOR= $YARP_VERSION_MAJOR"
-echo "YARP_VERSION_MINOR= $YARP_VERSION_MINOR"
-echo "YARP_VERSION_PATCH= $YARP_VERSION_PATCH"
 echo "ICUB_SCRIPT_DIR= $ICUB_SCRIPT_DIR"
 
 if [ -e $ICUB_SCRIPT_DIR/stop ]; then
 	echo "ok" >> $ICUB_SCRIPT_DIR/stop
 	exit 0
 fi
-
 
 #-------------------------------------------------------------------------------------#
 
@@ -55,6 +48,7 @@ else
 fi
 
 run_in_chroot "mount -t proc proc /proc"
+run_in_chroot "locale-gen en_US.UTF-8"
 
 ###------------------- Preparing --------------------###
 
@@ -82,9 +76,10 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
   if [ "${!BACKPORTS_URL_TAG}" != "" ]; then
     run_in_chroot "echo ${!BACKPORTS_URL_TAG} > /etc/apt/sources.list.d/backports.list"
   fi
+  run_in_chroot "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 57A5ACB6110576A6"
   run_in_chroot "apt-get update"
   run_in_chroot "apt-get $APT_OPTIONS install -f"
-  DEP_TAG="ICUB_DEPS_${!PLATFORM_KEY}"
+  DEP_TAG="ICUB_DEPS_${PLATFORM_KEY}"
   _DEPENDENCIES="$ICUB_DEPS_COMMON ${!DEP_TAG}"
   run_in_chroot "apt-get install $APT_OPTIONS $_DEPENDENCIES && touch /tmp/deps_install.done"
   if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
@@ -93,67 +88,69 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
   fi 
 fi
 ###------------------- Handle IpOpt --------------------###
-
-if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done ]; then 
-  CURR_DIR=$PWD  #save current folder to get back on track when done
-  cd ${ICUB_SCRIPT_DIR}/sources/
-  if [ ! -f "${IPOPT}.tar.gz" ] && [ ! -f "${IPOPT}.tar.zip" ]; then
-    # download from icub website
-    echo "Trying to Download ${IPOPT} from icub website"
-    wget http://www.icub.org/download/software/linux/${IPOPT}.tar.gz
-    if [ "$?" != "0" ]; then
-      echo "Trying to Download ${IPOPT} from main source archive"
-      # Download main souce archive
-      wget http://www.coin-or.org/download/source/Ipopt/${IPOPT}.zip
-      if [ "$?" != "0" ]
-      then 
-        echo "ERROR unable to Download ${IPOPT}"
-        do_exit 1
+if [ "$IPOPT" != "" ]
+then
+  if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-usr.done ]; then 
+    CURR_DIR=$PWD  #save current folder to get back on track when done
+    cd ${ICUB_SCRIPT_DIR}/sources/
+    if [ ! -f "${IPOPT}.tar.gz" ] && [ ! -f "${IPOPT}.tar.zip" ]; then
+      # download from icub website
+      echo "Trying to Download ${IPOPT} from icub website"
+      wget http://www.icub.org/download/software/linux/${IPOPT}.tar.gz
+      if [ "$?" != "0" ]; then
+        echo "Trying to Download ${IPOPT} from main source archive"
+        # Download main souce archive
+        wget http://www.coin-or.org/download/source/Ipopt/${IPOPT}.zip
+        if [ "$?" != "0" ]
+        then 
+          echo "ERROR unable to Download ${IPOPT}"
+          do_exit 1
+        fi
       fi
     fi
+    if [ -f ${IPOPT}.zip ]; then
+      unzip -q -o ${IPOPT}.zip
+    elif [ -f ${IPOPT}.tar.gz ]; then
+      tar xzf ${IPOPT}.tar.gz
+    fi
+    if [ "$?" != "0" ]
+    then 
+     echo "ERROR unable to decompress ${IPOPT}"
+     do_exit 1
+    fi
+    cd $CURR_DIR   # go back
+    # Compile and install (twice) the lib IpOpt - components Lapack, Mumps and Metis are already downloaded and placed inside the correct ThirdParty folder
+    echo "Usign IpOpt ver $IPOPT"
+    if [ ! -d "$ICUB_SCRIPT_DIR/sources/$IPOPT" ]; then
+      echo "ERROR: missing IpOpt in path ${ICUB_SCRIPT_DIR}/sources/${IPOPT}"
+      do_exit 1
+    fi
+    sudo cp -rf ${ICUB_SCRIPT_DIR}/sources/${IPOPT}  ${ICUB_BUILD_CHROOT}/tmp/
+    if [ "$?" != "0" ]
+    then
+      echo "ERROR: failed to copy ${ICUB_SCRIPT_DIR}/sources/${IPOPT}"
+      do_exit 1
+    fi
+    THIRD_PARTY="Blas Lapack Metis Mumps"
+    for package in $THIRD_PARTY; do
+      echo "Getting third party module $package"
+      run_in_chroot "cd /tmp/$IPOPT/ThirdParty/${package}; ./get.${package}"
+    done	
+    run_in_chroot "cd /tmp/$IPOPT/; mkdir -p build; cd build; ../configure $IPOPT_BUILD_FLAGS --prefix=/usr && touch /tmp/${IPOPT}_configure-usr.done"
+    if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/${IPOPT}_configure-usr.done" ]
+    then
+      echo "ERROR: failed to configure ipopt in ${ICUB_BUILD_CHROOT}/tmp/"
+      do_exit 1
+    fi
+    run_in_chroot "cd /tmp/$IPOPT/build && make &&  make test && make install && touch /tmp/${IPOPT}-usr.done"
+    if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/${IPOPT}-usr.done" ]
+    then															
+      echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed"
+      do_exit 1
+    fi
+  else
+    echo "IpOpt libraries (/usr) already handled." >> $LOG_FILE 2>&1
   fi
-  if [ -f ${IPOPT}.zip ]; then
-    unzip -q -o ${IPOPT}.zip
-  elif [ -f ${IPOPT}.tar.gz ]; then
-    tar xzf ${IPOPT}.tar.gz
-  fi
-  if [ "$?" != "0" ]
-  then 
-   echo "ERROR unable to decompress ${IPOPT}"
-   do_exit 1
-  fi
-  cd $CURR_DIR   # go back
-  # Compile and install (twice) the lib IpOpt - components Lapack, Mumps and Metis are already downloaded and placed inside the correct ThirdParty folder
-  echo "Usign IpOpt ver $IPOPT"
-  if [ ! -d "$ICUB_SCRIPT_DIR/sources/$IPOPT" ]; then
-    echo "ERROR: missing IpOpt in path ${ICUB_SCRIPT_DIR}/sources/${IPOPT}"
-    do_exit 1
-  fi
-  sudo cp -rf ${ICUB_SCRIPT_DIR}/sources/${IPOPT}  ${ICUB_BUILD_CHROOT}/tmp/
-  if [ "$?" != "0" ]
-  then
-    echo "ERROR: failed to copy ${ICUB_SCRIPT_DIR}/sources/${IPOPT}"
-    do_exit 1
-  fi
-  THIRD_PARTY="Blas Lapack Metis Mumps"
-  for package in $THIRD_PARTY; do
-    echo "Getting third party module $package"
-    run_in_chroot "cd /tmp/$IPOPT/ThirdParty/${package}; ./get.${package}"
-  done	
-  run_in_chroot "cd /tmp/$IPOPT/; mkdir -p build; cd build; ../configure $IPOPT_BUILD_FLAGS --prefix=/usr && touch /tmp/${IPOPT}_configure-usr.done"
-  if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/${IPOPT}_configure-usr.done" ]
-  then
-    echo "ERROR: failed to configure ipopt in ${ICUB_BUILD_CHROOT}/tmp/"
-    do_exit 1
-  fi
-  run_in_chroot "cd /tmp/$IPOPT/build && make &&  make test && make install && touch /tmp/${IPOPT}-usr.done"
-  if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/${IPOPT}-usr.done" ]
-  then															
-    echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed"
-    do_exit 1
-  fi
-else
-	echo "IpOpt libraries (/usr) already handled." >> $LOG_FILE 2>&1
 fi
 # <-- Handle IpOpt - end
 #----------------------------------- Download iCub source to correctly resolve iCub-common's dependencies ----------------------------------------#	
@@ -198,13 +195,13 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done ]; th
       fi
   fi
   	
-  if [ ! -d "$ICUB_BUILD_CHROOT/tmp/icub-sources-${ICUB_SOURCES_VERSION}" ]; then
+  if [ ! -d "${ICUB_BUILD_CHROOT}/tmp/icub-sources-${ICUB_SOURCES_VERSION}" ]; then
     echo "copying iCub tag $ICUB_SOURCES_VERSION..."
-    DO "sudo cp -uR $ICUB_SCRIPT_DIR/sources/icub-sources-${ICUB_SOURCES_VERSION} ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}"
+    DO "sudo cp -uR ${ICUB_SCRIPT_DIR}/sources/icub-sources-${ICUB_SOURCES_VERSION} ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}"
   else
   	echo "iCub tag $ICUB_SOURCES_VERSION already copied."
   fi
-  touch $ICUB_BUILD_CHROOT/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done
+  touch ${ICUB_BUILD_CHROOT}/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done
 else
   echo "iCub sources already handled"
 fi
@@ -225,13 +222,17 @@ ICUB_REQYARP_VERSION_MINOR=$(echo $TMP | awk '{ split($0, array, "\"" ); print a
 TMP=$(echo $STRING | awk '{ split($0, array, "PATCH" ); print array[2] }')
 ICUB_REQYARP_VERSION_PATCH=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
 
-echo "ICUB_REQYARP_VERSION_MAJOR= $ICUB_REQYARP_VERSION_MAJOR"														
-echo "ICUB_REQYARP_VERSION_MINOR= $ICUB_REQYARP_VERSION_MINOR"														
-echo "ICUB_REQYARP_VERSION_MINOR= $ICUB_REQYARP_VERSION_PATCH"														
-
-ICUB_REQYARP_VERSION=$ICUB_REQYARP_VERSION_MAJOR.$ICUB_REQYARP_VERSION_MINOR.$ICUB_REQYARP_VERSION_PATCH
-echo "ICUB_REQYARP_VERSION=$ICUB_REQYARP_VERSION"
-echo "Found Yarp version = $YARP_VERSION"
+ICUB_REQYARP_VERSION="${ICUB_REQYARP_VERSION_MAJOR}.${ICUB_REQYARP_VERSION_MINOR}.${ICUB_REQYARP_VERSION_PATCH}"
+echo "Required YARP version is $ICUB_REQYARP_VERSION"
+YARP_VERSION_MAJOR=$(grep YARP_VERSION_MAJOR ${YARP_TEST_CHROOT}/usr/lib/${PLATFORM_HARDWARE}-linux-gnu/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
+YARP_VERSION_MINOR=$(grep YARP_VERSION_MINOR ${YARP_TEST_CHROOT}/usr/lib/${PLATFORM_HARDWARE}-linux-gnu/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
+YARP_VERSION_PATCH=$(grep YARP_VERSION_PATCH ${YARP_TEST_CHROOT}/usr/lib/${PLATFORM_HARDWARE}-linux-gnu/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
+YARP_VERSION="${YARP_VERSION_MAJOR}.${YARP_VERSION_MINOR}.${YARP_VERSION_PATCH}"
+if [ "$YARP_VERSION" == "" ]; then
+  echo "ERROR: unable to retrive YARP version"
+else
+  echo "Found Yarp version $YARP_VERSION"
+fi
 if [ "${YARP_VERSION}" == "trunk" ]; then
   if [ "${ICUB_SOURCES_VERSION}" != "trunk" ]; then
     echo "ERROR: both yarp and icub sources must be trunk, found YARP=$YARP_VERSION and iCub=${ICUB_SOURCES_VERSION}"
@@ -262,43 +263,7 @@ fi
 echo 	"++ OK -> Found compatible Yarp version!!"
 #----------------------------------- iCub-common ----------------------------------------#				
 if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-common-package.done ]; then
-  run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/usr"
-  run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN"
-  
-  echo "Building IpOpt libraries for iCub package..."
-  if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done ]; then 
-  	run_in_chroot "cd /tmp/$IPOPT/build; ../configure $IPOPT_BUILD_FLAGS --prefix=/tmp/install_dir/$ICUB_COMMON_NAME/usr; make install ; if [ "$?" == "0" ] ; then touch /tmp/$IPOPT-icub.done; fi"
-  	if [ ! -f "$ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done" ]
-  	then
-                  echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed"
-                  exit 1
-  	fi
-	# fixes the wrong install path
-	run_in_chroot "sed -i 's|/tmp/install_dir/$ICUB_COMMON_NAME||g' /tmp/install_dir/$ICUB_COMMON_NAME/usr/lib/pkgconfig/*.pc"
-	run_in_chroot "sed -i 's|/tmp/install_dir/$ICUB_COMMON_NAME||g' /tmp/install_dir/$ICUB_COMMON_NAME/usr/share/coin/doc/Ipopt/*.txt"
-  
-  else
-  	echo "IpOpt libraries (/icub) already handled."
-  fi
-  
-  SIZE=$(du -s $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/)
-  SIZE=$(echo $SIZE | awk '{ split($0, array, "/" ); print array[1] }')
-  echo "Size: $SIZE"
-  run_in_chroot "touch /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums"
-  cd $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/
-  #FILES=$(find -path ./DEBIAN -prune -o -print)
-  #for FILE in $FILES
-  #do
-  #	if [ ! -d $FILE ]; then
-  #		md5sum $FILE | sudo tee -a $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums  >> /dev/null
-  #	fi
-  #done
-  
-  
-  # --> Create icub-common package
-  run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN; touch /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/control"
-  
-  echo "Generating icub-common package"
+  run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME"
   ICUB_COMMON_DEPENDENCIES=""
   for dep in $ICUB_DEPS_COMMON ; do
     if [ "$ICUB_COMMON_DEPENDENCIES" == "" ]; then
@@ -321,24 +286,83 @@ Section: contrib/science
 Priority: optional
 Architecture: $PLATFORM_HARDWARE
 Depends: $ICUB_COMMON_DEPENDENCIES
-Conflicts: coinor-libipopt0, coinor-libipopt-dev
+Installed-Size:  $SIZE
+Homepage: http://www.icub.org, https://projects.coin-or.org/Ipopt
+Maintainer: ${ICUB_PACKAGE_MAINTAINER}
+Description: List of dependencies for iCub software (metapackage)
+ This metapackage lists all the dependencies needed to install the icub platform software or to download the source code and compile it directly onto your machine." | sudo tee $ICUB_BUILD_CHROOT/tmp/${ICUB_COMMON_NAME}.deb.cfg
+  
+  if [ "$IPOPT" != "" ]; then
+    run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/usr"
+    run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN"
+    echo "Building IpOpt libraries for iCub package..."
+    if [ ! -e $ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done ]; then 
+    	run_in_chroot "cd /tmp/$IPOPT/build; ../configure $IPOPT_BUILD_FLAGS --prefix=/tmp/install_dir/$ICUB_COMMON_NAME/usr; make install ; if [ "$?" == "0" ] ; then touch /tmp/$IPOPT-icub.done; fi"
+    	if [ ! -f "$ICUB_BUILD_CHROOT/tmp/$IPOPT-icub.done" ]
+    	then
+                    echo "ERROR: Build of IpOpt in $ICUB_BUILD_CHROOT/tmp/ failed"
+                    exit 1
+    	fi
+          # fixes the wrong install path
+          run_in_chroot "sed -i 's|/tmp/install_dir/$ICUB_COMMON_NAME||g' /tmp/install_dir/$ICUB_COMMON_NAME/usr/lib/pkgconfig/*.pc"
+          run_in_chroot "sed -i 's|/tmp/install_dir/$ICUB_COMMON_NAME||g' /tmp/install_dir/$ICUB_COMMON_NAME/usr/share/coin/doc/Ipopt/*.txt"
+    else
+    	echo "IpOpt libraries (/icub) already handled."
+    	echo "IpOpt libraries (/icub) already handled."
+    fi
+    SIZE=$(du -s $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/)
+    SIZE=$(echo $SIZE | awk '{ split($0, array, "/" ); print array[1] }')
+    echo "Size: $SIZE"
+    run_in_chroot "touch /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/md5sums"
+    cd $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/
+    # --> Create icub-common package
+    run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN; touch /tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/control"
+    echo "Generating icub-common package"
+    echo "Package: icub-common
+Version: ${PACKAGE_VERSION}-${DEBIAN_REVISION_NUMBER}~${PLATFORM_KEY}
+Section: contrib/science
+Priority: optional
+Architecture: $PLATFORM_HARDWARE
+Depends: $ICUB_COMMON_DEPENDENCIES
 Installed-Size:  $SIZE
 Homepage: http://www.icub.org, https://projects.coin-or.org/Ipopt
 Maintainer: ${ICUB_PACKAGE_MAINTAINER}
 Description: List of dependencies for iCub software
  This package lists all the dependencies needed to install the icub platform software or to download the source code and compile it directly onto your machine.
- It contains also a compiled version of IpOpt library." | sudo tee $ICUB_BUILD_CHROOT/tmp/install_dir/$ICUB_COMMON_NAME/DEBIAN/control
-   
-  if [ -f "${ICUB_BUILD_CHROOT}/tmp/build-deb-icub-common-package.done" ]; then
-    rm ${ICUB_BUILD_CHROOT}/tmp/build-deb-icub-common-package.done
-  fi
-  run_in_chroot "cd /tmp/install_dir && dpkg -b $ICUB_COMMON_NAME ${ICUB_COMMON_PKG_NAME}.deb && touch /tmp/build-deb-icub-common-package.done"
-  
+ It contains also a compiled version of IpOpt library." | sudo tee ${ICUB_BUILD_CHROOT}/tmp/install_dir/${ICUB_COMMON_NAME}/DEBIAN/control
+    run_in_chroot "cd /tmp/install_dir && dpkg -b $ICUB_COMMON_NAME ${ICUB_COMMON_PKG_NAME}.deb && touch /tmp/build-deb-icub-common-package.done"
+  else
+    echo "Generating icub-common package"
+    if [ -f "${ICUB_BUILD_CHROOT}/tmp/install_dir/${ICUB_COMMON_NAME}.deb" ]; then
+      rm "${ICUB_BUILD_CHROOT}/tmp/install_dir/${ICUB_COMMON_NAME}.deb"
+    fi
+    echo "Package: icub-common
+Version: ${PACKAGE_VERSION}-${DEBIAN_REVISION_NUMBER}~${PLATFORM_KEY}
+Section: contrib/science
+Priority: optional
+Architecture: $PLATFORM_HARDWARE
+Depends: $ICUB_COMMON_DEPENDENCIES
+Homepage: http://www.icub.org, https://projects.coin-or.org/Ipopt
+Maintainer: ${ICUB_PACKAGE_MAINTAINER}
+Description: List of dependencies for iCub software
+ This package lists all the dependencies needed to install the icub platform software or to download the source code and compile it directly onto your machine.
+ It contains also a compiled version of IpOpt library." > ${ICUB_BUILD_CHROOT}/tmp/install_dir/${ICUB_COMMON_NAME}.cfg
+    run_in_chroot "apt-get -y update"
+    run_in_chroot "apt-get -y --allow-unauthenticated install equivs"
+    run_in_chroot "cd /tmp/install_dir && equivs-build --arch=${PLATFORM_HARDWARE} ${ICUB_COMMON_NAME}.cfg && touch /tmp/build-deb-icub-common-package.done"
+  fi 
   if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/build-deb-icub-common-package.done" ]; then
     echo "ERROR iCub-common package file ${ICUB_BUILD_CHROOT}/tmp/install_dir/${ICUB_COMMON_PKG_NAME}.deb not produced"
     exit 1
   fi
-  touch ${ICUB_BUILD_CHROOT}/tmp/icub-common-package.done
+  run_in_chroot "mv /tmp/install_dir/icub-common_${PACKAGE_VERSION}-${DEBIAN_REVISION_NUMBER}~${PLATFORM_KEY}_${PLATFORM_HARDWARE}.deb /tmp/install_dir/${ICUB_COMMON_PKG_NAME}.deb"
+  echo "Installing package ${ICUB_COMMON_PKG_NAME}.deb"
+  run_in_chroot "dpkg -i /tmp/install_dir/${ICUB_COMMON_PKG_NAME}.deb && touch /tmp/icub-common-package.done"
+  if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/icub-common-package.done" ]; then
+    echo "ERROR : problem installing ${ICUB_BUILD_CHROOT}/tmp/install_dir/${ICUB_COMMON_PKG_NAME}.deb"
+    exit 1
+  fi
+  
 else 
   echo "iCub-common package already handled"
 fi
@@ -461,17 +485,16 @@ Description: Software platform for iCub humanoid robot with simulator.
     rm "${ICUB_BUILD_CHROOT}/tmp/build-deb-icub-package.done"
   fi
   run_in_chroot "cd /tmp/install_dir && dpkg -b ${D_ICUB_INSTALL_DIR} $PACKAGE_NAME && touch /tmp/build-deb-icub-package.done"
-  
   if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/build-deb-icub-package.done" ]; then
     echo "ERROR: cmake of iCub package in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed"
     exit 1
   fi
-
-  echo "Installing package"
-  run_in_chroot "dpkg -i /tmp/install_dir/$ICUB_COMMON_PKG_NAME.deb"
-  run_in_chroot "dpkg -i /tmp/install_dir/$PACKAGE_NAME"
-  
-  touch ${ICUB_BUILD_CHROOT}/tmp/iCub-package.done
+  echo "Installing package $PACKAGE_NAME"
+  run_in_chroot "dpkg -i /tmp/install_dir/$PACKAGE_NAME && touch /tmp/iCub-package.done"
+  if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/iCub-package.done" ]; then
+    echo "ERROR: installing iCub package ${ICUB_BUILD_CHROOT}/tmp/install_dir/${PACKAGE_NAME} failed"
+    exit 1
+  fi
 else
   echo "iCub package already handled"
 fi
@@ -500,6 +523,6 @@ if [ -e "/data/debs/$CHROOT_NAME/$PACKAGE_NAME" ]; then
   lintian /data/debs/$CHROOT_NAME/$PACKAGE_NAME > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log							 
   lintian-info $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.info
 else
-  echo "ERROR: iCub package file /data/debs/$CHROOT_NAME/$PACKAGE_NAME not found, exiting"
+  echo "ERROR: icub package file /data/debs/$CHROOT_NAME/${PACKAGE_NAME} not found, exiting"
   exit 1
 fi

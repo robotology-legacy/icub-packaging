@@ -33,15 +33,15 @@ usage ()
 }
 
 log() {
-  echo "\e[96m$(date +%d-%m-%Y) - $(date +%H:%M:%S) : $1\e[39m"
+  echo "$(date +%d-%m-%Y) - $(date +%H:%M:%S) : $1"
 }
 
 warn() {
-  echo "e[33m$(date +%d-%m-%Y) - $(date +%H:%M:%S) WARNING : $1\e[39m"
+  echo "$(date +%d-%m-%Y) - $(date +%H:%M:%S) WARNING : $1"
  }
  
 error() {
-  echo "\e[31m$(date +%d-%m-%Y) - $(date +%H:%M:%S) ERROR : $1\e[39m"
+  echo "$(date +%d-%m-%Y) - $(date +%H:%M:%S) ERROR : $1"
 }
 
 exit_err () {

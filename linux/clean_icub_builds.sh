@@ -43,6 +43,7 @@ do
 	DO "source $ROOT_DIR/build/yarp_${i}.sh"									# Load YARP_PACKAGE_DIR & YARP_PACKAGE_NAME for current distro+arch
 	DO "source ${ROOT_DIR}/build/config_${i}.sh"								# Load PLATFORM_KEY & PLATFORM_HARDWARE
 	DO "sudo chroot $YARP_PACKAGE_DIR/test_chroot/ dpkg --purge icub"
+	DO "sudo chroot $YARP_PACKAGE_DIR/test_chroot/ dpkg --purge icub-common"
 	DO "sudo chroot $YARP_PACKAGE_DIR/test_chroot/ umount /proc"
 	DO "source $PWD/config.sh"													# Load ICUB_VERSION & DEBIAN_REVISION_NUMBER variables
 
