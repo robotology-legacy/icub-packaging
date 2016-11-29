@@ -23,11 +23,11 @@ fi
 ifname="${BUNDLE_OPENCV_URL}/${BUNDLE_OPENCV_VERSION}.zip"
 ofname="OpenCV-${BUNDLE_OPENCV_VERSION}.zip"
 if [ ! -e $ofname ]; then
-	wget $ifname --output-document=${ofname} 
-	if [ "$?" != "0" ]; then
-		echo "ERROR: Cannot fetch OpenCV from ${ifname}"
-		exit 1
-	fi
+  wget $ifname --output-document=${ofname} 
+  if [ "$?" != "0" ]; then
+    echo "ERROR: Cannot fetch OpenCV from ${ifname}"
+    exit 1
+  fi
 fi
 
 source_dir="opencv-${BUNDLE_OPENCV_VERSION}"
@@ -36,11 +36,11 @@ build_dir="$BUILD_DIR/$source_dir-$OPT_COMPILER-$OPT_VARIANT-$OPT_BUILD"
 OpenCV_DIR=`cygpath --mixed "$build_dir/install"`
 
 if [ ! -d "$build_dir" ]; then
-	mkdir $build_dir
+  mkdir $build_dir
 fi
 cd $build_dir
 if [ -f "CMakeCache.txt" ]; then
-	rm CMakeCache.txt
+  rm CMakeCache.txt
 fi
 "$CMAKE_BIN" -DCMAKE_INSTALL_PREFIX=$OpenCV_DIR -G "$OPT_GENERATOR" ../$source_dir || exit 1
 ## first call msbuild for target 
@@ -56,7 +56,7 @@ find ./ -type f -name *.obj -exec rm -rf {} \;
 OpenCV_DIR=`cygpath --mixed "$build_dir/install"`
 
 (
-	echo "export OpenCV_DIR='$OpenCV_DIR'"
+  echo "export OpenCV_DIR='$OpenCV_DIR'"
 ) > $BUILD_DIR/opencv_${OPT_COMPILER}_${OPT_VARIANT}_${OPT_BUILD}.sh
 
 

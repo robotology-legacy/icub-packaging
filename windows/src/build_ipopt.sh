@@ -25,32 +25,35 @@ fi
 IPOPT_VARIANT=""
 IPOPT_ARCH="$v"
 case "$c" in
-	"v12" )
-		IPOPT_VARIANT="msvc12"
-		;;
-	"v11" )
-		IPOPT_VARIANT="msvc11"
-		;;
-	"v10" )
-		IPOPT_VARIANT="msvc10"
-		;;
-	"" )
-		echo "ERROR: Empty compiler variant string for IPOPT"
-		exit 1
-		;;
-	"*" )
-		echo "ERROR: Usupported compiler variant for IPOPT: $c"
-		exit 1
-		;;
+  "v14" )
+    IPOPT_VARIANT="msvc14"
+    ;;
+  "v12" )
+    IPOPT_VARIANT="msvc12"
+    ;;
+  "v11" )
+    IPOPT_VARIANT="msvc11"
+    ;;
+  "v10" )
+    IPOPT_VARIANT="msvc10"
+    ;;
+  "" )
+    echo "ERROR: Empty compiler variant string for IPOPT"
+    exit 1
+    ;;
+  "*" )
+    echo "ERROR: Usupported compiler variant for IPOPT: $c"
+    exit 1
+    ;;
 esac
 packetname="ipopt-${BUNDLE_IPOPT_VERSION}_${IPOPT_VARIANT}_${IPOPT_ARCH}"
 archivename="$packetname.zip"
 if [ ! -e "$archivename" ]; then
     wget ${BUNDLE_IPOPT_URL}/${archivename}
-	if [ "$?" != "0" ]; then
-		echo "ERROR: unable to download file $archivename from ${BUNDLE_IPOPT_URL}"
-		exit -1
-	fi
+  if [ "$?" != "0" ]; then
+    echo "ERROR: unable to download file $archivename from ${BUNDLE_IPOPT_URL}"
+    exit -1
+  fi
 fi
 
 mkdir $source_dir
@@ -64,7 +67,7 @@ fi
 # Cache icub paths and variables, for dependent packages to read
 IPOPT_DIR=`cygpath --mixed "$BUILD_DIR/${source_dir}/${packetname}"`
 (
-	echo "export IPOPT_DIR='$IPOPT_DIR'"
+  echo "export IPOPT_DIR='$IPOPT_DIR'"
 ) > $BUILD_DIR/ipopt_${OPT_COMPILER}_${OPT_VARIANT}_any.sh
 
 cd $BUILD_DIR

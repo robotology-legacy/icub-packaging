@@ -23,11 +23,11 @@ packetname="SDL-${BUNDLE_SDL_VERSION}"
 archivename="${packetname}.zip"
 
 if [ ! -e $archivename ]; then
-	wget ${BUNDLE_SDL_URL}/$archivename 
-	if [ "$?" != "0" ]; then
-		echo "ERROR: Cannot fetch SDL from ${BUNDLE_SDL_URL}/${archivename}"
-		exit 1
-	fi
+  wget ${BUNDLE_SDL_URL}/$archivename 
+  if [ "$?" != "0" ]; then
+    echo "ERROR: Cannot fetch SDL from ${BUNDLE_SDL_URL}/${archivename}"
+    exit 1
+  fi
 fi
 
 mkdir $source_dir
@@ -40,7 +40,7 @@ fi
 # Cache icub paths and variables, for dependent packages to read
 SDLDIR=`cygpath --mixed "$BUILD_DIR/$source_dir/${packetname}"`
 (
-	echo "export SDLDIR='$SDLDIR'"
+  echo "export SDLDIR='$SDLDIR'"
 ) > $BUILD_DIR/sdl_${OPT_COMPILER}_${OPT_VARIANT}_any.sh
 
 cd $BUILD_DIR

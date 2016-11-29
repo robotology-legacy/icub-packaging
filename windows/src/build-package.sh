@@ -477,6 +477,9 @@ case "$c" in
 "v12" )
   OPENCV_OBJ_VARIANT="vc12"
   ;;
+"v14" )
+  OPENCV_OBJ_VARIANT="vc14"
+  ;;
 *)
   echo "ERROR: compiler version $v not supported."
   exit 1
