@@ -87,7 +87,9 @@ for c in $compilers ; do
     cd $BUNDLE_YARP_DIR
     # # brings in variables to locate all packages e.g. YARP_DIR, GSL_DIR, ACE_DIR, gtkmm
     source yarp_${c}_${v}_Release.sh
-    source gsl_${c}_${v}_Release.sh
+    # Removing GSL
+    #source gsl_${c}_${v}_Release.sh
+    source eigen_any_any_any.sh
     source ace_${c}_${v}_Release.sh
     if [ -f "gtkmm_${c}_${v}_Release.sh" ]; then
       source gtkmm_${c}_${v}_Release.sh
@@ -112,11 +114,13 @@ for c in $compilers ; do
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_ode.sh $c $v Release
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Release
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_ipopt.sh $c $v Release
+    source $ICUB_PACKAGE_SOURCE_DIR/src/build_gsl.sh $c $v Release
     
     source sdl_${c}_${v}_any.sh
     source glut_${c}_${v}_any.sh
     source ode_${c}_${v}_any.sh
     source ipopt_${c}_${v}_any.sh
+    source gsl_${c}_${v}_Release.sh
     
     source opencv_${c}_${v}_Release.sh
     
@@ -125,9 +129,10 @@ for c in $compilers ; do
       
     ########## Debug versions
     cd $BUNDLE_YARP_DIR
-    # # brings in variables to locate all packages e.g. YARP_DIR, GSL_DIR, ACE_DIR, gtkmm
+    # # brings in variables to locate all packages e.g. YARP_DIR, ACE_DIR, gtkmm
     source yarp_${c}_${v}_Debug.sh
-    source gsl_${c}_${v}_Debug.sh
+    # Removing GSL
+    #source gsl_${c}_${v}_Debug.sh
     source ace_${c}_${v}_Debug.sh
     if [ -f "gtkmm_${c}_${v}_Debug.sh" ]; then
       source gtkmm_${c}_${v}_Debug.sh
@@ -149,6 +154,10 @@ for c in $compilers ; do
     cd $BUILD_DIR
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Debug
     source opencv_${c}_${v}_Debug.sh
+    
+    cd $BUILD_DIR
+    source $ICUB_PACKAGE_SOURCE_DIR/src/build_gsl.sh $c $v Debug
+    source gsl_${c}_${v}_Debug.sh
     
     cd $BUILD_DIR
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh $c $v Debug
