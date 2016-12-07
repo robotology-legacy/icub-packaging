@@ -272,7 +272,7 @@ OPENCV_SUB="opencv-$BUNDLE_OPENCV_VERSION"
 GLUT_SUB="glut-$BUNDLE_GLUT_VERSION"
 SDL_SUB="sdl-$BUNDLE_SDL_VERSION"
 ODE_SUB="ode-$BUNDLE_ODE_VERSION"
-GSL_SUB="GSL-$BUNDLE_GSL_VERSION"
+GSL_SUB="gsl-$BUNDLE_GSL_VERSION"
 
 ## First license
 cd $ICUB_DIR_UNIX || exit 1
@@ -429,10 +429,9 @@ fi
 echo "GSL: $GSL_DIR"
 if [ -e "$GSL_DIR" ]; then
   cd "$GSL_DIR"
-  nsis_add_recurse icub_gsl include ${GLS_LIB}/include
-  nsis_add_recurse icub_gsl lib ${GLS_LIB}/lib
+  nsis_add_recurse icub_gsl include ${GSL_SUB}/include 
+  nsis_add_recurse icub_gsl lib ${GSL_SUB}/lib 
 fi
-
 
 # Add Visual Studio redistributable material to NSIS
 echo $OPT_VC_REDIST_CRT

@@ -274,10 +274,8 @@ FunctionEnd
 ;Installer Sections
 
 Section "-first"
-  Var /GLOBAL GSL_PATH
   Var /GLOBAL YARP_PATH
   Var /GLOBAL YARP_FOUND
-  Var /GLOBAL GSL_FOUND
   
   SetOutPath "$INSTDIR"
   !insertmacro RegisterPackage ipopt ${IPOPT_SUB}
@@ -334,7 +332,7 @@ SectionGroup "iCub" SeciCub
     !include ${NSIS_OUTPUT_PATH}\icub_base_add.nsi
     ${StrRepLocal} $0 "$INSTDIR\${INST2}" "\" "/"
     !insertmacro FixCMakeForPackage __NSIS_ICUB_INSTALLED_LOCATION__ $\"$0$\"
-  ${StrRepLocal} $0 "$GSL_PATH" "\" "/"
+  ${StrRepLocal} $0 "$INSTDIR\${GSL_SUB}" "\" "/"
     !insertmacro FixCMakeForPackage __NSIS_GSL_INSTALLED_LOCATION__ $\"$0$\"
     ${StrRepLocal} $0 "$INSTDIR\${ACE_SUB}" "\" "/"
     !insertmacro FixCMakeForPackage __NSIS_ACE_INSTALLED_LOCATION__ $\"$0$\"
@@ -362,6 +360,12 @@ SectionEnd
 Section "ODE files" SecODE
     SetOutPath "$INSTDIR"
     !include ${NSIS_OUTPUT_PATH}\icub_ode_add.nsi
+SectionEnd
+
+Section "GSL files" SecGSL
+    SetOutPath "$INSTDIR"
+    !include ${NSIS_OUTPUT_PATH}\icub_gsl_add.nsi
+    
 SectionEnd
 
 Section "SDL files" SecSDL
@@ -404,6 +408,7 @@ Section "Environment variables" SecPath
 
    !insertmacro SectionFlagIsSet ${SecIpopt} ${SF_SELECTED} isIpoptSel notIpoptSel
    notIpoptSel:
+     DetailPrint "Skipping IPOPT environment variables and PATH"
     Goto ipoptEndIf 
    isIpoptSel:
       WriteRegExpandStr ${WriteEnvStr_RegKey} IPOPT_DIR "$INSTDIR\${IPOPT_SUB}"
@@ -412,6 +417,7 @@ Section "Environment variables" SecPath
    
    !insertmacro SectionFlagIsSet ${SecODE} ${SF_SELECTED} isODESel notODESel
    notODESel:
+    DetailPrint "Skipping ODE environment variables and PATH"
     Goto odeEndif 
    isODESel:
        WriteRegExpandStr ${WriteEnvStr_RegKey} ODE_DIR "$INSTDIR\${ODE_SUB}"
@@ -419,6 +425,7 @@ Section "Environment variables" SecPath
   
    !insertmacro SectionFlagIsSet ${SecOpenCV} ${SF_SELECTED} isOpenCVSel notOpenCVSel
    notOpenCVSel:
+    DetailPrint "Skipping OpenCV environment variables and PATH"
     Goto endOpenCVIf 
    isOpenCVSel:
       WriteRegExpandStr ${WriteEnvStr_RegKey} OPENCV_DIR "$INSTDIR\${OPENCV_SUB}"
@@ -441,9 +448,21 @@ Section "Environment variables" SecPath
       ${EndIf}
     !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\$0\$1\bin"
    endOpenCVIf:
+   
+   !insertmacro SectionFlagIsSet ${SecGSL} ${SF_SELECTED} isSelGSL notGSLSel
+   notGSLSel:
+    DetailPrint "Skipping GSL environment variables and PATH"
+    Goto gslEndif 
+   isSelGSL:
+    !insertmacro UpdateEnvironmentAppend "LIB" "$INSTDIR\${GSL_SUB}\lib"
+    !insertmacro UpdateEnvironmentAppend "INCLUDE" "$INSTDIR\${GSL_SUB}\include"
+    !insertmacro UpdateEnvironmentAppend "GSL_DIR" "$INSTDIR\${GSL_SUB}"
+    WriteRegExpandStr ${WriteEnvStr_RegKey} GSLDIR "$INSTDIR\${GSL_SUB}"
+   gslEndif:
 
    !insertmacro SectionFlagIsSet ${SecSDL} ${SF_SELECTED} isSelSDL notSDLSel
    notSDLSel:
+    DetailPrint "Skipping SDL environment variables and PATH"
     Goto sdlEndif 
    isSelSDL:
     !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${SDL_SUB}\lib"
@@ -452,6 +471,7 @@ Section "Environment variables" SecPath
    
    !insertmacro SectionFlagIsSet ${SecGLUT} ${SF_SELECTED} isGLUTSel notGLUTSel
    notGLUTSel:
+    DetailPrint "Skipping GLUT environment variables and PATH"
     Goto endifGLUT 
    isGLUTSel:
     WriteRegExpandStr ${WriteEnvStr_RegKey} GLUT_DIR "$INSTDIR\${GLUT_SUB}"
@@ -492,6 +512,7 @@ LangString DESC_SecVcDlls ${LANG_ENGLISH} "Visual Studio runtime redistributable
 LangString DESC_SecSDL ${LANG_ENGLISH} "Simple Direct Layer (SDL). Used by the simulator."
 LangString DESC_SecGLUT ${LANG_ENGLISH} "The OpenGL Utility Toolkit (GLUT). Used by the iCub visualization gui."
 LangString DESC_SecODE ${LANG_ENGLISH} "Open Dynamics Engine (ODE). Used by the simulator"
+LangString DESC_SecGSL ${LANG_ENGLISH} "GNU Scientific Library (GSL)."
 LangString DESC_SecPath ${LANG_ENGLISH} "Modify user environment. Add executables and DLLs to the PATH, set variables used by CMake (e.g. ICUB_DIR, IPOPT_DIR, etc.)"
 
 ;Assign language strings to sections
@@ -510,6 +531,7 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Modify user environment. Add executable
   !insertmacro MUI_DESCRIPTION_TEXT ${SecGLUT} $(DESC_SecGLUT)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecSDL} $(DESC_SecSDL)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecODE} $(DESC_SecODE)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecGSL} $(DESC_SecGSL)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 ;--------------------------------
@@ -560,8 +582,23 @@ Section "Uninstall"
   odeNotFound:
   
   ClearErrors
-  ReadRegStr $0 HKCU "Software\${VENDOR}\opencv\${OPENCV_SUB}" ""
+  ReadRegStr $0 HKCU "Software\${VENDOR}\gsl\${GSL_SUB}" ""
 
+  IfErrors 0 gslFound
+  DetailPrint "GSL was not found in the system"
+  Goto gslNotFound
+  
+    gslFound:
+    DetailPrint "Removing GSL environment variables"
+    DeleteRegValue ${WriteEnvStr_RegKey} GSL_DIR
+    !insertmacro un.UpdateEnvironmentAppend "LIB" "$INSTDIR\${GSL_SUB}\lib"
+    !insertmacro un.UpdateEnvironmentAppend "INCLUDE" "$INSTDIR\${GSL_SUB}\include"
+    !insertmacro un.UpdateEnvironmentAppend "GSL_DIR" "$INSTDIR\${GSL_SUB}"
+  
+  gslNotFound:
+  
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\${VENDOR}\opencv\${OPENCV_SUB}" ""
   IfErrors 0 opencvFound
   DetailPrint "OpenCV was not found in the system"
   Goto opencvNotFound
@@ -631,6 +668,7 @@ Section "Uninstall"
   !include ${NSIS_OUTPUT_PATH}\icub_glut_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_glut_bin_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_ode_remove.nsi
+  !include ${NSIS_OUTPUT_PATH}\icub_gsl_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_modules_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_data_dirs_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_headers_remove.nsi
@@ -651,6 +689,7 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\${SDL_SUB}"
   RMDir /r "$INSTDIR\${GLUT_SUB}"
   RMDir /r "$INSTDIR\${ODE_SUB}"
+  RMDir /r "$INSTDIR\${GSL_SUB}"
 
   !insertmacro UnregisterPackage iCub ${INST2}
   !insertmacro UnregisterPackage ipopt ${IPOPT_SUB}
@@ -659,12 +698,13 @@ Section "Uninstall"
   !insertmacro UnregisterPackage sdl ${SDL_SUB}
   !insertmacro UnregisterPackage glut ${GLUT_SUB}
   !insertmacro UnregisterPackage ode ${ODE_SUB}
+  !insertmacro UnregisterPackage gsl ${GSL_SUB}
   
 SectionEnd
 
 Function .onInit
   Call CheckYARPVersion
-  Call CheckGSLVersion
+  ;Call CheckGSLVersion
   
   ${If} ${ICUB_PLATFORM} == "x64"
   ${OrIf} ${ICUB_PLATFORM} == "amd64"
@@ -690,25 +730,16 @@ Function .onInit
   DetailPrint "YARP was not found at $YARP_PATH"
   ${SetSectionGroup} ${SeciCub}
   ${UnSelectSection} ${SecModules}
-    ${UnSelectSection} ${SecDataDirs}
-    ${UnSelectSection} ${SecLibraries}
-    ${UnSelectSection} ${SecHeaders}
+  ${UnSelectSection} ${SecDataDirs}
+  ${UnSelectSection} ${SecLibraries}
+  ${UnSelectSection} ${SecHeaders}
   ${UnSelectSection} ${SecHeaders}
   ${UnSelectSection} ${SecVcDlls}
   ${UnSelectSection} ${SecCMake}
-    ${MakeGroupReadOnly} ${SeciCub}
+  ${MakeGroupReadOnly} ${SeciCub}
   ;IntOp $R0 ${SECTION_OFF} | ${SF_RO}
   ;SectionSetFlags ${SecCMake} $R0
   yarpdone:
-  
-  StrCmp $GSL_FOUND "1" gsl notgsl
-  gsl:
-  DetailPrint "GSL found at $GSL_PATH"
-  Goto gsldone
-  notgsl:
-  DetailPrint "GSL was not found at $GSL_PATH"
-  gsldone:
-   
  !insertmacro MULTIUSER_INIT
 FunctionEnd
 
@@ -735,23 +766,3 @@ Function CheckYARPVersion
   ExitFunction:
  
 FunctionEnd
-
-Function CheckGSLVersion
- 
-  ClearErrors
-  ReadRegStr $0 HKCU "Software\${VENDOR}\GSL\gsl-${GSL_VERSION}" ""
-  DetailPrint "Got registry key $0"
- 
-  StrCpy $GSL_FOUND "0"
-  IfErrors ExitFunction NoAbort
- 
-  NoAbort:
-    DetailPrint "GSL was found in the system"
-    StrCpy $GSL_PATH $0
-    StrCpy $GSL_FOUND "1"
-    Goto ExitFunction
-  ExitFunction:
- 
-FunctionEnd
-
-
