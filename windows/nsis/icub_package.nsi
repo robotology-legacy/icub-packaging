@@ -283,7 +283,7 @@ Section "-first"
   !insertmacro RegisterPackage sdl ${SDL_SUB}
   !insertmacro RegisterPackage ode ${ODE_SUB}
   !insertmacro RegisterPackage glut ${GLUT_SUB}
-    
+  !insertmacro RegisterPackage gsl ${GSL_SUB}
   SectionIn RO
 SectionEnd
 
@@ -457,7 +457,7 @@ Section "Environment variables" SecPath
     !insertmacro UpdateEnvironmentAppend "LIB" "$INSTDIR\${GSL_SUB}\lib"
     !insertmacro UpdateEnvironmentAppend "INCLUDE" "$INSTDIR\${GSL_SUB}\include"
     !insertmacro UpdateEnvironmentAppend "GSL_DIR" "$INSTDIR\${GSL_SUB}"
-    WriteRegExpandStr ${WriteEnvStr_RegKey} GSLDIR "$INSTDIR\${GSL_SUB}"
+    WriteRegExpandStr ${WriteEnvStr_RegKey} GSL_DIR "$INSTDIR\${GSL_SUB}"
    gslEndif:
 
    !insertmacro SectionFlagIsSet ${SecSDL} ${SF_SELECTED} isSelSDL notSDLSel
@@ -538,73 +538,63 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Modify user environment. Add executable
 ;Uninstaller Section
 
 Section "Uninstall"
-
-    ######### iCub
-    ClearErrors
+# iCub
+  ClearErrors
   ReadRegStr $0 HKCU "Software\${VENDOR}\iCub\${INST2}" ""
-
   IfErrors 0 iCubFound
   DetailPrint "iCub was not found in the system"
   Goto iCubNotFound
-  
-    iCubFound:
-    DetailPrint "Removing iCub environment variables and PATH"
+  iCubFound:
+    DetailPrint "Removing iCub registry key"
     DeleteRegValue ${WriteEnvStr_RegKey} ICUB_DIR
+    DetailPrint "Removing iCub environment variables"
     !insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${INST2}\bin"
     !insertmacro un.UpdateEnvironmentAppend YARP_DATA_DIRS "$INSTDIR\${INST2}\share\iCub"
-  
   iCubNotFound:
-
+# IPOPT
   ClearErrors
   ReadRegStr $0 HKCU "Software\${VENDOR}\ipopt\${IPOPT_SUB}" ""
-
   IfErrors 0 ipoptFound
   DetailPrint "Ipopt was not found in the system"
   Goto ipoptNotFound
-  
-    ipoptFound:
-    DetailPrint "Removing ipopt environment variables"
+  ipoptFound:
+    DetailPrint "Removing ipopt registry key"
     DeleteRegValue ${WriteEnvStr_RegKey} IPOPT_DIR
+    DetailPrint "Removing ipopt environment variables"
     !insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${IPOPT_SUB}\bin"
   ipoptNotFound:
-  
   ClearErrors
   ReadRegStr $0 HKCU "Software\${VENDOR}\ode\${ODE_SUB}" ""
-
+# ODE
   IfErrors 0 odeFound
   DetailPrint "ode was not found in the system"
   Goto odeNotFound
-  
-    odeFound:
-    DetailPrint "Removing ode environment variables"
+  odeFound:
+    DetailPrint "Removing ode registry key"
     DeleteRegValue ${WriteEnvStr_RegKey} ODE_DIR
-  
   odeNotFound:
-  
+# GSL
   ClearErrors
   ReadRegStr $0 HKCU "Software\${VENDOR}\gsl\${GSL_SUB}" ""
-
   IfErrors 0 gslFound
   DetailPrint "GSL was not found in the system"
   Goto gslNotFound
-  
-    gslFound:
-    DetailPrint "Removing GSL environment variables"
+  gslFound:
+    DetailPrint "Removing GSL registry key"
     DeleteRegValue ${WriteEnvStr_RegKey} GSL_DIR
+    DetailPrint "Removing GSL environment variables"
     !insertmacro un.UpdateEnvironmentAppend "LIB" "$INSTDIR\${GSL_SUB}\lib"
     !insertmacro un.UpdateEnvironmentAppend "INCLUDE" "$INSTDIR\${GSL_SUB}\include"
     !insertmacro un.UpdateEnvironmentAppend "GSL_DIR" "$INSTDIR\${GSL_SUB}"
-  
   gslNotFound:
-  
+# OPENCV  
   ClearErrors
   ReadRegStr $0 HKCU "Software\${VENDOR}\opencv\${OPENCV_SUB}" ""
   IfErrors 0 opencvFound
   DetailPrint "OpenCV was not found in the system"
   Goto opencvNotFound
-  
-    opencvFound:
-    DetailPrint "Removing opencv environment variables"
+  opencvFound:
+    DetailPrint "Removing opencv registry key"
     DeleteRegValue ${WriteEnvStr_RegKey} OPENCV_DIR
     ${If} ${ICUB_PLATFORM} == "x64"
     ${OrIf} ${ICUB_PLATFORM} == "amd64"
@@ -623,39 +613,36 @@ Section "Uninstall"
       ${If} ${ICUB_VARIANT} == "v12"
       StrCpy $1 "vc12"
       ${EndIf}
+    DetailPrint "Removing opencv environment variables"
     !insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\$0\$1\bin"
   opencvNotFound:
-  
+# SDL  
   ClearErrors
   ReadRegStr $0 HKCU "Software\${VENDOR}\sdl\${SDL_SUB}" ""
-
   IfErrors 0 sdlFound
   DetailPrint "SDL was not found in the system"
   Goto sqlNotFound
-  
-    sdlFound:
-    DetailPrint "Removing sdl environment variables"
+  sdlFound:
+    DetailPrint "Removing sdl registry key"
     DeleteRegValue ${WriteEnvStr_RegKey} SDLDIR 
+    DetailPrint "Removing sdl environment variables"
     !insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${SDL_SUB}\lib"
   sqlNotFound:
-  
+# GLUT  
   ClearErrors
   ReadRegStr $0 HKCU "Software\${VENDOR}\glut\${GLUT_SUB}" ""
-
   IfErrors 0 glutFound
   DetailPrint "GLUT was not found in the system"
   Goto glutNotFound
-  
-    glutFound:
-    DetailPrint "Removing GLUT environment variables"
+  glutFound:
+    DetailPrint "Removing GLUT registry key"
     DeleteRegValue ${WriteEnvStr_RegKey} GLUT_DIR
+    DetailPrint "Removing GLUT environment variables"
     !insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${GLUT_SUB}"
   glutNotFound:
   
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
-  
-
-  
+    
   !include ${NSIS_OUTPUT_PATH}\icub_base_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_libraries_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_ipopt_remove.nsi
@@ -694,7 +681,6 @@ Section "Uninstall"
   !insertmacro UnregisterPackage iCub ${INST2}
   !insertmacro UnregisterPackage ipopt ${IPOPT_SUB}
   !insertmacro UnregisterPackage OpenCV ${OPENCV_SUB}
-  
   !insertmacro UnregisterPackage sdl ${SDL_SUB}
   !insertmacro UnregisterPackage glut ${GLUT_SUB}
   !insertmacro UnregisterPackage ode ${ODE_SUB}
@@ -713,7 +699,7 @@ Function .onInit
       StrCpy $instdir "$PROGRAMFILES64\${VENDOR}"
       SetRegView 64
     ${Else}
-      MessageBox MB_OK "Sorry, but this version runs only on 64 bit machines, please use a 32 package"
+      MessageBox MB_OK "Sorry, but this version runs only on 64 bit machines, please use a 32 bit package"
       Abort
     ${EndIf}
   ${Else}

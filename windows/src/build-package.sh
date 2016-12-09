@@ -363,7 +363,7 @@ case "$v" in
   echo "ERROR: platform $v not supported."
   exit 1
 esac
-echo echo "SDL_DIR Release: $SDLDIR"
+echo echo "SDLDIR Release: $SDLDIR"
 if [ -e "$SDLDIR" ] ; then
   cd "$SDLDIR" || exit 1
   for f in `find ./ -maxdepth 1 -type f`; do
