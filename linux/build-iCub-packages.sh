@@ -378,7 +378,9 @@ if [ ! -e ${ICUB_BUILD_CHROOT}/tmp/iCub-package.done ]; then
   if [ -f "${ICUB_BUILD_CHROOT}/tmp/configure-icub-package.done" ]; then
     rm "${ICUB_BUILD_CHROOT}/tmp/configure-icub-package.done"
   fi
-  run_in_chroot "cd $D_ICUB_DIR ; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE $ICUB_CMAKE_OPTIONS -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub $D_ICUB_ROOT && touch /tmp/configure-icub-package.done"
+  CMAKE_OPTIONS_TAG="CMAKE_OPTIONS_${PLATFORM_KEY}"
+  _SPECIAL_DIST_CMAKE_OPTIONS="${!CMAKE_OPTIONS_TAG}"
+  run_in_chroot "cd $D_ICUB_DIR ; export ICUB_ROOT=$D_ICUB_INSTALL_DIR/usr/share/iCub; $CMAKE $ICUB_CMAKE_OPTIONS -DCMAKE_INSTALL_PREFIX=$D_ICUB_INSTALL_DIR/usr/ -DICUB_APPLICATIONS_PREFIX=$D_ICUB_INSTALL_DIR/usr/share/iCub  $_SPECIAL_DIST_CMAKE_OPTIONS $D_ICUB_ROOT && touch /tmp/configure-icub-package.done"
   if [ ! -f "${ICUB_BUILD_CHROOT}/tmp/configure-icub-package.done" ]
   then
     echo "ERROR: cmake of iCub package in ${ICUB_BUILD_CHROOT}/${D_ICUB_DIR} failed"
