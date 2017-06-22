@@ -9,6 +9,7 @@ BUILD_PATH="/data"
 #
 SCRIPT_PATH=$(dirname $0)
 CLEANUP="false"
+DISTS_LIST=""
 
 print_defs ()
 {
@@ -28,6 +29,7 @@ usage ()
   echo "options are :"
 
   echo "  -D : delete packages instead of build (and clean up the build enviroment)"
+  echo "  -s DIST : select distribution DIST"
   echo "  -d : print defaults"
   echo "  -h : print this help"
 }
@@ -51,9 +53,12 @@ exit_err () {
 
 
 parse_opt() {
-  while getopts hdD opt
+  while getopts hdDs: opt
   do
     case "$opt" in
+    s)
+      DISTS_LIST="$OPTARG"
+      ;;
     D)
       CLEANUP="true"
       ;;
@@ -109,6 +114,10 @@ fini()
 
 main()
 {
+  if [ "$DISTS_LIST" != "" ] ; then
+    log "Selecting dists $DISTS_LIST"
+    SUPPORTED_DISTRO_LIST="$DISTS_LIST"
+  fi
   for distro in $SUPPORTED_DISTRO_LIST ; do
     for target in $SUPPORTED_TARGET_LIST ; do 
       if [ "$CLEANUP" == "true" ]; then
