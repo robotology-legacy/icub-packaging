@@ -110,8 +110,8 @@ RequestExecutionLevel admin
 !macroend
 
 !macro FixCMakeForPackage package_key dir
-   !insertmacro ReplaceInFile "$INSTDIR\${INST2}\cmake\icub-config.cmake" ${package_key} ${dir}
-   !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-includes.cmake" ${package_key} ${dir}
+   !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-config.cmake" ${package_key} ${dir}
+   !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-inst-includes.cmake" ${package_key} ${dir}
    !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-release.cmake"  ${package_key} ${dir}
    !insertmacro ReplaceInFile "$INSTDIR\${INST2}\lib\ICUB\icub-export-install-debug.cmake"  ${package_key} ${dir}
 !macroend

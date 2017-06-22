@@ -114,62 +114,6 @@ cp $ICUB_DIR_DBG_UNIX/lib/ICUB/icub-export-install-debug.cmake $ICUB_DIR_UNIX/li
 cp $ICUB_DIR_DBG_UNIX/lib/*.lib $ICUB_DIR_UNIX/lib/
 cd $ICUB_DIR_UNIX/lib/ICUB || exit 1
 
-# cp icub-config.cmake icub-config-fp.cmake
-# cp icub-export-install-includes.cmake icub-export-install-includes-fp.cmake 
-# cp icub-export-install-release.cmake icub-export-install-release-fp.cmake
-# cp icub-export-install-debug.cmake icub-export-install-debug-fp.cmake
-
-# file=icub-config-fp.cmake
-# replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} $file
-# replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
-# replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-# replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
-
-# insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)"  $file
-# insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
-# insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-# insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
-
-#### fix cmake include file
-# file=icub-export-install-includes-fp.cmake
-# replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} $file
-# replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
-# replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-# replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
-
-# insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
-# insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
-# insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-# insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" $file
-
-#### fix export file, release
-# file=icub-export-install-release-fp.cmake
-# replace_string "$GSL_DIR" \${GSL_INSTALLED_LOCATION} $file
-# replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-# replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} $file
-# replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} $file
-
-# insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
-# insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-# insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" $file
-# insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
-
-#### fix export file, debug
-# file=icub-export-install-debug-fp.cmake
-
-##Note: binaries for debug can be in different locations w.r.t. release
-# replace_string "$GSL_DIR_DBG" \${GSL_INSTALLED_LOCATION} $file
-# replace_string "$OpenCV_DIR_DBG" \${OPENCV_INSTALLED_LOCATION} $file
-
-##Some libraries do not place debug/release binaries in different locations
-# replace_string "$IPOPT_DIR" \${IPOPT_INSTALLED_LOCATION} $file
-# replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} $file
-
-# insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  $file
-# insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" $file
-# insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" $file
-# insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" $file
-
 # Function to prepare stub files for adding/removing files for an NSIS
 # section, and for building the corresponding zip file
 function nsis_setup {
@@ -287,7 +231,7 @@ nsis_add_recurse icub_data_dirs share $ICUB_SUB/share
 cd $ICUB_DIR_UNIX/lib/ICUB || exit 1
 
 #replace_string "$ICUB_DIR" \${ICUB_INSTALLED_LOCATION} icub-config-tmp.cmake
-files_to_fix="icub-config.cmake icub-export-install-includes.cmake icub-export-install-release.cmake icub-export-install-debug.cmake"
+files_to_fix="icub-config.cmake icub-export-inst-includes.cmake icub-export-install-release.cmake icub-export-install-debug.cmake"
 for f in $files_to_fix
 do
   echo "processing file ${f}"
@@ -318,9 +262,9 @@ do
   mv ${f}.backup ${f}
 done
 
-nsis_add icub_base icub-config.cmake $ICUB_SUB/cmake/icub-config.cmake
+nsis_add icub_base icub-config.cmake $ICUB_SUB/lib/ICUB/icub-config.cmake
 nsis_add icub_base icub-export-install.cmake $ICUB_SUB/lib/ICUB/icub-export-install.cmake
-nsis_add icub_base icub-export-install-includes.cmake $ICUB_SUB/lib/ICUB/icub-export-install-includes.cmake
+nsis_add icub_base icub-export-inst-includes.cmake $ICUB_SUB/lib/ICUB/icub-export-inst-includes.cmake
 nsis_add icub_base icub-export-install-release.cmake $ICUB_SUB/lib/ICUB/icub-export-install-release.cmake
 nsis_add icub_base icub-export-install-debug.cmake $ICUB_SUB/lib/ICUB/icub-export-install-debug.cmake
 
@@ -363,24 +307,23 @@ case "$v" in
   echo "ERROR: platform $v not supported."
   exit 1
 esac
-echo echo "SDLDIR Release: $SDLDIR"
+echo "SDLDIR Release: $SDLDIR"
 if [ -e "$SDLDIR" ] ; then
   cd "$SDLDIR" || exit 1
   for f in `find ./ -maxdepth 1 -type f`; do
     nsis_add icub_sdl $f $SDL_SUB/$f
   done
-  
   nsis_add_recurse icub_sdl include $SDL_SUB/include
   nsis_add_recurse icub_sdl docs $SDL_SUB/docs
-  
   cd "$SDLDIR/lib/${SDL_OBJ_PLAT}" || exit 1
-  
   files="SDL.lib SDLmain.lib"
   for f in $files; do
     nsis_add icub_sdl $f $SDL_SUB/lib/$f
   done
-  
   nsis_add icub_sdl_bin SDL.dll $SDL_SUB/lib/SDL.dll
+else
+  echo "ERROR: directory $SDL_SUB is missing" 
+  exit 1
 fi
 
 ## add GLUT 
@@ -403,6 +346,8 @@ if [ -e "$GLUT_DIR" ] ; then
     nsis_add icub_glut $f $GLUT_SUB/$f
   done
   nsis_add_recurse icub_glut GL $GLUT_SUB/GL
+else
+  echo "WARNING: Skipping GLUT - directory $GLUT_DIR is missing" 
 fi
 
 
@@ -410,11 +355,9 @@ fi
 echo "ODE: $ODE_DIR"
 if [ -e "$ODE_DIR" ]; then
   cd "$ODE_DIR"
-  
   for f in `find ./ -maxdepth 1 -type f`; do
     nsis_add icub_ode $f $ODE_SUB/$f
   done
-  
   nsis_add_recurse icub_ode lib $ODE_SUB/lib
   nsis_add_recurse icub_ode drawstuff $ODE_SUB/drawstuff
   nsis_add_recurse icub_ode GIMPACT $ODE_SUB/GIMPACT
@@ -424,6 +367,9 @@ if [ -e "$ODE_DIR" ]; then
   nsis_add_recurse icub_ode ou $ODE_SUB/ou
   nsis_add_recurse icub_ode tests $ODE_SUB/tests
   nsis_add_recurse icub_ode tools $ODE_SUB/tools
+else
+  echo "ERROR: directory $ODE_DIR is missing" 
+  exit 1
 fi
 
 echo "GSL: $GSL_DIR"
@@ -431,6 +377,9 @@ if [ -e "$GSL_DIR" ]; then
   cd "$GSL_DIR"
   nsis_add_recurse icub_gsl include ${GSL_SUB}/include 
   nsis_add_recurse icub_gsl lib ${GSL_SUB}/lib 
+else
+  echo "ERROR: directory $GSL_DIR is missing" 
+  exit 1
 fi
 
 # Add Visual Studio redistributable material to NSIS
