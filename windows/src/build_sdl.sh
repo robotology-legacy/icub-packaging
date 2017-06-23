@@ -19,7 +19,30 @@ if [ "BUNDLE_SDL_VERSION" == "" ] || [ "BUNDLE_SDL_URL" == "" ]; then
   echo "BUNDLE_SDL_URL=$BUNDLE_SDL_URL"
   exit 1
 fi
-packetname="SDL-${BUNDLE_SDL_VERSION}" 
+
+SDL_VARIANT=""
+SDL_ARCH="$v"
+case "$c" in
+  "v14" )
+    SDL_VARIANT="msvc14"
+    ;;
+  "v12" )
+    SDL_VARIANT="msvc12"
+    ;;
+  "v11" )
+    SDL_VARIANT="msvc11"
+    ;;
+  "" )
+    echo "ERROR: Empty compiler variant string for SDL"
+    exit 1
+    ;;
+  "*" )
+    echo "ERROR: Usupported compiler variant for SDL: $c"
+    exit 1
+    ;;
+esac
+
+packetname="SDL-${BUNDLE_SDL_VERSION}_${SDL_VARIANT}" 
 archivename="${packetname}.zip"
 
 if [ ! -e $archivename ]; then

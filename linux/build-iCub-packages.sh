@@ -48,7 +48,7 @@ else
 fi
 
 run_in_chroot "mount -t proc proc /proc"
-run_in_chroot "locale-gen en_US.UTF-8"
+run_in_chroot "/usr/sbin/locale-gen en_US.UTF-8"
 
 ###------------------- Preparing --------------------###
 
@@ -76,6 +76,7 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
   if [ "${!BACKPORTS_URL_TAG}" != "" ]; then
     run_in_chroot "echo ${!BACKPORTS_URL_TAG} > /etc/apt/sources.list.d/backports.list"
   fi
+  run_in_chroot "apt-get install $APT_OPTIONS gnupg"
   run_in_chroot "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 57A5ACB6110576A6"
   run_in_chroot "apt-get update"
   run_in_chroot "apt-get $APT_OPTIONS install -f"
@@ -223,13 +224,31 @@ TMP=$(echo $STRING | awk '{ split($0, array, "PATCH" ); print array[2] }')
 ICUB_REQYARP_VERSION_PATCH=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
 
 ICUB_REQYARP_VERSION="${ICUB_REQYARP_VERSION_MAJOR}.${ICUB_REQYARP_VERSION_MINOR}.${ICUB_REQYARP_VERSION_PATCH}"
-echo "Required YARP version is $ICUB_REQYARP_VERSION"
-YARP_VERSION_MAJOR=$(grep YARP_VERSION_MAJOR ${YARP_TEST_CHROOT}/usr/lib/${PLATFORM_HARDWARE}-linux-gnu/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
-YARP_VERSION_MINOR=$(grep YARP_VERSION_MINOR ${YARP_TEST_CHROOT}/usr/lib/${PLATFORM_HARDWARE}-linux-gnu/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
-YARP_VERSION_PATCH=$(grep YARP_VERSION_PATCH ${YARP_TEST_CHROOT}/usr/lib/${PLATFORM_HARDWARE}-linux-gnu/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
+if [ "$ICUB_REQYARP_VERSION_MAJOR" == "" ] || [ "$ICUB_REQYARP_VERSION_MINOR" == "" ] || [ "$ICUB_REQYARP_VERSION_PATCH" == "" ] || [ "$ICUB_REQYARP_VERSION" == "" ]; then
+  echo "ERROR: unable to retrive YARP version (string is $YARP_VERSION)"
+  exit 1
+else
+  echo "Required YARP version is $ICUB_REQYARP_VERSION"
+fi
+case  "${PLATFORM_HARDWARE}" in
+"amd64" ) 
+  PLAT_TAG="x86_64"
+  ;;
+"i386" )
+  PLAT_TAG="i386"
+  ;;
+* )
+  echo "ERROR: unsupported PLATFORM_HARDWARE : $PLATFORM_HARDWARE"
+  exit 1
+  ;;
+esac  
+YARP_VERSION_MAJOR=$(grep YARP_VERSION_MAJOR ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
+YARP_VERSION_MINOR=$(grep YARP_VERSION_MINOR ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
+YARP_VERSION_PATCH=$(grep YARP_VERSION_PATCH ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
 YARP_VERSION="${YARP_VERSION_MAJOR}.${YARP_VERSION_MINOR}.${YARP_VERSION_PATCH}"
-if [ "$YARP_VERSION" == "" ]; then
-  echo "ERROR: unable to retrive YARP version"
+if [ "$YARP_VERSION_MAJOR" == "" ] || [ "$YARP_VERSION_MINOR" == "" ] || [ "$YARP_VERSION_PATCH" == "" ] || [ "$YARP_VERSION" == "" ]; then
+  echo "ERROR: unable to retrive YARP version (string is $YARP_VERSION)"
+  exit 1
 else
   echo "Found Yarp version $YARP_VERSION"
 fi
@@ -260,7 +279,7 @@ else
           fi
   fi
 fi
-echo 	"++ OK -> Found compatible Yarp version!!"
+echo 	"OK, Found compatible Yarp version!!"
 #----------------------------------- iCub-common ----------------------------------------#				
 if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-common-package.done ]; then
   run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME"
