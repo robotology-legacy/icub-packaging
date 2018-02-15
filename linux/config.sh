@@ -1,28 +1,26 @@
-PACKAGE_VERSION="1.8.0"
+PACKAGE_VERSION="1.10.0"
 # Always use a revision number >=1
 DEBIAN_REVISION_NUMBER=1
-ICUB_SOURCES_VERSION="1.8.0"
+ICUB_SOURCES_VERSION="1.10.0"
 #ICUB_SOURCES_VERSION="trunk"
 
 #IPOPT="Ipopt-3.11.7"
 
-SUPPORTED_DISTRO_LIST="xenial yakkety zesty jessie stretch"
+SUPPORTED_DISTRO_LIST="xenial artful jessie stretch"
 SUPPORTED_TARGET_LIST="i386 amd64"
 
-APT_OPTIONS="-q --no-install-recommends -y --force-yes"
+APT_OPTIONS="-q -y"
 SVN_OPTIONS="-q --force --non-interactive"  # -q is quiet option, do not prints out each file downloaded, less verbose log file.
 
 ICUB_COMMON_CONFLICT=""  
 
-ICUB_DEPS_COMMON="libace-dev libc6 python libgsl0-dev libncurses5-dev libcv-dev libhighgui-dev libcvaux-dev libsdl1.2-dev subversion git gfortran cmake libxmu-dev libode-dev wget unzip qtbase5-dev qtdeclarative5-dev qtmultimedia5-dev libqt5svg5 libqt5opengl5-dev libopencv-dev freeglut3-dev libtinyxml-dev libblas-dev coinor-libipopt-dev liblapack-dev libmumps-dev qml-module-qtmultimedia qml-module-qtquick-dialogs qml-module-qtquick-controls libedit-dev libeigen3-dev"
-ICUB_DEPS_yakkety="libode6"
-ICUB_DEPS_xenial="libode4"
-ICUB_DEPS_zesty="libode6"
-ICUB_DEPS_stretch="libode6"
-ICUB_DEPS_jessie="libode1"
-ICUB_DEPS_BACKPORTS_STRING_yakkety=""
+ICUB_DEPS_COMMON="libace-dev libc6 python libgsl0-dev libncurses5-dev libsdl1.2-dev subversion git gfortran cmake libxmu-dev libode-dev wget unzip qtbase5-dev qtdeclarative5-dev qtmultimedia5-dev libqt5svg5 libqt5opengl5-dev libopencv-dev freeglut3-dev libtinyxml-dev libblas-dev coinor-libipopt-dev liblapack-dev libmumps-dev qml-module-qtmultimedia qml-module-qtquick-dialogs qml-module-qtquick-controls libedit-dev libeigen3-dev"
+ICUB_DEPS_xenial="libode4 libhighgui-dev libcv-dev libcvaux-dev"
+ICUB_DEPS_artful="libode6"
+ICUB_DEPS_stretch="libode6 libhighgui-dev libcv-dev libcvaux-dev"
+ICUB_DEPS_jessie="libode1 libhighgui-dev libcv-dev libcvaux-dev"
 ICUB_DEPS_BACKPORTS_STRING_xenial=""
-ICUB_DEPS_BACKPORTS_STRING_zesty=""
+ICUB_DEPS_BACKPORTS_STRING_artful=""
 ICUB_DEPS_BACKPORTS_STRING_jessie=""
 ICUB_DEPS_BACKPORTS_STRING_stretch=""
 
@@ -44,7 +42,10 @@ ICUB_CMAKE_OPTIONS="\
  -DENABLE_icubmod_skinprototype=ON \
  -DENABLE_icubmod_socketcan=ON \
  -DENABLE_icubmod_static_grabber=ON \
- -DENABLE_icubmod_xsensmtx=ON \
+ -DENABLE_icubmod_xsensmtx=OFF \
  -DYARP_FORCE_DYNAMIC_PLUGINS=ON"
+CMAKE_OPTIONS_xenial=""
+CMAKE_OPTIONS_artful=""
+CMAKE_OPTIONS_jessie=""
+CMAKE_OPTIONS_stretch=""
 
-CMAKE_OPTIONS_yakkety="-DCMAKE_LIBRARY_PATH=/usr/lib/gcc/i686-linux-gnu/6 -DCMAKE_LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/6"
