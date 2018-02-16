@@ -1,6 +1,6 @@
 # icub-packaging
 
-This is repository containing the scripts used to buils the icub-main and icub-common binary packages
+This is repository containing the scripts used to builds the icub-main and icub-common binary packages
 
 ## License
 
