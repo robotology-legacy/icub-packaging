@@ -209,28 +209,34 @@ else
 fi
   
 # Find which version of yarp is required
-STRING=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)
-if [ "$STRING" == "" ]
+ICUB_REQYARP_VERSION=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "find_package(YARP" | grep "REQUIRED" | awk '{print $2}')
+#YARP_VERSION_STRING=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)
+if [ "$ICUB_REQYARP_VERSION" == "" ]
 then
-	echo "ERROR: Yarp version string not found in ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt"
+	echo "ERROR: Required Yarp version string not found in ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt"
 	exit 1
-fi
-TMP=$(echo $STRING | awk '{ split($0, array, "MAJOR" ); print array[2] }')
-ICUB_REQYARP_VERSION_MAJOR=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
-
-TMP=$(echo $STRING | awk '{ split($0, array, "MINOR" ); print array[2] }')
-ICUB_REQYARP_VERSION_MINOR=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
-
-TMP=$(echo $STRING | awk '{ split($0, array, "PATCH" ); print array[2] }')
-ICUB_REQYARP_VERSION_PATCH=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
-
-ICUB_REQYARP_VERSION="${ICUB_REQYARP_VERSION_MAJOR}.${ICUB_REQYARP_VERSION_MINOR}.${ICUB_REQYARP_VERSION_PATCH}"
-if [ "$ICUB_REQYARP_VERSION_MAJOR" == "" ] || [ "$ICUB_REQYARP_VERSION_MINOR" == "" ] || [ "$ICUB_REQYARP_VERSION_PATCH" == "" ] || [ "$ICUB_REQYARP_VERSION" == "" ]; then
-  echo "ERROR: unable to retrive YARP version (string is $YARP_VERSION)"
-  exit 1
 else
   echo "Required YARP version is $ICUB_REQYARP_VERSION"
 fi
+#TMP=$(echo $YARP_VERSION_STRING | awk '{ split($0, array, "MAJOR" ); print array[2] }')
+#echo $TMP
+#ICUB_REQYARP_VERSION_MAJOR=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
+#echo "Major $ICUB_REQYARP_VERSION_MAJOR"
+#TMP=$(echo $YARP_VERSION_STRING | awk '{ split($0, array, "MINOR" ); print array[2] }')
+#echo $TMP
+#ICUB_REQYARP_VERSION_MINOR=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
+#echo "Minor $ICUB_REQYARP_VERSION_MINOR"
+#TMP=$(echo $YARP_VERSION_STRING | awk '{ split($0, array, "PATCH" ); print array[2] }')
+#echo $TMP
+#ICUB_REQYARP_VERSION_PATCH=$(echo $TMP | awk '{ split($0, array, "\"" ); print array[2] }')
+#echo "Patch $ICUB_REQYARP_VERSION_PATCH"
+#ICUB_REQYARP_VERSION="${ICUB_REQYARP_VERSION_MAJOR}.${ICUB_REQYARP_VERSION_MINOR}.${ICUB_REQYARP_VERSION_PATCH}"
+#if [ "$ICUB_REQYARP_VERSION_MAJOR" == "" ] || [ "$ICUB_REQYARP_VERSION_MINOR" == "" ] || [ "$ICUB_REQYARP_VERSION_PATCH" == "" ] || [ "$ICUB_REQYARP_VERSION" == "" ]; then
+#  echo "ERROR: unable to retrive YARP version (string is $YARP_VERSION_STRING)"
+#  exit 1
+#else
+#  echo "Required YARP version is $ICUB_REQYARP_VERSION"
+#fi
 case  "${PLATFORM_HARDWARE}" in
 "amd64" ) 
   PLAT_TAG="x86_64"
@@ -242,7 +248,7 @@ case  "${PLATFORM_HARDWARE}" in
   echo "ERROR: unsupported PLATFORM_HARDWARE : $PLATFORM_HARDWARE"
   exit 1
   ;;
-esac  
+esac
 YARP_VERSION_MAJOR=$(grep YARP_VERSION_MAJOR ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
 YARP_VERSION_MINOR=$(grep YARP_VERSION_MINOR ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
 YARP_VERSION_PATCH=$(grep YARP_VERSION_PATCH ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
@@ -258,29 +264,13 @@ if [ "${YARP_VERSION}" == "trunk" ]; then
     echo "ERROR: both yarp and icub sources must be trunk, found YARP=$YARP_VERSION and iCub=${ICUB_SOURCES_VERSION}"
   fi
 else
-  if [ "$YARP_VERSION_MAJOR" -lt  "$ICUB_REQYARP_VERSION_MAJOR" ]
-  then
-          echo "wrong major version"
-          exit 1
-  fi
-  if [ "$YARP_VERSION_MAJOR" -eq "$ICUB_REQYARP_VERSION_MAJOR" ]
-  then
-          if [ "$YARP_VERSION_MINOR" -lt "$ICUB_REQYARP_VERSION_MINOR" ]
-          then
-                  echo "wrong minor number"
-                  exit 1
-          fi
-          if [ "$YARP_VERSION_MINOR" -eq "$ICUB_REQYARP_VERSION_MINOR" ]
-          then
-                  if [ "$YARP_VERSION_PATCH" -lt "$ICUB_REQYARP_VERSION_PATCH" ]
-                  then
-                          echo "wrong patch number"
-                          exit 1
-                  fi
-          fi
-  fi
+  if [ "${YARP_VERSION}" == "${ICUB_REQYARP_VERSION}" ]; then
+    echo "OK, Found compatible Yarp version!!"
+  else 
+    echo "ERROR: wrong Yarp version (found $YARP_VERSION - required $ICUB_REQYARP_VERSION)"
+    exit 1
+  fi 
 fi
-echo 	"OK, Found compatible Yarp version!!"
 #----------------------------------- iCub-common ----------------------------------------#				
 if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-common-package.done ]; then
   run_in_chroot " mkdir -p /tmp/install_dir/$ICUB_COMMON_NAME"
