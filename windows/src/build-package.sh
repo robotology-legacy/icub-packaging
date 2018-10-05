@@ -76,12 +76,6 @@ ICUB_ROOT_DBG=$ICUB_ROOT
 ## now load release variables
 source icub_${c}_${v}_Release.sh
 
-######### Load env variables for OpenCV
-source opencv_${c}_${v}_Debug.sh
-OpenCV_DIR_DBG=$OpenCV_DIR
-## now load release variables
-source opencv_${c}_${v}_Release.sh
-
 ######### Start build process
 if [ ! -d "build-nsis" ]; then
   mkdir build-nsis
@@ -93,8 +87,6 @@ ICUB_DIR_DBG_UNIX=`cygpath -u $ICUB_DIR_DBG`
 ICUB_DIR_UNIX=`cygpath -u $ICUB_DIR`
 SDLDIR_UNIX=`cygpath -u $SDLDIR`
 GLUT_DIR_UNIX=`cygpath -u $GLUT_DIR`
-OPENCV_DIR_UNIX=`cygpath -u $OpenCV_DIR`
-OPENCV_DIR_DBG_UNIX=`cygpath -u $OpenCV_DIR_DBG`
 GSL_DIR_UNIX=$(cygpath -u $GSL_DIR)
 GSL_DIR_DBG_UNIX=$(cygpath -u $GSL_DIR_DBG)
 
@@ -197,8 +189,6 @@ nsis_setup icub_modules
 nsis_setup icub_data_dirs
 
 nsis_setup icub_ipopt
-nsis_setup icub_opencv
-nsis_setup icub_opencv_bin
 
 nsis_setup icub_glut
 nsis_setup icub_glut_bin
@@ -212,7 +202,6 @@ nsis_setup icub_gsl
 
 ICUB_SUB="icub-$BUNDLE_ICUB_VERSION"
 IPOPT_SUB="ipopt-$BUNDLE_IPOPT_VERSION"
-OPENCV_SUB="opencv-$BUNDLE_OPENCV_VERSION"
 GLUT_SUB="glut-$BUNDLE_GLUT_VERSION"
 SDL_SUB="sdl-$BUNDLE_SDL_VERSION"
 ODE_SUB="ode-$BUNDLE_ODE_VERSION"
@@ -246,16 +235,11 @@ do
   IPOPT_DEBUG_STRING=$(echo $IPOPT_DIR | sed "s/Release/Debug/g")
   replace_string "$IPOPT_DEBUG_STRING" \${IPOPT_INSTALLED_LOCATION} "${f}.backup"
   
-  replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} "${f}.backup"
-  OpenCV_DEBUG_STRING=$(echo $OpenCV_DIR | sed "s/Release/Debug/g")
-  replace_string "$OpenCV_DEBUG_STRING" \${OPENCV_INSTALLED_LOCATION} "${f}.backup"
-  
   replace_string "$ACE_DIR" \${ACE_INSTALLED_LOCATION} "${f}.backup"
   ACE_DEBUG_STRING=$(echo $ACE_DIR | sed "s/Release/Debug/g")
   replace_string "$ACE_DEBUG_STRING" \${ACE_INSTALLED_LOCATION} "${f}.backup"
 
   insert_top "set(GSL_INSTALLED_LOCATION __NSIS_GSL_INSTALLED_LOCATION__)" "${f}.backup"
-  insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" "${f}.backup"
   insert_top "set(IPOPT_INSTALLED_LOCATION __NSIS_IPOPT_INSTALLED_LOCATION__)"  "${f}.backup"
   insert_top "set(ICUB_INSTALLED_LOCATION __NSIS_ICUB_INSTALLED_LOCATION__)" "${f}.backup"
   insert_top "set(ACE_INSTALLED_LOCATION __NSIS_ACE_INSTALLED_LOCATION__)" "${f}.backup"
@@ -398,88 +382,6 @@ nsis_add_recurse icub_ipopt lib $IPOPT_SUB/lib
 nsis_add_recurse icub_ipopt share $IPOPT_SUB/share
 nsis_add_recurse icub_ipopt bin $IPOPT_SUB/bin
 
-##### Add OpenCV
-# Add release stuff
-echo $OpenCV_DIR
-cd $OpenCV_DIR
-
-cp OpenCVConfig.cmake OpenCVConfig-fp.cmake
-replace_string "$OpenCV_DIR" \${OPENCV_INSTALLED_LOCATION} OpenCVConfig-fp.cmake
-insert_top "set(OPENCV_INSTALLED_LOCATION __NSIS_OPENCV_INSTALLED_LOCATION__)" OpenCVConfig-fp.cmake
-mv OpenCVConfig-fp.cmake OpenCVConfig.cmake
-
-if [ -e 3rdParty ]; then
-  nsis_add_recurse icub_opencv 3rdparty $OPENCV_SUB/3rdparty
-fi
-  
-nsis_add_recurse icub_opencv include $OPENCV_SUB/include
-nsis_add icub_opencv OpenCVConfig.cmake $OPENCV_SUB/OpenCVConfig.cmake
-file="OpenCVConfig-version.cmake"
-nsis_add icub_opencv $file $OPENCV_SUB/$file
-
-echo echo "OpenCV Release: $OPENCV_DIR_UNIX"
-case "$v" in
-"x86" )
-  OPENCV_OBJ_PLAT="x86"
-  ;;
-"x64" | "x86_64" | "x86_amd64" )
-  OPENCV_OBJ_PLAT="x64"
-  ;;
-*)
-  echo "ERROR: platform $v not supported."
-  exit 1
-esac
-case "$c" in
-"v10" )
-  OPENCV_OBJ_VARIANT="vc10"
-  ;;
-"v11" )
-  OPENCV_OBJ_VARIANT="vc11"
-  ;;
-"v12" )
-  OPENCV_OBJ_VARIANT="vc12"
-  ;;
-"v14" )
-  OPENCV_OBJ_VARIANT="vc14"
-  ;;
-*)
-  echo "ERROR: compiler version $v not supported."
-  exit 1
-  ;;
-esac
-OPENCV_OBJ_SUFFIX_PATH="${OPENCV_OBJ_PLAT}/${OPENCV_OBJ_VARIANT}"
- 
-# add binaries for OpenCV
-cd "${OPENCV_DIR_UNIX}/${OPENCV_OBJ_SUFFIX_PATH}/bin" || exit 1
-for f in `ls *.dll`; do
-  nsis_add icub_opencv_bin $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/bin/$f
-done
-for f in `ls *.exe`; do
-  nsis_add icub_opencv_bin $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/bin/$f
-done
-# add libraries for OpenCV
-cd "${OPENCV_DIR_UNIX}/${OPENCV_OBJ_SUFFIX_PATH}/lib" || exit 1
-for f in `ls *.lib`; do
-    nsis_add icub_opencv $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/lib/$f
-done
-for f in `ls *.cmake`; do
-    nsis_add icub_opencv $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/lib/$f
-done
-
-# add debug binaries for OpenCV
-cd "${OPENCV_DIR_DBG_UNIX}/${OPENCV_OBJ_SUFFIX_PATH}/bin" || exit 1
-for f in `ls *.dll`; do
-     nsis_add icub_opencv_bin $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/bin/$f
-done
-for f in `ls *.exe`; do
-     nsis_add icub_opencv_bin $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/bin/$f
-done
-# add debug libraries for OpenCV
-cd "${OPENCV_DIR_DBG_UNIX}/${OPENCV_OBJ_SUFFIX_PATH}/lib" || exit 1
-for f in `ls *.lib`; do
-    nsis_add icub_opencv $f ${OPENCV_SUB}/${OPENCV_OBJ_SUFFIX_PATH}/lib/$f
-done
-
 # Run NSIS
 cd $OUT_DIR
 echo $OUT_DIR
@@ -487,7 +389,7 @@ echo $ICUB_PACKAGE_SOURCE_DIR
 cp $ICUB_PACKAGE_SOURCE_DIR/nsis/*.nsh .
 
 #$NSIS_BIN -DACE_SUB=$ACE_SUB -DQT3_SUB=$QT3_SUB -DODE_SUB=$ODE_SUB -DGLUT_SUB=$GLUT_SUB -DSDL_SUB=$SDL_SUB -DOPENCV_SUB=$OPENCV_SUB -DIPOPT_SUB=$IPOPT_SUB -DYARP_VERSION=$BUNDLE_YARP_VERSION -DINST2=$ICUB_SUB -DGSL_VERSION=$BUNDLE_GSL_VERSION -DICUB_VERSION=$BUNDLE_ICUB_VERSION -DICUB_TWEAK=$BUNDLE_ICUB_TWEAK -DBUILD_VERSION=${OPT_COMPILER}_${OPT_VARIANT} -DVENDOR=$VENDOR -DICUB_LOGO=$ICUB_LOGO -DICUB_LICENSE=$ICUB_LICENSE -DICUB_ORG_DIR=$ICUB_DIR -DGSL_ORG_DIR=$GSL_DIR -DNSIS_OUTPUT_PATH=`cygpath -w $PWD` `cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi` || exit 1
-$NSIS_BIN -DICUB_VARIANT="$c" -DICUB_PLATFORM="$v" -DGSL_SUB="$GSL_SUB" -DACE_SUB="$ACE_SUB" -DODE_SUB="$ODE_SUB" -DGLUT_SUB="$GLUT_SUB" -DSDL_SUB="$SDL_SUB" -DOPENCV_SUB="$OPENCV_SUB" -DIPOPT_SUB="$IPOPT_SUB" -DYARP_VERSION="$BUNDLE_YARP_VERSION" -DINST2="$ICUB_SUB" -DGSL_VERSION="$BUNDLE_GSL_VERSION" -DICUB_VERSION="$BUNDLE_ICUB_VERSION" -DICUB_TWEAK="$BUNDLE_ICUB_TWEAK" -DBUILD_VERSION="${OPT_COMPILER}_${OPT_VARIANT}" -DVENDOR="$VENDOR" -DICUB_LOGO="$ICUB_LOGO" -DICUB_LICENSE="$ICUB_LICENSE" -DICUB_ORG_DIR="$ICUB_DIR" -DGSL_ORG_DIR="$GSL_DIR" -DNSIS_OUTPUT_PATH="$(cygpath -w $PWD)" "$(cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi)" || exit 1
+$NSIS_BIN -DICUB_VARIANT="$c" -DICUB_PLATFORM="$v" -DGSL_SUB="$GSL_SUB" -DACE_SUB="$ACE_SUB" -DODE_SUB="$ODE_SUB" -DGLUT_SUB="$GLUT_SUB" -DSDL_SUB="$SDL_SUB" -DIPOPT_SUB="$IPOPT_SUB" -DYARP_VERSION="$BUNDLE_YARP_VERSION" -DINST2="$ICUB_SUB" -DGSL_VERSION="$BUNDLE_GSL_VERSION" -DICUB_VERSION="$BUNDLE_ICUB_VERSION" -DICUB_TWEAK="$BUNDLE_ICUB_TWEAK" -DBUILD_VERSION="${OPT_COMPILER}_${OPT_VARIANT}" -DVENDOR="$VENDOR" -DICUB_LOGO="$ICUB_LOGO" -DICUB_LICENSE="$ICUB_LICENSE" -DICUB_ORG_DIR="$ICUB_DIR" -DGSL_ORG_DIR="$GSL_DIR" -DNSIS_OUTPUT_PATH="$(cygpath -w $PWD)" "$(cygpath -m $ICUB_PACKAGE_SOURCE_DIR/nsis/icub_package.nsi)" || exit 1
 
 PACKAGES_DEST_DIR="${BUILD_DIR}/icub-packages" 
 if [ ! -d "${PACKAGES_DEST_DIR}" ]; then
