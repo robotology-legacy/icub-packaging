@@ -1,13 +1,13 @@
-PACKAGE_VERSION="1.12.0"
+PACKAGE_VERSION="1.13.0"
 # Always use a revision number >=1
 DEBIAN_REVISION_NUMBER=1
-ICUB_SOURCES_VERSION="1.12.0"
+ICUB_SOURCES_VERSION="1.13.0"
 #ICUB_SOURCES_VERSION="trunk"
 
 #IPOPT="Ipopt-3.11.7"
 
-#SUPPORTED_DISTRO_LIST="stretch xenial bionic"
-SUPPORTED_DISTRO_LIST="xenial bionic"
+#SUPPORTED_DISTRO_LIST="stretch bionic cosmic disco"
+SUPPORTED_DISTRO_LIST="bionic cosmic disco"
 SUPPORTED_TARGET_LIST="amd64 i386"
 
 APT_OPTIONS="-q -y"
@@ -15,12 +15,13 @@ SVN_OPTIONS="-q --force --non-interactive"  # -q is quiet option, do not prints 
 
 ICUB_COMMON_CONFLICT=""  
 
-ICUB_DEPS_COMMON="libace-dev libc6 python libgsl0-dev libncurses5-dev libsdl1.2-dev subversion git gfortran cmake libxmu-dev libode-dev wget unzip qtbase5-dev qtdeclarative5-dev qtmultimedia5-dev libqt5svg5 libqt5opengl5-dev libopencv-dev freeglut3-dev libtinyxml-dev libblas-dev coinor-libipopt-dev liblapack-dev libmumps-dev qml-module-qtmultimedia qml-module-qtquick-dialogs qml-module-qtquick-controls libedit-dev libeigen3-dev libjpeg-dev"
-ICUB_DEPS_xenial="libode4 libhighgui-dev libcv-dev libcvaux-dev"
+ICUB_DEPS_COMMON="libace-dev libc6 python libgsl0-dev libncurses5-dev libsdl1.2-dev subversion git gfortran cmake libxmu-dev libode-dev wget unzip qtbase5-dev qtdeclarative5-dev qtmultimedia5-dev libqt5svg5 libqt5opengl5-dev libopencv-dev freeglut3-dev libtinyxml-dev libblas-dev coinor-libipopt-dev liblapack-dev libmumps-dev qml-module-qtmultimedia qml-module-qtquick-dialogs qml-module-qtquick-controls libedit-dev libeigen3-dev libjpeg-dev libsimbody-dev libxml2-dev"
 ICUB_DEPS_bionic="libode6"
-ICUB_DEPS_stretch="libode6 libhighgui-dev libcv-dev libcvaux-dev"
-ICUB_DEPS_jessie="libode1 libhighgui-dev libcv-dev libcvaux-dev"
-ICUB_DEPS_BACKPORTS_STRING_xenial=""
+ICUB_DEPS_cosmic="libode6"
+ICUB_DEPS_disco="libode8"
+ICUB_DEPS_stretch="libode6"
+ICUB_DEPS_BACKPORTS_STRING_disco=""
+ICUB_DEPS_BACKPORTS_STRING_cosmic=""
 ICUB_DEPS_BACKPORTS_STRING_bionic=""
 ICUB_DEPS_BACKPORTS_STRING_stretch=""
 
@@ -44,6 +45,7 @@ ICUB_CMAKE_OPTIONS="\
  -DENABLE_icubmod_static_grabber=ON \
  -DENABLE_icubmod_xsensmtx=OFF \
  -DYARP_FORCE_DYNAMIC_PLUGINS=ON"
-CMAKE_OPTIONS_xenial=""
+CMAKE_OPTIONS_disco=""
+CMAKE_OPTIONS_cosmic=""
 CMAKE_OPTIONS_bionic=""
 CMAKE_OPTIONS_stretch=""
