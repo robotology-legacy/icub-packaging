@@ -279,7 +279,6 @@ Section "-first"
   
   SetOutPath "$INSTDIR"
   !insertmacro RegisterPackage ipopt ${IPOPT_SUB}
-  !insertmacro RegisterPackage OpenCV ${OPENCV_SUB}
   !insertmacro RegisterPackage sdl ${SDL_SUB}
   !insertmacro RegisterPackage ode ${ODE_SUB}
   !insertmacro RegisterPackage glut ${GLUT_SUB}
@@ -349,14 +348,6 @@ Section "Ipopt files" SecIpopt
     !include ${NSIS_OUTPUT_PATH}\icub_ipopt_add.nsi
 SectionEnd
 
-Section "OpenCV files" SecOpenCV
-    SetOutPath "$INSTDIR"
-    !include ${NSIS_OUTPUT_PATH}\icub_opencv_add.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_opencv_bin_add.nsi
-  ${StrRepLocal} $0 "$INSTDIR\${OPENCV_SUB}" "\" "/"
-    !insertmacro ReplaceInFile "$INSTDIR\${OPENCV_SUB}\OpenCVConfig.cmake" __NSIS_OPENCV_INSTALLED_LOCATION__ $\"$0$\"
-SectionEnd
-
 Section "ODE files" SecODE
     SetOutPath "$INSTDIR"
     !include ${NSIS_OUTPUT_PATH}\icub_ode_add.nsi
@@ -421,34 +412,7 @@ Section "Environment variables" SecPath
     Goto odeEndif 
    isODESel:
        WriteRegExpandStr ${WriteEnvStr_RegKey} ODE_DIR "$INSTDIR\${ODE_SUB}"
-   odeEndif:
-  
-   !insertmacro SectionFlagIsSet ${SecOpenCV} ${SF_SELECTED} isOpenCVSel notOpenCVSel
-   notOpenCVSel:
-    DetailPrint "Skipping OpenCV environment variables and PATH"
-    Goto endOpenCVIf 
-   isOpenCVSel:
-      WriteRegExpandStr ${WriteEnvStr_RegKey} OPENCV_DIR "$INSTDIR\${OPENCV_SUB}"
-        ${If} ${ICUB_PLATFORM} == "x64"
-    ${OrIf} ${ICUB_PLATFORM} == "amd64"
-    ${OrIf} ${ICUB_PLATFORM} == "x86_amd64"
-      StrCpy $0 "x64"
-     ${EndIf}
-     ${If} ${ICUB_PLATFORM} == "x86"
-      StrCpy $0 "x86"
-    ${EndIf}
-    ${If} ${ICUB_VARIANT} == "v10"
-      StrCpy $1 "vc10"
-      ${EndIf}
-      ${If} ${ICUB_VARIANT} == "v11"
-      StrCpy $1 "vc11"
-      ${EndIf}
-      ${If} ${ICUB_VARIANT} == "v12"
-      StrCpy $1 "vc12"
-      ${EndIf}
-    !insertmacro UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\$0\$1\bin"
-   endOpenCVIf:
-   
+   odeEndif: 
    !insertmacro SectionFlagIsSet ${SecGSL} ${SF_SELECTED} isSelGSL notGSLSel
    notGSLSel:
     DetailPrint "Skipping GSL environment variables and PATH"
@@ -507,7 +471,6 @@ LangString DESC_SecLibraries ${LANG_ENGLISH} "C++ libraries."
 LangString DESC_SecHeaders ${LANG_ENGLISH} "Header files."
 LangString DESC_SecCMake ${LANG_ENGLISH} "CMake files."
 LangString DESC_SecIpopt ${LANG_ENGLISH} "Interior Point OPTimizer (Ipopt), used for solving inverse problems."
-LangString DESC_SecOpenCV ${LANG_ENGLISH} "Open Source Computer Vision library (OpenCV)."
 LangString DESC_SecVcDlls ${LANG_ENGLISH} "Visual Studio runtime redistributable files.  Not free software. If you already have Visual Studio installed, you may want to skip this."
 LangString DESC_SecSDL ${LANG_ENGLISH} "Simple Direct Layer (SDL). Used by the simulator."
 LangString DESC_SecGLUT ${LANG_ENGLISH} "The OpenGL Utility Toolkit (GLUT). Used by the iCub visualization gui."
@@ -523,7 +486,6 @@ LangString DESC_SecPath ${LANG_ENGLISH} "Modify user environment. Add executable
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDataDirs} $(DESC_SecDataDirs)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecLibraries} $(DESC_SecLibraries)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecIpopt} $(DESC_SecIpopt)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecOpenCV} $(DESC_SecOpenCV)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecHeaders} $(DESC_SecHeaders)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecCMake} $(DESC_SecCMake)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecVcDlls} $(DESC_SecVcDlls)
@@ -587,35 +549,6 @@ Section "Uninstall"
     !insertmacro un.UpdateEnvironmentAppend "INCLUDE" "$INSTDIR\${GSL_SUB}\include"
     !insertmacro un.UpdateEnvironmentAppend "GSL_DIR" "$INSTDIR\${GSL_SUB}"
   gslNotFound:
-# OPENCV  
-  ClearErrors
-  ReadRegStr $0 HKCU "Software\${VENDOR}\opencv\${OPENCV_SUB}" ""
-  IfErrors 0 opencvFound
-  DetailPrint "OpenCV was not found in the system"
-  Goto opencvNotFound
-  opencvFound:
-    DetailPrint "Removing opencv registry key"
-    DeleteRegValue ${WriteEnvStr_RegKey} OPENCV_DIR
-    ${If} ${ICUB_PLATFORM} == "x64"
-    ${OrIf} ${ICUB_PLATFORM} == "amd64"
-    ${OrIf} ${ICUB_PLATFORM} == "x86_amd64"
-      StrCpy $0 "x64"
-     ${EndIf}
-     ${If} ${ICUB_PLATFORM} == "x86"
-      StrCpy $0 "x86"
-    ${EndIf}
-    ${If} ${ICUB_VARIANT} == "v10"
-      StrCpy $1 "vc10"
-      ${EndIf}
-      ${If} ${ICUB_VARIANT} == "v11"
-      StrCpy $1 "vc11"
-      ${EndIf}
-      ${If} ${ICUB_VARIANT} == "v12"
-      StrCpy $1 "vc12"
-      ${EndIf}
-    DetailPrint "Removing opencv environment variables"
-    !insertmacro un.UpdateEnvironmentAppend PATH "$INSTDIR\${OPENCV_SUB}\$0\$1\bin"
-  opencvNotFound:
 # SDL  
   ClearErrors
   ReadRegStr $0 HKCU "Software\${VENDOR}\sdl\${SDL_SUB}" ""
@@ -646,8 +579,6 @@ Section "Uninstall"
   !include ${NSIS_OUTPUT_PATH}\icub_base_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_libraries_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_ipopt_remove.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_opencv_remove.nsi
-  !include ${NSIS_OUTPUT_PATH}\icub_opencv_bin_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_headers_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_vc_dlls_remove.nsi
   !include ${NSIS_OUTPUT_PATH}\icub_sdl_remove.nsi
@@ -672,7 +603,6 @@ Section "Uninstall"
   RMDir /r "$INSTDIR\${INST2}"
   
   RMDir /r "$INSTDIR\${IPOPT_SUB}"
-  RMDir /r "$INSTDIR\${OPENCV_SUB}"
   RMDir /r "$INSTDIR\${SDL_SUB}"
   RMDir /r "$INSTDIR\${GLUT_SUB}"
   RMDir /r "$INSTDIR\${ODE_SUB}"
@@ -680,7 +610,6 @@ Section "Uninstall"
 
   !insertmacro UnregisterPackage iCub ${INST2}
   !insertmacro UnregisterPackage ipopt ${IPOPT_SUB}
-  !insertmacro UnregisterPackage OpenCV ${OPENCV_SUB}
   !insertmacro UnregisterPackage sdl ${SDL_SUB}
   !insertmacro UnregisterPackage glut ${GLUT_SUB}
   !insertmacro UnregisterPackage ode ${ODE_SUB}

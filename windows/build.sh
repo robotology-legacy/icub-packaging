@@ -94,7 +94,7 @@ for c in $compilers ; do
     if [ -f "gtkmm_${c}_${v}_Release.sh" ]; then
       source gtkmm_${c}_${v}_Release.sh
     else
-      echo "GTKMM NOT AVAILABLE"
+      echo "WARNING: GTKMM NOT AVAILABLE"
       unset GTKMM_DIR
       unset GTKMM_PATH
       unset GTK_BASEPATH
@@ -102,17 +102,38 @@ for c in $compilers ; do
     fi
     if [ -f "qt_${c}_${v}_Release.sh" ]; then
       source qt_${c}_${v}_Release.sh
+      echo "QT_DIR=$QT_DIR"
+      echo "QT_PATH=$QT_PATH"
+      echo "Qt5_DIR=$Qt5_DIR"
     else
-      echo "QT NOT AVAILABLE"
+      echo "WARNING: QT NOT AVAILABLE"
       unset QT_DIR
       unset QT_PATH
       unset Qt5_DIR
+    fi
+    if [ -f "libjpeg_${v}_Release.sh" ]; then
+      source libjpeg_${v}_Release.sh
+      echo "LIBJPEG_DIR=$LIBJPEG_DIR"
+      echo "JPEG_INCLUDE_DIR=$JPEG_INCLUDE_DIR"
+      echo "JPEG_LIBRARY=$JPEG_LIBRARY"
+
+    else
+      echo "WARNING: LIBJPEG NOT AVAILABLE"
+      unset LIBJPEG_DIR
+      unset JPEG_INCLUDE_DIR
+      unset JPEG_LIBRARY
+    fi
+    if [ -f "opencv_${c}_${v}_Release.sh" ]; then
+      source opencv_${c}_${v}_Release.sh
+      echo "OpenCV_DIR=$OpenCV_DIR"
+    else
+      echo "WARNING: OPENCV NOT AVAILABLE"
+      unset OpenCV_DIR
     fi
     cd $BUILD_DIR
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_sdl.sh $c $v Release
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_glut.sh $c $v Release
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_ode.sh $c $v Release
-    source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Release
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_ipopt.sh $c $v Release
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_gsl.sh $c $v Release
     
@@ -121,8 +142,6 @@ for c in $compilers ; do
     source ode_${c}_${v}_any.sh
     source ipopt_${c}_${v}_any.sh
     source gsl_${c}_${v}_Release.sh
-    
-    source opencv_${c}_${v}_Release.sh
     
     cd $BUILD_DIR
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_icub.sh $c $v Release
@@ -137,7 +156,7 @@ for c in $compilers ; do
     if [ -f "gtkmm_${c}_${v}_Debug.sh" ]; then
       source gtkmm_${c}_${v}_Debug.sh
      else
-      echo "GTKMM NOT AVAILABLE"
+      echo "WARNING: GTKMM [DEBUG]  NOT AVAILABLE"
       unset GTKMM_DIR
       unset GTKMM_PATH
       unset GTK_BASEPATH
@@ -145,16 +164,33 @@ for c in $compilers ; do
     fi
     if [ -f "qt_${c}_${v}_Debug.sh" ]; then
       source qt_${c}_${v}_Debug.sh
+      echo "[DEBUG] QT_DIR=$QT_DIR"
+      echo "[DEBUG] QT_PATH=$QT_PATH"
+      echo "[DEBUG] Qt5_DIR=$Qt5_DIR"
     else
-      echo "QT NOT AVAILABLE"
+      echo "[DEBUG] WARNING: QT NOT AVAILABLE"
       unset QT_DIR
       unset QT_PATH
       unset Qt5_DIR
     fi
-    cd $BUILD_DIR
-    source $ICUB_PACKAGE_SOURCE_DIR/src/build_opencv.sh $c $v Debug
-    source opencv_${c}_${v}_Debug.sh
-    
+    if [ -f "libjpeg_${v}_Debug.sh" ]; then
+      source libjpeg_${v}_Debug.sh
+      echo "[DEBUG] LIBJPEG_DIR=$LIBJPEG_DIR"
+      echo "[DEBUG] JPEG_INCLUDE_DIR=$JPEG_INCLUDE_DIR"
+      echo "[DEBUG] JPEG_LIBRARY=$JPEG_LIBRARY"
+    else
+      echo "WARNING: [DEBUG] LIBJPEG NOT AVAILABLE"
+      unset LIBJPEG_DIR
+      unset JPEG_INCLUDE_DIR
+      unset JPEG_LIBRARY
+    fi
+    if [ -f "opencv_${c}_${v}_Debug.sh" ]; then
+      source opencv_${c}_${v}_Debug.sh
+      echo "[DEBUG] OpenCV_DIR=$OpenCV_DIR"
+    else
+      echo "WARNING: [DEBUG] OPENCV NOT AVAILABLE"
+      unset OpenCV_DIR
+    fi
     cd $BUILD_DIR
     source $ICUB_PACKAGE_SOURCE_DIR/src/build_gsl.sh $c $v Debug
     source gsl_${c}_${v}_Debug.sh
@@ -169,4 +205,3 @@ for c in $compilers ; do
     
   done
 done
-#done

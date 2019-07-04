@@ -1,3 +1,6 @@
+#!/bin/bash -e
+#set -x
+
 c=$1
 v=$2
 
@@ -27,17 +30,23 @@ if [ ! -e "$source_name" ]; then
 	exit 1
   }
 fi
+
 cd $source_name
+
+git fetch --all --prune || {
+  echo "Cannot fetch ${source_name} from $source_url"
+	exit 1
+}
 
 if [ "$BUNDLE_ICUB_VERSION" == "" ] || [ "$BUNDLE_ICUB_VERSION" == "trunk" ] || [ "$BUNDLE_ICUB_VERSION" == "master" ]
 then
   git checkout master || {
     echo "Cannot fetch master"
-	exit 1
+    exit 1
   }
   git pull || {
     echo "Cannot update $source_name from $source_url"
-	exit 1
+    exit 1
   }
 else
   git checkout  v${BUNDLE_ICUB_VERSION} || {
@@ -69,7 +78,16 @@ if [ "$GTKMM_DIR" != "" ]; then
 else
   echo "Skipping GTKMM"
 fi
-echo "Using OpenCV from $OpenCV_DIR"
+if [ "$LIBJPEG_DIR" != "" ]; then
+  echo "Using LIBJPEG from $LIBJPEG_DIR"
+else
+  echo "Skipping LIBJPEG"
+fi
+if [ "$OpenCV_DIR" != "" ]; then
+  echo "Using OPENCV from $OpenCV_DIR"
+else
+  echo "Skipping OPENCV"
+fi
 echo "OPT_GENERATOR: $OPT_GENERATOR"
 echo "CMake: $CMAKE_BIN"
 
