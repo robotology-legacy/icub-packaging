@@ -1,13 +1,12 @@
 PACKAGE_VERSION="1.13.0"
 # Always use a revision number >=1
-DEBIAN_REVISION_NUMBER=1
+DEBIAN_REVISION_NUMBER=2
 ICUB_SOURCES_VERSION="1.13.0"
 #ICUB_SOURCES_VERSION="trunk"
 
 #IPOPT="Ipopt-3.11.7"
 
-#SUPPORTED_DISTRO_LIST="stretch bionic cosmic disco"
-SUPPORTED_DISTRO_LIST="bionic cosmic disco"
+SUPPORTED_DISTRO_LIST="buster stretch bionic disco"
 SUPPORTED_TARGET_LIST="amd64 i386"
 
 APT_OPTIONS="-q -y"
