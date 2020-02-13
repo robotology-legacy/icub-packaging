@@ -89,6 +89,11 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
     do_exit 1
   fi 
 fi
+###------------------- Handle YCM ----------------------###
+if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm.done" ]; then
+    echo "Getting YCM package from $YCM_PACKAGE_URL"
+    run_in_chroot "cd /tmp && wget $YCM_PACKAGE_URL && gdebi -n -q /tmp/$YCM_PACKAGE_FILE && touch /tmp/ycm.done"
+fi
 ###------------------- Handle IpOpt --------------------###
 if [ "$IPOPT" != "" ]
 then
@@ -164,50 +169,51 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done ]; th
   	echo "ERROR: missinig ICUB_REPO_URL parameter in config file"
   	exit 1
   fi
+
+  if [ -d "$ICUB_SCRIPT_DIR/sources/icub-main" ]; then
+    cd $ICUB_SCRIPT_DIR/sources/icub-main
+    echo "Pulling latest version of icub sources from ${ICUB_REPO_URL}"
+    git pull --rebase
+    if [ "$?" != "0" ]; then
+      echo "Error: unable to update icub repositoy from ${ICUB_REPO_URL}"
+      exit 1
+    fi
+  else 
+    cd $ICUB_SCRIPT_DIR/sources
+    echo "Cloning icub sources from ${ICUB_REPO_URL}"
+    git clone $ICUB_REPO_URL
+    if [ "$?" != "0" ]; then
+      echo "Error: unable to clone icub repositoy from ${ICUB_REPO_URL}"
+      exit 1
+    fi
+    cd icub-main
+  fi
   
   if [ "$ICUB_SOURCES_VERSION" == "" ] || [ "$ICUB_SOURCES_VERSION" == "trunk" ]; then
-    echo "Fetching iCub trunk"
-    cd $ICUB_SCRIPT_DIR/sources
-    if [ -d "icub-sources-${ICUB_SOURCES_VERSION}" ]; then
-      cd icub-sources-${ICUB_SOURCES_VERSION}
-      sudo svn update
-      if [ "$?" != "0" ]; then
-        echo "Error: unable to update icub repositoy from ${ICUB_REPO_URL}/trunk"
-        exit 1
-      fi
-      cd ..
-    else
-      sudo svn co $SVN_OPTIONS ${ICUB_REPO_URL}/trunk icub-sources-$ICUB_SOURCES_VERSION
-      if [ "$?" != "0" ]; then
-        echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/trunk"
-        exit 1
-      fi
+    echo "switch to master branch"
+    git checkout master
+    if [ "$?" != "0" ]; then
+      echo "Error: unable to checkout master branch on icub repository"
+      exit 1
     fi
-  else
-    echo "Fetching iCub tag v${ICUB_SOURCES_VERSION}"																	
-    if [ ! -d $ICUB_SCRIPT_DIR/sources/$ICUB_SOURCES_VERSION ]; then
-      cd $ICUB_SCRIPT_DIR/sources
-      sudo svn co $SVN_OPTIONS ${ICUB_REPO_URL}/tags/v${ICUB_SOURCES_VERSION} icub-sources-$ICUB_SOURCES_VERSION
-      if [ "$?" != "0" ]; then
-        echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/tags/v${ICUB_SOURCES_VERSION}"
-        exit 1
-        fi
-      else
-        echo "iCub tag v$ICUB_SOURCES_VERSION already downloaded..."
-      fi
+    cd ..
+    else
+    echo "switch to branch $ICUB_SOURCES_VERSION"
+    git checkout $ICUB_SOURCES_VERSION
+    if [ "$?" != "0" ]; then
+      echo "Error: unable to checkout branch $ICUB_SOURCES_VERSION on icub repository"
+      exit 1
+    fi
   fi
   	
-  if [ ! -d "${ICUB_BUILD_CHROOT}/tmp/icub-sources-${ICUB_SOURCES_VERSION}" ]; then
-    echo "copying iCub tag $ICUB_SOURCES_VERSION..."
-    DO "sudo cp -uR ${ICUB_SCRIPT_DIR}/sources/icub-sources-${ICUB_SOURCES_VERSION} ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}"
-  else
-  	echo "iCub tag $ICUB_SOURCES_VERSION already copied."
+  if [ ! -d "${ICUB_BUILD_CHROOT}/tmp/icub-main" ]; then
+    echo "removing old version of ${ICUB_BUILD_CHROOT}/tmp/icub-main"
+    rm -rf "${ICUB_BUILD_CHROOT}/tmp/icub-main"
   fi
+  echo "copying iCub-main sources from ${ICUB_SCRIPT_DIR}/sources/icub-main to  ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}"
+  cp -uR ${ICUB_SCRIPT_DIR}/sources/icub-main ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}
   touch ${ICUB_BUILD_CHROOT}/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done
-else
-  echo "iCub sources already handled"
-fi
-  
+fi  
 # Find which version of yarp is required
 ICUB_REQYARP_VERSION=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "find_package(YARP" | grep "REQUIRED" | awk '{print $2}')
 #YARP_VERSION_STRING=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)

@@ -1,10 +1,13 @@
 PACKAGE_VERSION="1.13.0"
 # Always use a revision number >=1
 DEBIAN_REVISION_NUMBER=2
-ICUB_SOURCES_VERSION="1.13.0"
-#ICUB_SOURCES_VERSION="trunk"
+#ICUB_SOURCES_VERSION="1.13.0"
+ICUB_SOURCES_VERSION="devel"
 
 #IPOPT="Ipopt-3.11.7"
+#YCM_REPO="https://github.com/robotology/ycm.git"
+YCM_PACKAGE_URL="https://launchpad.net/~robotology/+archive/ubuntu/test/+files/ycm-cmake-modules_0.11.0-1_all.deb"
+YCM_PACKAGE_FILE="ycm-cmake-modules_0.11.0-1_all.deb"
 
 SUPPORTED_DISTRO_LIST="buster stretch bionic disco"
 SUPPORTED_TARGET_LIST="amd64 i386"
