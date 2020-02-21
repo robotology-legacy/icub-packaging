@@ -5,12 +5,11 @@ DEBIAN_REVISION_NUMBER=2
 ICUB_SOURCES_VERSION="devel"
 
 #IPOPT="Ipopt-3.11.7"
-#YCM_REPO="https://github.com/robotology/ycm.git"
-YCM_PACKAGE_URL="https://launchpad.net/~robotology/+archive/ubuntu/test/+files/ycm-cmake-modules_0.11.0-1_all.deb"
-YCM_PACKAGE_FILE="ycm-cmake-modules_0.11.0-1_all.deb"
+YCM_PACKAGE_URL_bionic="https://launchpad.net/~robotology/+archive/ubuntu/ppa/+files/ycm-cmake-modules_0.11.0-1~ubuntu18.04~robotology3_all.deb"
+YCM_PACKAGE_URL_buster="https://launchpad.net/~robotology/+archive/ubuntu/ppa/+files/ycm-cmake-modules_0.11.0-1_all.deb"
 
-SUPPORTED_DISTRO_LIST="buster stretch bionic disco"
-SUPPORTED_TARGET_LIST="amd64 i386"
+SUPPORTED_DISTRO_LIST="buster stretch bionic"
+SUPPORTED_TARGET_LIST="amd64"
 
 APT_OPTIONS="-q -y"
 SVN_OPTIONS="-q --force --non-interactive"  # -q is quiet option, do not prints out each file downloaded, less verbose log file.

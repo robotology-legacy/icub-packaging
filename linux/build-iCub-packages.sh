@@ -48,8 +48,9 @@ else
 fi
 
 run_in_chroot "mount -t proc proc /proc"
-run_in_chroot "apt-get install $APT_OPTIONS --install-recommends locales"
+run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS --install-recommends locales"
 run_in_chroot "/usr/sbin/locale-gen en_US en_US.UTF-8"
+run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS apt-transport-https ca-certificates gnupg software-properties-common wget"
 
 ###------------------- Preparing --------------------###
 
@@ -77,22 +78,50 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
   if [ "${!BACKPORTS_URL_TAG}" != "" ]; then
     run_in_chroot "echo ${!BACKPORTS_URL_TAG} > /etc/apt/sources.list.d/backports.list"
   fi
-  run_in_chroot "apt-get install $APT_OPTIONS --install-recommends gnupg"
-  run_in_chroot "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 57A5ACB6110576A6"
+  run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS --install-recommends gnupg"
+  run_in_chroot "apt-key adv :w
+--keyserver keyserver.ubuntu.com --recv-keys 57A5ACB6110576A6"
   run_in_chroot "apt-get update"
   #run_in_chroot "apt-get $APT_OPTIONS install -f"
   DEP_TAG="ICUB_DEPS_${PLATFORM_KEY}"
   _DEPENDENCIES="$ICUB_DEPS_COMMON ${!DEP_TAG}"
-  run_in_chroot "apt-get install $APT_OPTIONS $_DEPENDENCIES && touch /tmp/deps_install.done"
+  run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS $_DEPENDENCIES && touch /tmp/deps_install.done"
   if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
     echo "ERROR: problems installing dependancies."
     do_exit 1
   fi 
 fi
+
+
+###------------------- Handle cmake ----------------------###
+if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
+  if [ "$PLATFORM_KEY" == "cosmic" ]; then
+    run_in_chroot "wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add -"
+    run_in_chroot "apt-add-repository 'deb https://apt.kitware.com/ubuntu/ $PLATFORM_KEY main'"
+    run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
+  fi
+    run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
+else
+  echo "cmake already handled." 
+fi 
+
+if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
+  echo "ERROR: problems installing cmake."
+  do_exit 1
+fi 
+
 ###------------------- Handle YCM ----------------------###
-if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm.done" ]; then
-    echo "Getting YCM package from $YCM_PACKAGE_URL"
-    run_in_chroot "cd /tmp && wget $YCM_PACKAGE_URL && gdebi -n -q /tmp/$YCM_PACKAGE_FILE && touch /tmp/ycm.done"
+if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
+  echo "Installing YCM package"
+  YCM_URL_TAG="YCM_PACKAGE_URL_${PLATFORM_KEY}"
+  run_in_chroot "wget ${!YCM_URL_TAG} -O /tmp/ycm.deb"
+  run_in_chroot "DEBIAN_FRONTEND=noninteractive; dpkg -i /tmp/ycm.deb; apt-get install -f; dpkg -i /tmp/ycm.deb && touch /tmp/ycm-deb.done"
+else
+  echo "YCM package already handled."
+fi
+if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
+  echo "ERROR: problem installing YCM"
+  do_exit 1
 fi
 ###------------------- Handle IpOpt --------------------###
 if [ "$IPOPT" != "" ]
