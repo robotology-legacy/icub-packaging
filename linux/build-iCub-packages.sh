@@ -1,5 +1,5 @@
 #!/bin/bash
-# Load everything needed from external files
+# Load everything oeeded from external files
 cd "`dirname $0`"
 echo $PWD
 ICUB_SCRIPT_DIR=$(pwd)
@@ -79,8 +79,7 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
     run_in_chroot "echo ${!BACKPORTS_URL_TAG} > /etc/apt/sources.list.d/backports.list"
   fi
   run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS --install-recommends gnupg"
-  run_in_chroot "apt-key adv :w
---keyserver keyserver.ubuntu.com --recv-keys 57A5ACB6110576A6"
+  run_in_chroot "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 57A5ACB6110576A6"
   run_in_chroot "apt-get update"
   #run_in_chroot "apt-get $APT_OPTIONS install -f"
   DEP_TAG="ICUB_DEPS_${PLATFORM_KEY}"
@@ -95,12 +94,20 @@ fi
 
 ###------------------- Handle cmake ----------------------###
 if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
-  if [ "$PLATFORM_KEY" == "cosmic" ]; then
-    run_in_chroot "wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add -"
-    run_in_chroot "apt-add-repository 'deb https://apt.kitware.com/ubuntu/ $PLATFORM_KEY main'"
-    run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
-  fi
-    run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
+  case "$PLATFORM_KEY" in
+    "bionic")
+      run_in_chroot "wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add -"
+      run_in_chroot "apt-add-repository 'deb https://apt.kitware.com/ubuntu/ $PLATFORM_KEY main'"
+      run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
+      ;;
+    "buster")
+      run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get -t buster-backports install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
+      ;;
+    *)
+      echo "ERROR: unsupported distro $PLATFORM_KEY"
+      do_exit 1
+      ;;
+  esac 
 else
   echo "cmake already handled." 
 fi 
@@ -244,6 +251,8 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done ]; th
   touch ${ICUB_BUILD_CHROOT}/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done
 fi  
 # Find which version of yarp is required
+echo "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" 
+echo $(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "find_package(YARP")
 ICUB_REQYARP_VERSION=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "find_package(YARP" | grep "REQUIRED" | awk '{print $2}')
 #YARP_VERSION_STRING=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)
 if [ "$ICUB_REQYARP_VERSION" == "" ]
@@ -284,6 +293,7 @@ case  "${PLATFORM_HARDWARE}" in
   exit 1
   ;;
 esac
+echo "${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake"
 YARP_VERSION_MAJOR=$(grep YARP_VERSION_MAJOR ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
 YARP_VERSION_MINOR=$(grep YARP_VERSION_MINOR ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
 YARP_VERSION_PATCH=$(grep YARP_VERSION_PATCH ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
@@ -556,20 +566,22 @@ mkdir -p /data/debs/$CHROOT_NAME
 sudo cp $YARP_PACKAGE_DIR/yarp*.deb /data/debs/$CHROOT_NAME/
 sudo cp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb /data/debs/$CHROOT_NAME/  	
 
+if [ "$SKIP_TESTS" != "true" ]; then
 ## ---------------------------- Test the packages with lintian ------------------------------------##
-if [ -e "/data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb" ]; then
-  echo -e "\nTesting icub-common package with lintian."
-  lintian /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log					
-  lintian-info $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_NAME.info
-else
-  echo "ERROR: icub-common package file /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb not found, exiting"
-  exit 1
-fi
-if [ -e "/data/debs/$CHROOT_NAME/$PACKAGE_NAME" ]; then
-  echo -e "\nTesting iCub package with lintian."
-  lintian /data/debs/$CHROOT_NAME/$PACKAGE_NAME > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log							 
-  lintian-info $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.info
-else
-  echo "ERROR: icub package file /data/debs/$CHROOT_NAME/${PACKAGE_NAME} not found, exiting"
-  exit 1
+  if [ -e "/data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb" ]; then
+    echo -e "\nTesting icub-common package with lintian."
+    lintian /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log					
+    lintian-info $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_NAME.info
+  else
+    echo "ERROR: icub-common package file /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb not found, exiting"
+    exit 1
+  fi
+  if [ -e "/data/debs/$CHROOT_NAME/$PACKAGE_NAME" ]; then
+    echo -e "\nTesting iCub package with lintian."
+    lintian /data/debs/$CHROOT_NAME/$PACKAGE_NAME > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log							 
+    lintian-info $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.info
+  else
+    echo "ERROR: icub package file /data/debs/$CHROOT_NAME/${PACKAGE_NAME} not found, exiting"
+    exit 1
+  fi
 fi
