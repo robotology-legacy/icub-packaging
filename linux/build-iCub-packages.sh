@@ -118,17 +118,19 @@ if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
 fi 
 
 ###------------------- Handle YCM ----------------------###
-if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
-  echo "Installing YCM package"
-  YCM_URL_TAG="YCM_PACKAGE_URL_${PLATFORM_KEY}"
-  run_in_chroot "wget ${!YCM_URL_TAG} -O /tmp/ycm.deb"
-  run_in_chroot "DEBIAN_FRONTEND=noninteractive; dpkg -i /tmp/ycm.deb; apt-get install -f; dpkg -i /tmp/ycm.deb && touch /tmp/ycm-deb.done"
-else
-  echo "YCM package already handled."
-fi
-if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
-  echo "ERROR: problem installing YCM"
-  do_exit 1
+YCM_URL_TAG="YCM_PACKAGE_URL_${PLATFORM_KEY}"
+if [ "${!YCM_URL_TAG}" != "" ]; then
+  if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
+    echo "Installing YCM package"
+    run_in_chroot "wget ${!YCM_URL_TAG} -O /tmp/ycm.deb"
+    run_in_chroot "DEBIAN_FRONTEND=noninteractive; dpkg -i /tmp/ycm.deb; apt-get install -f; dpkg -i /tmp/ycm.deb && touch /tmp/ycm-deb.done"
+  else
+    echo "YCM package already handled."
+  fi
+  if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
+    echo "ERROR: problem installing YCM"
+    do_exit 1
+  fi
 fi
 ###------------------- Handle IpOpt --------------------###
 if [ "$IPOPT" != "" ]
