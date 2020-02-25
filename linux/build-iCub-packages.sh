@@ -1,5 +1,5 @@
 #!/bin/bash
-# Load everything needed from external files
+# Load everything oeeded from external files
 cd "`dirname $0`"
 echo $PWD
 ICUB_SCRIPT_DIR=$(pwd)
@@ -48,8 +48,9 @@ else
 fi
 
 run_in_chroot "mount -t proc proc /proc"
-run_in_chroot "apt-get install $APT_OPTIONS --install-recommends locales"
+run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS --install-recommends locales"
 run_in_chroot "/usr/sbin/locale-gen en_US en_US.UTF-8"
+run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS apt-transport-https ca-certificates gnupg software-properties-common wget"
 
 ###------------------- Preparing --------------------###
 
@@ -77,17 +78,59 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
   if [ "${!BACKPORTS_URL_TAG}" != "" ]; then
     run_in_chroot "echo ${!BACKPORTS_URL_TAG} > /etc/apt/sources.list.d/backports.list"
   fi
-  run_in_chroot "apt-get install $APT_OPTIONS --install-recommends gnupg"
+  run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS --install-recommends gnupg"
   run_in_chroot "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 57A5ACB6110576A6"
   run_in_chroot "apt-get update"
   #run_in_chroot "apt-get $APT_OPTIONS install -f"
   DEP_TAG="ICUB_DEPS_${PLATFORM_KEY}"
   _DEPENDENCIES="$ICUB_DEPS_COMMON ${!DEP_TAG}"
-  run_in_chroot "apt-get install $APT_OPTIONS $_DEPENDENCIES && touch /tmp/deps_install.done"
+  run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS $_DEPENDENCIES && touch /tmp/deps_install.done"
   if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
     echo "ERROR: problems installing dependancies."
     do_exit 1
   fi 
+fi
+
+
+###------------------- Handle cmake ----------------------###
+if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
+  case "$PLATFORM_KEY" in
+    "bionic")
+      run_in_chroot "wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add -"
+      run_in_chroot "apt-add-repository 'deb https://apt.kitware.com/ubuntu/ $PLATFORM_KEY main'"
+      run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
+      ;;
+    "buster")
+      run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get -t buster-backports install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
+      ;;
+    *)
+      echo "ERROR: unsupported distro $PLATFORM_KEY"
+      do_exit 1
+      ;;
+  esac 
+else
+  echo "cmake already handled." 
+fi 
+
+if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
+  echo "ERROR: problems installing cmake."
+  do_exit 1
+fi 
+
+###------------------- Handle YCM ----------------------###
+YCM_URL_TAG="YCM_PACKAGE_URL_${PLATFORM_KEY}"
+if [ "${!YCM_URL_TAG}" != "" ]; then
+  if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
+    echo "Installing YCM package"
+    run_in_chroot "wget ${!YCM_URL_TAG} -O /tmp/ycm.deb"
+    run_in_chroot "DEBIAN_FRONTEND=noninteractive; dpkg -i /tmp/ycm.deb; apt-get install -f; dpkg -i /tmp/ycm.deb && touch /tmp/ycm-deb.done"
+  else
+    echo "YCM package already handled."
+  fi
+  if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
+    echo "ERROR: problem installing YCM"
+    do_exit 1
+  fi
 fi
 ###------------------- Handle IpOpt --------------------###
 if [ "$IPOPT" != "" ]
@@ -164,51 +207,54 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done ]; th
   	echo "ERROR: missinig ICUB_REPO_URL parameter in config file"
   	exit 1
   fi
+
+  if [ -d "$ICUB_SCRIPT_DIR/sources/icub-main" ]; then
+    cd $ICUB_SCRIPT_DIR/sources/icub-main
+    echo "Pulling latest version of icub sources from ${ICUB_REPO_URL}"
+    git pull --rebase
+    if [ "$?" != "0" ]; then
+      echo "Error: unable to update icub repositoy from ${ICUB_REPO_URL}"
+      exit 1
+    fi
+  else 
+    cd $ICUB_SCRIPT_DIR/sources
+    echo "Cloning icub sources from ${ICUB_REPO_URL}"
+    git clone $ICUB_REPO_URL
+    if [ "$?" != "0" ]; then
+      echo "Error: unable to clone icub repositoy from ${ICUB_REPO_URL}"
+      exit 1
+    fi
+    cd icub-main
+  fi
   
   if [ "$ICUB_SOURCES_VERSION" == "" ] || [ "$ICUB_SOURCES_VERSION" == "trunk" ]; then
-    echo "Fetching iCub trunk"
-    cd $ICUB_SCRIPT_DIR/sources
-    if [ -d "icub-sources-${ICUB_SOURCES_VERSION}" ]; then
-      cd icub-sources-${ICUB_SOURCES_VERSION}
-      sudo svn update
-      if [ "$?" != "0" ]; then
-        echo "Error: unable to update icub repositoy from ${ICUB_REPO_URL}/trunk"
-        exit 1
-      fi
-      cd ..
-    else
-      sudo svn co $SVN_OPTIONS ${ICUB_REPO_URL}/trunk icub-sources-$ICUB_SOURCES_VERSION
-      if [ "$?" != "0" ]; then
-        echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/trunk"
-        exit 1
-      fi
+    echo "switch to master branch"
+    git checkout master
+    if [ "$?" != "0" ]; then
+      echo "Error: unable to checkout master branch on icub repository"
+      exit 1
     fi
-  else
-    echo "Fetching iCub tag v${ICUB_SOURCES_VERSION}"																	
-    if [ ! -d $ICUB_SCRIPT_DIR/sources/$ICUB_SOURCES_VERSION ]; then
-      cd $ICUB_SCRIPT_DIR/sources
-      sudo svn co $SVN_OPTIONS ${ICUB_REPO_URL}/tags/v${ICUB_SOURCES_VERSION} icub-sources-$ICUB_SOURCES_VERSION
-      if [ "$?" != "0" ]; then
-        echo "Error: unable to get icub repositoy from ${ICUB_REPO_URL}/tags/v${ICUB_SOURCES_VERSION}"
-        exit 1
-        fi
-      else
-        echo "iCub tag v$ICUB_SOURCES_VERSION already downloaded..."
-      fi
+    cd ..
+    else
+    echo "switch to branch $ICUB_SOURCES_VERSION"
+    git checkout $ICUB_SOURCES_VERSION
+    if [ "$?" != "0" ]; then
+      echo "Error: unable to checkout branch $ICUB_SOURCES_VERSION on icub repository"
+      exit 1
+    fi
   fi
   	
-  if [ ! -d "${ICUB_BUILD_CHROOT}/tmp/icub-sources-${ICUB_SOURCES_VERSION}" ]; then
-    echo "copying iCub tag $ICUB_SOURCES_VERSION..."
-    DO "sudo cp -uR ${ICUB_SCRIPT_DIR}/sources/icub-sources-${ICUB_SOURCES_VERSION} ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}"
-  else
-  	echo "iCub tag $ICUB_SOURCES_VERSION already copied."
+  if [ ! -d "${ICUB_BUILD_CHROOT}/tmp/icub-main" ]; then
+    echo "removing old version of ${ICUB_BUILD_CHROOT}/tmp/icub-main"
+    rm -rf "${ICUB_BUILD_CHROOT}/tmp/icub-main"
   fi
+  echo "copying iCub-main sources from ${ICUB_SCRIPT_DIR}/sources/icub-main to  ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}"
+  cp -uR ${ICUB_SCRIPT_DIR}/sources/icub-main ${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}
   touch ${ICUB_BUILD_CHROOT}/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done
-else
-  echo "iCub sources already handled"
-fi
-  
+fi  
 # Find which version of yarp is required
+echo "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" 
+echo $(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "find_package(YARP")
 ICUB_REQYARP_VERSION=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "find_package(YARP" | grep "REQUIRED" | awk '{print $2}')
 #YARP_VERSION_STRING=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)
 if [ "$ICUB_REQYARP_VERSION" == "" ]
@@ -249,6 +295,7 @@ case  "${PLATFORM_HARDWARE}" in
   exit 1
   ;;
 esac
+echo "${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake"
 YARP_VERSION_MAJOR=$(grep YARP_VERSION_MAJOR ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
 YARP_VERSION_MINOR=$(grep YARP_VERSION_MINOR ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
 YARP_VERSION_PATCH=$(grep YARP_VERSION_PATCH ${YARP_TEST_CHROOT}/usr/lib/${PLAT_TAG}-linux-gnu/cmake/YARP/YARPConfig.cmake | awk '{print $2}' | tr -d '"' | tr -d ')')
@@ -521,20 +568,22 @@ mkdir -p /data/debs/$CHROOT_NAME
 sudo cp $YARP_PACKAGE_DIR/yarp*.deb /data/debs/$CHROOT_NAME/
 sudo cp $ICUB_BUILD_CHROOT/tmp/install_dir/iCub*.deb /data/debs/$CHROOT_NAME/  	
 
+if [ "$SKIP_TESTS" != "true" ]; then
 ## ---------------------------- Test the packages with lintian ------------------------------------##
-if [ -e "/data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb" ]; then
-  echo -e "\nTesting icub-common package with lintian."
-  lintian /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log					
-  lintian-info $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_NAME.info
-else
-  echo "ERROR: icub-common package file /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb not found, exiting"
-  exit 1
-fi
-if [ -e "/data/debs/$CHROOT_NAME/$PACKAGE_NAME" ]; then
-  echo -e "\nTesting iCub package with lintian."
-  lintian /data/debs/$CHROOT_NAME/$PACKAGE_NAME > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log							 
-  lintian-info $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.info
-else
-  echo "ERROR: icub package file /data/debs/$CHROOT_NAME/${PACKAGE_NAME} not found, exiting"
-  exit 1
+  if [ -e "/data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb" ]; then
+    echo -e "\nTesting icub-common package with lintian."
+    lintian /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log					
+    lintian-info $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_PKG_NAME.log > $ICUB_SCRIPT_DIR/log/Lintian-$ICUB_COMMON_NAME.info
+  else
+    echo "ERROR: icub-common package file /data/debs/$CHROOT_NAME/$ICUB_COMMON_PKG_NAME.deb not found, exiting"
+    exit 1
+  fi
+  if [ -e "/data/debs/$CHROOT_NAME/$PACKAGE_NAME" ]; then
+    echo -e "\nTesting iCub package with lintian."
+    lintian /data/debs/$CHROOT_NAME/$PACKAGE_NAME > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log							 
+    lintian-info $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.log > $ICUB_SCRIPT_DIR/log/Lintian-${PACKAGE_NAME}.info
+  else
+    echo "ERROR: icub package file /data/debs/$CHROOT_NAME/${PACKAGE_NAME} not found, exiting"
+    exit 1
+  fi
 fi
