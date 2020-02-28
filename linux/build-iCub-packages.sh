@@ -51,7 +51,7 @@ run_in_chroot "mount -t proc proc /proc"
 run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS --install-recommends locales"
 run_in_chroot "/usr/sbin/locale-gen en_US en_US.UTF-8"
 run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS apt-transport-https ca-certificates gnupg software-properties-common wget"
-
+run_in_chroot "echo LC_ALL=en_US.UTF-8 >> /etc/environment"
 ###------------------- Preparing --------------------###
 
 # Check if test_CHROOT_NAME make target has been made
@@ -71,21 +71,19 @@ else
 fi
 
 echo "PLATFORM_KEY is $PLATFORM_KEY"
-# --> Handle (install) ALL dependencies at the beginning
-if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
-  echo "Installing all dependencies in the dchroot environment"
+###----------- Handle generic deps -----------------------###
+if [ ! -e $ICUB_BUILD_CHROOT/tmp/gen_deps_install.done ]; then
+  echo "Installing generic dependencies in the dchroot environment"
   BACKPORTS_URL_TAG="ICUB_DEPS_BACKPORTS_STRING_${PLATFORM_KEY}"
   if [ "${!BACKPORTS_URL_TAG}" != "" ]; then
     run_in_chroot "echo ${!BACKPORTS_URL_TAG} > /etc/apt/sources.list.d/backports.list"
   fi
   run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS --install-recommends gnupg"
   run_in_chroot "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 57A5ACB6110576A6"
-  run_in_chroot "apt-get update"
-  #run_in_chroot "apt-get $APT_OPTIONS install -f"
-  DEP_TAG="ICUB_DEPS_${PLATFORM_KEY}"
-  _DEPENDENCIES="$ICUB_DEPS_COMMON ${!DEP_TAG}"
-  run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS $_DEPENDENCIES && touch /tmp/deps_install.done"
-  if [ ! -e $ICUB_BUILD_CHROOT/tmp/deps_install.done ]; then
+  run_in_chroot "apt-get $APT_OPTIONS update"
+  run_in_chroot "apt-get $APT_OPTIONS upgrade"
+  run_in_chroot "apt-get $APT_OPTIONS install -f && touch /tmp/gen_deps_install.done"
+  if [ ! -e $ICUB_BUILD_CHROOT/tmp/gen_deps_install.done ]; then
     echo "ERROR: problems installing dependancies."
     do_exit 1
   fi 
@@ -94,6 +92,7 @@ fi
 
 ###------------------- Handle cmake ----------------------###
 if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
+  echo "Installing CMAKE in the dchroot environment"
   case "$PLATFORM_KEY" in
     "bionic")
       run_in_chroot "wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | apt-key add -"
@@ -101,37 +100,49 @@ if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
       run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
       ;;
     "buster")
-      run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get -t buster-backports install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
+      run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get $APT_OPTIONS -t buster-backports install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
       ;;
     *)
       echo "ERROR: unsupported distro $PLATFORM_KEY"
       do_exit 1
       ;;
   esac 
+   if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
+     echo "ERROR: problems installing cmake."
+     do_exit 1
+   fi
 else
   echo "cmake already handled." 
 fi 
 
-if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
-  echo "ERROR: problems installing cmake."
-  do_exit 1
-fi 
-
 ###------------------- Handle YCM ----------------------###
-YCM_URL_TAG="YCM_PACKAGE_URL_${PLATFORM_KEY}"
-if [ "${!YCM_URL_TAG}" != "" ]; then
-  if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
-    echo "Installing YCM package"
-    run_in_chroot "wget ${!YCM_URL_TAG} -O /tmp/ycm.deb"
-    run_in_chroot "DEBIAN_FRONTEND=noninteractive; dpkg -i /tmp/ycm.deb; apt-get install -f; dpkg -i /tmp/ycm.deb && touch /tmp/ycm-deb.done"
-  else
-    echo "YCM package already handled."
-  fi
+if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
+  echo "Installing YCM package"
+  YCM_URL_TAG="YCM_PACKAGE_URL_${PLATFORM_KEY}"
+  run_in_chroot "wget ${!YCM_URL_TAG} -O /tmp/ycm.deb"
+  run_in_chroot "DEBIAN_FRONTEND=noninteractive; dpkg -i /tmp/ycm.deb; apt-get install -f; dpkg -i /tmp/ycm.deb && touch /tmp/ycm-deb.done"
   if [ ! -e "$ICUB_BUILD_CHROOT/tmp/ycm-deb.done" ]; then
     echo "ERROR: problem installing YCM"
     do_exit 1
   fi
+else
+  echo "YCM package already handled."
 fi
+
+###----------- Handle iCub deps from icub-common -------###
+if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub_deps_install.done ]; then
+  echo "Installing icub-common dependencies in the dchroot environment"
+  DEP_TAG="ICUB_DEPS_${PLATFORM_KEY}"
+  _DEPENDENCIES="$ICUB_DEPS_COMMON ${!DEP_TAG}"
+  run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS $_DEPENDENCIES && touch /tmp/icub_deps_install.done"
+  if [ ! -e "$ICUB_BUILD_CHROOT/tmp/icub_deps_install.done" ]; then
+    echo "ERROR: problems installing dependancies."
+    do_exit 1
+  fi 
+else
+  echo "icub-common deps already handled"
+fi
+
 ###------------------- Handle IpOpt --------------------###
 if [ "$IPOPT" != "" ]
 then
@@ -342,7 +353,7 @@ Version: ${PACKAGE_VERSION}-${DEBIAN_REVISION_NUMBER}~${PLATFORM_KEY}
 Section: contrib/science
 Priority: optional
 Architecture: $PLATFORM_HARDWARE
-Depends: $ICUB_COMMON_DEPENDENCIES
+Depends: $ICUB_COMMON_DEPENDENCIES, cmake (>=${CMAKE_MIN_REQ_VER})
 Installed-Size:  $SIZE
 Homepage: http://www.icub.org, https://projects.coin-or.org/Ipopt
 Maintainer: ${ICUB_PACKAGE_MAINTAINER}
@@ -380,7 +391,7 @@ Version: ${PACKAGE_VERSION}-${DEBIAN_REVISION_NUMBER}~${PLATFORM_KEY}
 Section: contrib/science
 Priority: optional
 Architecture: $PLATFORM_HARDWARE
-Depends: $ICUB_COMMON_DEPENDENCIES
+Depends: $ICUB_COMMON_DEPENDENCIES, cmake (>=${CMAKE_MIN_REQ_VER})
 Installed-Size:  $SIZE
 Homepage: http://www.icub.org, https://projects.coin-or.org/Ipopt
 Maintainer: ${ICUB_PACKAGE_MAINTAINER}
@@ -398,7 +409,7 @@ Version: ${PACKAGE_VERSION}-${DEBIAN_REVISION_NUMBER}~${PLATFORM_KEY}
 Section: contrib/science
 Priority: optional
 Architecture: $PLATFORM_HARDWARE
-Depends: $ICUB_COMMON_DEPENDENCIES
+Depends: $ICUB_COMMON_DEPENDENCIES, cmake (>=${CMAKE_MIN_REQ_VER} )
 Homepage: http://www.icub.org, https://projects.coin-or.org/Ipopt
 Maintainer: ${ICUB_PACKAGE_MAINTAINER}
 Description: List of dependencies for iCub software
