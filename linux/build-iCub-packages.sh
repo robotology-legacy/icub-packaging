@@ -267,9 +267,9 @@ if [ ! -e $ICUB_BUILD_CHROOT/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done ]; th
   touch ${ICUB_BUILD_CHROOT}/tmp/icub-${ICUB_SOURCES_VERSION}-sources.done
 fi  
 # Find which version of yarp is required
-echo "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" 
-echo $(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "find_package(YARP")
-ICUB_REQYARP_VERSION=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "find_package(YARP" | grep "REQUIRED" | awk '{print $2}')
+#echo "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" 
+#echo $(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "find_package(YARP")
+ICUB_REQYARP_VERSION=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep "set(YARP_REQUIRED_VERSION" | awk '{print $2}' | tr -d '()')
 #YARP_VERSION_STRING=$(cat "${ICUB_BUILD_CHROOT}/${D_ICUB_ROOT}/CMakeLists.txt" | grep ICUB_REQYARP_VERSION)
 if [ "$ICUB_REQYARP_VERSION" == "" ]
 then
