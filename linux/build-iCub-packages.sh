@@ -102,6 +102,9 @@ if [ ! -e "$ICUB_BUILD_CHROOT/tmp/cmake.done" ]; then
     "buster")
       run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get $APT_OPTIONS -t buster-backports install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
       ;;
+    "focal")
+      run_in_chroot "DEBIAN_FRONTEND=noninteractive; apt-get install $APT_OPTIONS cmake && touch /tmp/cmake.done" 
+      ;; 
     *)
       echo "ERROR: unsupported distro $PLATFORM_KEY"
       do_exit 1
