@@ -13,7 +13,7 @@
 SCRIPT_VERSION="0.9"          # Sets version variable
 SCRIPT_TEMPLATE_VERSION="1.2.1" #
 SCRIPT_NAME=$(realpath -s $0)
-SCRIPT_PATH=$(dirname $_SCRIPT)
+SCRIPT_PATH=$(dirname $SCRIPT_NAME)
 #
 # #####################################################
 # COLORS
@@ -45,7 +45,7 @@ ICUB_REPO_URL="https://github.com/robotology/icub-main"
 ICUB_PACKAGE_MAINTAINER="Matteo Brunettini <matteo.brunettini@iit.it>"
 
 # locals
-_EQUIVS_BIN=$(which equivs-build)
+_EQUIVS_BIN=$(which equivs-build || true)
 _PLATFORM_KEY=$(lsb_release -sc)
 _CONTROL_FILE="icub-common.${_PLATFORM_KEY}-${PLATFORM_HARDWARE}.control"
 # #####################################################
@@ -71,8 +71,8 @@ print_defs ()
   echo "  ICUB_REPO_URL is $ICUB_REPO_URL"
   echo "  ICUB_PACKAGE_MAINTAINER is $ICUB_PACKAGE_MAINTAINER"
   echo "  _EQUIVS_BIN is $_EQUIVS_BIN"
-  echo " _PLATFORM_KEY is $_PLATFORM_KEY"
-  echo " _CONTROL_FILE is $_CONTROL_FILE "
+  echo "  _PLATFORM_KEY is $_PLATFORM_KEY"
+  echo "  _CONTROL_FILE is $_CONTROL_FILE "
 }
 
 usage ()
@@ -179,7 +179,7 @@ init()
 
 fini()
 {
-  if [ -f "$_CONTROL_FILE" ];
+  if [ -f "$_CONTROL_FILE" ]; then
     rm "$_CONTROL_FILE"
   fi
 
@@ -189,7 +189,9 @@ fini()
 check_and_install_deps()
 {
   if [ "$_EQUIVS_BIN" == "" ]; then
+    log "installing equivs, so we may need your password"
     sudo apt install -y equivs
+    _EQUIVS_BIN=$(which equivs-build)
   fi
 }
 
@@ -216,11 +218,11 @@ Version: ${PACKAGE_VERSION}-${DEBIAN_REVISION_NUMBER}~${_PLATFORM_KEY}
 Section: contrib/science
 Priority: optional
 Architecture: $PLATFORM_HARDWARE
-Depends: $ICUB_COMMON_DEPENDENCIES, cmake (>=${CMAKE_MIN_REQ_VER})
+Depends: $_ICUB_COMMON_DEPENDENCIES, cmake (>=${CMAKE_MIN_REQ_VER})
 Homepage: http://www.icub.org
 Maintainer: ${ICUB_PACKAGE_MAINTAINER}
 Description: List of dependencies for iCub software (metapackage)
- This metapackage lists all the dependencies needed to install the icub platform software or to download the source code and compile it directly onto your machine." | sudo tee $_CONTROL_FILE
+ This metapackage lists all the dependencies needed to install the icub platform software or to download the source code and compile it directly onto your machine." | tee $_CONTROL_FILE
 
 }
 
