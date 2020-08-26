@@ -1,4 +1,4 @@
-PACKAGE_VERSION="1.16.0"
+PACKAGE_VERSION="1.17.0"
 # Always use a revision number >=1
 DEBIAN_REVISION_NUMBER=1
 #ICUB_SOURCES_VERSION="1.13.0"
@@ -10,10 +10,10 @@ YCM_PACKAGE_URL_bionic="https://launchpad.net/~robotology/+archive/ubuntu/ppa/+f
 YCM_PACKAGE_URL_buster="https://launchpad.net/~robotology/+archive/ubuntu/ppa/+files/${YCM_PACKAGE}_0.11.3-1_all.deb"
 YCM_PACKAGE_URL_focal="https://launchpad.net/~robotology/+archive/ubuntu/ppa/+files/${YCM_PACKAGE}_0.11.3-1_all.deb"
 
-ICUB_COMMON_PACKAGE="iCub-common"
-ICUB_COMMON_PACKAGE_URL_bionic="https://github.com/robotology/icub-main/releases/download/v${PACKAGE_VERSION}/${ICUB_COMMON_PACKAGE}${PACKAGE_VERSION}-1.bionic_amd64.deb"
-ICUB_COMMON_PACKAGE_URL_buster="https://github.com/robotology/icub-main/releases/download/v${PACKAGE_VERSION}/${ICUB_COMMON_PACKAGE}${PACKAGE_VERSION}-1.buster_amd64.deb"
-ICUB_COMMON_PACKAGE_URL_focal="https://github.com/robotology/icub-main/releases/download/v${PACKAGE_VERSION}/${ICUB_COMMON_PACKAGE}${PACKAGE_VERSION}-1.focal_amd64.deb"
+ICUB_COMMON_PACKAGE="icub-common_"
+ICUB_COMMON_PACKAGE_URL_bionic="https://github.com/robotology/icub-main/releases/download/v${PACKAGE_VERSION}/${ICUB_COMMON_PACKAGE}${PACKAGE_VERSION}-1bionic_amd64.deb"
+ICUB_COMMON_PACKAGE_URL_buster="https://github.com/robotology/icub-main/releases/download/v${PACKAGE_VERSION}/${ICUB_COMMON_PACKAGE}${PACKAGE_VERSION}-1buster_amd64.deb"
+ICUB_COMMON_PACKAGE_URL_focal="https://github.com/robotology/icub-main/releases/download/v${PACKAGE_VERSION}/${ICUB_COMMON_PACKAGE}${PACKAGE_VERSION}-1focal_amd64.deb"
 
 SUPPORTED_DISTRO_LIST="buster bionic focal"
 SUPPORTED_TARGET_LIST="amd64"
