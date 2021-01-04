@@ -11,7 +11,7 @@
 # Se i path sono scorretti, controllare (o rimuovere) /etc/dchroot.conf
 #--------------------------------- Helpers --------------------------------------------------------------#
 # Helper for running a command within the build chroot
-function run_in_chroot 
+function run_in_chroot
 {
 #	sudo dchroot -c $CHROOT_NAME --directory=/ "$1"
 	sudo chroot $ICUB_BUILD_CHROOT bash -c "$1"
@@ -24,14 +24,14 @@ function DO
 }
 
 # Helper for smooth exit (unmounting /proc)
-function do_exit 
+function do_exit
 {
 	run_in_chroot "umount /proc"
 	exit $1
 }
 
 #---------------------------------- Check input values ---------------------------------------------------#
-# 
+#
 
 cd "`dirname $0`"
 echo $PWD
@@ -114,7 +114,7 @@ YARP_PACKAGE_NAME=$YARP_PACKAGE
 # YARP_PACKAGE_NAME=yarp-${YARP_VERSION}-${PLATFORM_KEY}-${PLATFORM_HARDWARE}.deb
 
 #------------------------ Check if traget distribuition is supported--------------------------------------#
-# 
+#
 echo "Checking if distribution $PLATFORM_KEY is supported among the following: $SUPPORTED_DISTRO_LIST"
 DISTRO_OK="false"
 for distro in $SUPPORTED_DISTRO_LIST; do
@@ -125,7 +125,7 @@ for distro in $SUPPORTED_DISTRO_LIST; do
   fi
 done
 if [ "$DISTRO_OK" != "true" ]
-then 
+then
   echo "ERROR : distribuition $PLATFORM_KEY is not supported"
   exit 1
 fi

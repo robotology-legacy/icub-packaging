@@ -1,4 +1,4 @@
-PACKAGE_VERSION="1.17.0"
+PACKAGE_VERSION="1.18.0"
 # Always use a revision number >=1
 DEBIAN_REVISION_NUMBER=1
 #ICUB_SOURCES_VERSION="1.13.0"
@@ -6,9 +6,9 @@ DEBIAN_REVISION_NUMBER=1
 
 #IPOPT="Ipopt-3.11.7"
 YCM_PACKAGE="ycm-cmake-modules"
-YCM_PACKAGE_URL_bionic="https://launchpad.net/~robotology/+archive/ubuntu/ppa/+files/${YCM_PACKAGE}_0.11.3-1~ubuntu18.04~robotology1_all.deb"
-YCM_PACKAGE_URL_buster="https://launchpad.net/~robotology/+archive/ubuntu/ppa/+files/${YCM_PACKAGE}_0.11.3-1_all.deb"
-YCM_PACKAGE_URL_focal="https://launchpad.net/~robotology/+archive/ubuntu/ppa/+files/${YCM_PACKAGE}_0.11.3-1_all.deb"
+YCM_PACKAGE_URL_buster="https://github.com/robotology/ycm/releases/download/v0.12.0/${YCM_PACKAGE}_0.12.0-1.debian10.robotology1_all.deb"
+YCM_PACKAGE_URL_bionic="https://github.com/robotology/ycm/releases/download/v0.12.0/${YCM_PACKAGE}_0.12.0-1.ubuntu18.04.robotology2_all.deb"
+YCM_PACKAGE_URL_focal="https://github.com/robotology/ycm/releases/download/v0.12.0/${YCM_PACKAGE}_0.12.0-1.ubuntu20.04.robotology1_all.deb"
 
 ICUB_COMMON_PACKAGE="icub-common_"
 ICUB_COMMON_PACKAGE_URL_bionic="https://github.com/robotology/icub-main/releases/download/v${PACKAGE_VERSION}/${ICUB_COMMON_PACKAGE}${PACKAGE_VERSION}-1bionic_amd64.deb"
