@@ -1,5 +1,7 @@
 # icub-packaging
 
+⚠ This repository has been archived as the packaging is now managed via the [`robotology-superbuild`](https://github.com/robotology/robotology-superbuild) infrastructure.
+
 This repository contains the scripts used to build the icub-main and icub-common binary packages.
 
 ## License
